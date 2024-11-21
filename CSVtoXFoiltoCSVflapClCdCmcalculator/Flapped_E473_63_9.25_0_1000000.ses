@@ -1,0 +1,14 @@
+load .\Flapped_E473.dat
+ppar
+n 160
+
+
+oper
+mach 0
+visc 1000000
+alfa 9.25
+dump .\Flapped_E473_63_9.25_0_1000000.res
+mach 0.0
+visc
+
+quit
