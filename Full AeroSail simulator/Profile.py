@@ -60,7 +60,7 @@ class Profile():
 
         # Computes the coefficients, returns [Cl, Cd, Cm]
         self.createXfoil_foil()
-        polar = self.xfoil.run_polar(alpha, alpha, 0, mach=mach, re=re)
+        polar = self.xfoil.run_polar(alpha, alpha+1, 1, mach=mach, re=re)
         self.Cl = polar.cl[0]
         self.Cd = polar.cd[0]
         self.Cm = polar.cm[0]
@@ -92,13 +92,13 @@ class Profile():
     # Creates the PyXfoil object
     def createXfoil_foil(self):
         self.xfoil = Xfoil('Flapped E473')
-        self.xfoil.set_points(self.x, self.y)
+        self.xfoil.set_points(self.x.tolist(), self.y.tolist())
         if self.panels is not None:
             self.xfoil.set_ppar(self.panels)
         else:
             self.xfoil.set_ppar(160)
 
-# TESTING CODE
+# TESTING CODE -------------------------------------------------
 
 # initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
 # testProfile = Profile('data/E473coordinates.txt')
