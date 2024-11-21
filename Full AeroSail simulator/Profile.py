@@ -1,0 +1,94 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from pyxfoil import Xfoil, set_workdir, set_xfoilexe
+
+def initializeXfoil(workdir, xfoilexe):
+    set_workdir(workdir)
+    set_xfoilexe(xfoilexe)
+
+class Profile():
+    def __init__(self, PlainDATfile):
+        self.PlainDAT = np.genfromtxt(PlainDATfile, delimiter=' ')
+        self.x = self.PlainDAT[:,0]
+        self.y = self.PlainDAT[:,1]
+        self.panels = None
+        self.createXfoil_foil()
+        self.cp = [] # Alpha, mach, re, results
+        # print(self.PlainDAT)
+
+    def set_panels(self, panels):
+        self.panels = panels
+    def add_flap(self, chordratio, radiansdeflection, optionaltargetfile=None):
+
+        # WARNING: THIS ONLY WORKS UP TO A DEFLECTION AROUND 30 DEGREES
+
+        self.flappedProfile = self.PlainDAT
+        for i in range(np.size(self.x, axis=0)):
+
+            rotatedpointx = (1 - chordratio) + ((np.cos(-radiansdeflection) * (self.x[i] - (1 - chordratio))) - np.sin(-radiansdeflection) * (self.y[i]))
+            rotatedpointy = ((np.sin(-radiansdeflection) * (self.x[i] - (1 - chordratio))) + (np.cos(-radiansdeflection) * (self.y[i])))
+
+            if self.flappedProfile[i, 0] > (1 - chordratio):
+                if radiansdeflection > 0:
+                    if rotatedpointy < self.y[i]:
+                        self.flappedProfile[i, 0] = rotatedpointx
+                        self.flappedProfile[i, 1] = rotatedpointy
+                    elif radiansdeflection > np.radians(36):
+                        self.flappedProfile[i, 1] = -self.y[i]
+
+                elif rotatedpointy > self.y[i]:
+                    self.flappedProfile[i, 0] = rotatedpointx
+                    self.flappedProfile[i, 1] = rotatedpointy
+                elif radiansdeflection < np.radians(-36):
+                    self.flappedProfile[i, 1] = -self.y[i]
+
+        if optionaltargetfile is not None:
+            np.savetxt(optionaltargetfile, self.flappedProfile, fmt=['%.3f', '%.3f'])
+        # update xs and ys
+        self.x = self.flappedProfile[:, 0]
+        self.y = self.flappedProfile[:, 1]
+        return self.flappedProfile # Outputs an array with all the points of the new airfoil
+    def get_coefficients(self, alpha, mach, re):
+
+        # Computes the coefficients, returns [Cl, Cd, Cm]
+        self.createXfoil_foil()
+        polar = self.xfoil.run_polar(alpha, alpha, 0, mach=mach, re=re)
+        self.Cl = polar.cl[0]
+        self.Cd = polar.cd[0]
+        self.Cm = polar.cm[0]
+
+        return [self.Cl, self.Cd, self.Cm]
+    def plot_foil(self):
+        self.createXfoil_foil()
+        self.xfoil.plot_profile(ls='-')
+        plt.show()
+    def plot_cp(self, alpha, mach, re):
+        rescase = self.xfoil.run_result(alpha, mach=mach, re=re)
+        self.cp.append([alpha, mach, re, rescase])
+        ax = None
+        ax = rescase.plot_result(yaxis='cp', ax=ax, ls='-x')
+        _ = ax.legend()
+        plt.show()
+    def plot_curve(self, almin, almax, alint, mach, re, xaxis, yaxis):
+        ax = None
+        ax = self.xfoil.run_polar(almin, almax, alint, mach=mach, re=re).plot_polar(ax=ax, xaxis=xaxis, yaxis=yaxis, ls='-o')
+        _ = ax.legend()
+        plt.show()
+    def createXfoil_foil(self):
+        self.xfoil = Xfoil('Flapped E473')
+        self.xfoil.set_points(self.x, self.y)
+        if self.panels is not None:
+            self.xfoil.set_ppar(self.panels)
+        else:
+            self.xfoil.set_ppar(160)
+
+# TESTING CODE
+
+# initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
+# testProfile = Profile('data/E473coordinates.txt')
+# testProfile.plot_foil()
+# testProfile.add_flap(0.4, np.radians(25))
+# testProfile.plot_foil()
+# testProfile.plot_cp(5, 0, 1000000)
+# testProfile.plot_curve(-10, 20, 0.5, 0, 1000000, 'alpha', 'cl')
+# print(testProfile.get_coefficients(5, 0, 1000000))
