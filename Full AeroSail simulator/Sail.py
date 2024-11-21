@@ -8,7 +8,7 @@ import Profile
 # This Sail class computes atributes for a finite wing from profile parameters. It also works with flaps :)
 
 class Sail():
-    def __init__(self, plainfoil, chord, chordratio, height=None, oswalde = 1):
+    def __init__(self, plainfoil, chord, chordratio, height=None, oswalde = 1, panels=160):
         self.chord = chord
         self.chordratio = chordratio
         self.height = height
@@ -21,6 +21,8 @@ class Sail():
         self.area = self.height * self.chord
         self.l_d_m = [None, None, None]
         self.cl, self.cd, self.cm = 0,0,0
+        self.panels = panels
+        self.airfoil.set_panels(panels)
 
     # Sets a parameter (set in the string) to a value (set as an input)
     def set_p(self, parameter, value):
@@ -39,6 +41,8 @@ class Sail():
                 self.re = value
             case 'mach':
                 self.mach = value
+            case 'panels':
+                self.panels = value
 
     # Adds a flap to the entire wing at a certain deflection
     def add_flap(self, flapdeflection):
@@ -46,15 +50,21 @@ class Sail():
         self.airfoil.add_flap(self.chordratio, flapdeflection)
 
     # Returns the whole sail coefficients using the Prandtl approximation: https://webstor.srmist.edu.in/web_assets/srm_mainsite/files/downloads/class4-2012.pdf
+    # RETURNS [0,0,0] IF IT COULDN'T GET THE COEFFICIENTS --> PYXFOIL RETURNED NONE
     def get_sail_coefficients(self, alpha, flapdeflection):
         self.add_flap(flapdeflection)
         airfoil_coefficients = self.airfoil.get_coefficients(alpha, self.mach, self.re)
-        profile_cl = airfoil_coefficients[0]
-        profile_cd = airfoil_coefficients[1]
-        self.cm = airfoil_coefficients[2]
-        self.cl = profile_cl / (1 + (profile_cl / (np.pi * self.oswalde * self.ar)))
-        self.cd = profile_cd + ((self.cl ** 2 )/ (np.pi * self.oswalde * self.ar))
-        return [self.cl, self.cd, self.cm]
+        if (airfoil_coefficients[0] is not None) and (airfoil_coefficients[1] is not None) and (airfoil_coefficients[2] is not None):
+            profile_cl = airfoil_coefficients[0]
+            profile_cd = airfoil_coefficients[1]
+            self.cm = airfoil_coefficients[2]
+            self.cl = profile_cl / (1 + (profile_cl / (np.pi * self.oswalde * self.ar)))
+            self.cd = profile_cd + ((self.cl ** 2 )/ (np.pi * self.oswalde * self.ar))
+            print([self.cl, self.cd, self.cm])
+            return [self.cl, self.cd, self.cm]
+        else:
+            print("FAILURE")
+            return [0,0,0]
 
     # Returns the whole sail lift and drag using the area
     def get_l_d_m(self, alpha, flapdeflection, V, rho=1.225):
@@ -66,8 +76,8 @@ class Sail():
     # Plots a polar of the sail, doesn't work at big angles of attack
     def plot_polar(self, almin, almax, alint, flapdeflection):
         alphas = np.arange(almin, almax, alint)
-        cl = np.zeros_like(alphas)
-        cd = np.zeros_like(alphas)
+        cl = np.zeros_like(alphas, dtype=float)
+        cd = np.zeros_like(alphas, dtype=float)
         print(alphas)
         for i, alpha in enumerate(alphas):
             coefficients = self.get_sail_coefficients(alpha, flapdeflection)
@@ -87,8 +97,8 @@ class Sail():
 # TESTING CODE -------------------------------------------------
 
 Profile.initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
-Sail = Sail('Data/E473coordinates.txt', 5, 0.4, 30)
-printprint(Sail.get_sail_coefficients(10, np.radians(10)))
-print(Sail.get_l_d_m(10, np.radians(10), 10))
+Sail = Sail('Data/E473coordinates.txt', 5, 0.4, 30, panels = 20)
+# print(Sail.get_sail_coefficients(15, np.radians(10)))
+# print(Sail.get_l_d_m(10, np.radians(10), 10))
 # print(Sail.get_l_d_m(0, 0, 10))
-# Sail.plot_polar(-5, 10, 0.5, np.radians(5))
+Sail.plot_polar(-10, 20, 0.2, np.radians(15))

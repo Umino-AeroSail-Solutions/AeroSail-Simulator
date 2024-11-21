@@ -60,10 +60,13 @@ class Profile():
 
         # Computes the coefficients, returns [Cl, Cd, Cm]
         self.createXfoil_foil()
+
+        self.Cl , self.Cd, self.Cm = None, None, None
         polar = self.xfoil.run_polar(alpha, alpha+1, 1, mach=mach, re=re)
-        self.Cl = polar.cl[0]
-        self.Cd = polar.cd[0]
-        self.Cm = polar.cm[0]
+        if (len(polar.cd) != 0) and (len(polar.cl) != 0) and (len(polar.cm) != 0):
+            self.Cl = polar.cl[0]
+            self.Cd = polar.cd[0]
+            self.Cm = polar.cm[0]
 
         return [self.Cl, self.Cd, self.Cm]
 
