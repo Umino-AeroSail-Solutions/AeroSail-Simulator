@@ -56,17 +56,47 @@ class Profile():
         return self.flappedProfile # Outputs an array with all the points of the new airfoil
 
     # Computes the coefficients for a certain condition. Saves them and returns them as [Cl, Cd, Cm]
-    def get_coefficients(self, alpha, mach, re):
+    def get_coefficients(self, alpha, mach, re, errorstep = 0.1, errorange=1):
 
         # Computes the coefficients, returns [Cl, Cd, Cm]
         self.createXfoil_foil()
 
         self.Cl , self.Cd, self.Cm = None, None, None
-        polar = self.xfoil.run_polar(alpha, alpha+1, 1, mach=mach, re=re)
-        if (len(polar.cd) != 0) and (len(polar.cl) != 0) and (len(polar.cm) != 0):
+        polar = self.xfoil.run_polar(alpha, alpha+0.2, 0.2, mach=mach, re=re)
+        if (len(polar.cd) != 0) and (len(polar.cl) != 0) and (len(polar.cm) != 0):  # Only if it does converge
             self.Cl = polar.cl[0]
             self.Cd = polar.cd[0]
             self.Cm = polar.cm[0]
+        else: # Did not converge :( --> Try and linearly interpolate the value with values around it
+            solvedleft = False
+            alphat = alpha
+            while(not solvedleft):
+                alphat -= errorstep
+                if alphat < alpha-errorange:
+                    break
+                polar = self.xfoil.run_polar(alphat, alphat + 0.2, 0.2, mach=mach, re=re)
+                if (len(polar.cd) != 0) and (len(polar.cl) != 0) and (len(polar.cm) != 0):  # Only if it does converge
+                    Clleft = polar.cl[0]
+                    Cdleft = polar.cd[0]
+                    Cmleft = polar.cm[0]
+                    alphaleft = alphat
+                    solvedleft = True
+            if solvedleft:
+                alphat = alpha
+                solvedright = False
+                while alphat < alpha+errorange:
+                    alphat += errorstep
+                    polar = self.xfoil.run_polar(alphat, alphat + 0.2, 0.2, mach=mach, re=re)
+                    if (len(polar.cd) != 0) and (len(polar.cl) != 0) and (len(polar.cm) != 0):  # Only if it does converge
+                        Clright = polar.cl[0]
+                        Cdright = polar.cd[0]
+                        Cmright = polar.cm[0]
+                        alpharight = alphat
+                        solvedright = True
+            if solvedright and solvedleft:
+                alphas = np.array([alphaleft, alpharight])
+                cls, cds, cms = np.array([Clleft, Clright]), np.array([Cdleft, Cdright]), np.array([Cmleft, Cmright])
+                self.Cl, self.Cd, self.Cm = np.interp(alpha, alphas, cls), np.interp(alpha, alphas, cds), np.interp(alpha, alphas, cms)
 
         return [self.Cl, self.Cd, self.Cm]
 
