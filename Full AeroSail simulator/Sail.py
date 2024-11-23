@@ -1,11 +1,13 @@
 from re import match
+from unittest import case
 
 import numpy as np
 import matplotlib.pyplot as plt
-
+from mpl_toolkits.mplot3d import Axes3D
 import Profile
 
 # This Sail class computes atributes for a finite wing from profile parameters. It also works with flaps :)
+
 
 class Sail():
     def __init__(self, plainfoil, chord, chordratio, height=None, oswalde = 1, panels=160):
@@ -29,20 +31,52 @@ class Sail():
         match parameter:
             case 'chord':
                 self.chord = value
+                self.area = self.height * self.chord
+                self.ar = self.height / self.chord
             case 'chordratio':
                 self.chordratio = value
             case 'height':
                 self.height = value
+                self.area = self.height * self.chord
+                self.ar = self.height / self.chord
             case 'oswalde':
                 self.oswalde = value
             case 'plainfoil':
                 self.plainfoil = value
+                self.airfoil = Profile.Profile(self.plainfoil)
             case 're':
                 self.re = value
             case 'mach':
                 self.mach = value
             case 'panels':
                 self.panels = value
+                self.airfoil.set_panels(self.panels)
+
+    # Returns a specified parameter
+    def get_p(self, parameter):
+        match parameter:
+            case 'chord':
+                return self.chord
+            case 'chordratio':
+                return self.chordratio
+            case 'height':
+                return self.height
+            case 'oswalde':
+                return self.oswalde
+            case 'plainfoil':
+                return self.plainfoil
+            case 're':
+                return self.re
+            case 'mach':
+                return self.mach
+            case 'panels':
+                return self.panels
+            case 'airfoil':
+                return self.airfoil
+            case 'ar':
+                return self.ar
+            case 'area':
+                return self.area
 
     # Adds a flap to the entire wing at a certain deflection
     def add_flap(self, flapdeflection):
@@ -73,7 +107,7 @@ class Sail():
         self.l_d_m = [q * self.cl * self.area, q * self.cd * self.area, q * self.cm * self.area * self.chord]
         return self.l_d_m
 
-    # Plots a polar of the sail, doesn't work at big angles of attack
+    # Plots a polar of the sail, doesn't work at big angles of attack. Returns lists with coefficients
     def plot_polar(self, almin, almax, alint, flapdeflection):
         alphas = np.arange(almin, almax, alint)
         cl = np.zeros_like(alphas, dtype=float)
@@ -93,6 +127,72 @@ class Sail():
         plt.legend()
         plt.grid(True)
         plt.show()
+        return alphas, cl, cd
+
+    # Creates some arrays with polar values and saves it in local lists
+    def create_interpolation(self, almin, almax, alstep, flapmin, flapmax, flapstep):
+        alphas = np.arange(almin, almax, alstep)
+        flaps = np.arange(flapmin, flapmax, flapstep)
+        Alphas, Flaps = np.meshgrid(alphas, flaps)
+        Cl = np.zeros_like(Alphas)
+        Cd = np.zeros_like(Alphas)
+        CloCd = np.zeros_like(Alphas)
+        for i in range(len(flaps)):
+            for j in range(len(alphas)):
+                alpha = alphas[j]
+                flapdeflection = flaps[i]
+                coefficients = self.get_sail_coefficients(alpha, flapdeflection)
+                Cl[i, j] = coefficients[0]
+                Cd[i, j] = coefficients[1]
+                CloCd[i, j] = Cl[i, j]/Cd[i, j]
+        self.InterpAlphas = alphas
+        self.InterpFlaps = Flaps
+        self.InterpCls = Cl
+        self.InterpCds = Cd
+        self.InterpCloCds = CloCd
+        return alphas, flaps, Cl, Cd, CloCd
+
+    # Saves the interpolation arrays in a npz file
+    def save_interpolation(self, filename):
+        np.savez(filename, interpAlphas=self.InterpAlphas, interpFlaps=self.InterpFlaps, interpCls=self.InterpCls, interpCds=self.InterpCds, interpCloCds=self.InterpCloCds)
+
+    # Loads the interpolation arrays from a npz file
+    def load_interpolation(self, filename):
+        npzfile = np.load(filename)
+        self.InterpAlphas = npzfile['interpAlphas']
+        self.InterpFlaps = npzfile['interpFlaps']
+        self.InterpCls = npzfile['interpCls']
+        self.InterpCds = npzfile['interpCds']
+        self.InterpCloCds = npzfile['interpCloCds']
+
+    # Plots the interpolation arrays
+    def plot_2d_polar_Interp(self):
+        plt.figure()
+        fig1 = plt.figure()
+        fig2 = plt.figure()
+        fig3 = plt.figure()
+        ax1 = fig1.add_subplot(111, projection='3d')
+        ax2 = fig2.add_subplot(111, projection='3d')
+        ax3 = fig3.add_subplot(111, projection='3d')
+        surf1 = ax1.plot_surface(self.InterpAlphas, self.InterpFlaps, self.InterpCls, cmap='plasma')
+        ax1.set_zlabel('Lift Coefficient (Cl)')
+        plt.title('3D Surface Plot of Cl')
+        surf2 = ax2.plot_surface(self.InterpAlphas, self.InterpFlaps, self.InterpCds, cmap='plasma')
+        ax2.set_zlabel('Drag Coefficient (Cd)')
+        plt.title('3D Surface Plot of Cd')
+        surf3 = ax3.plot_surface(self.InterpAlphas, self.InterpFlaps, self.InterpCloCds, cmap='plasma')
+        ax3.set_zlabel('(CloCd)')
+        ax1.set_xlabel('Angle of Attack (radians)')
+        ax1.set_ylabel('Flap Deflection (radians)')
+        ax2.set_xlabel('Angle of Attack (radians)')
+        ax2.set_ylabel('Flap Deflection (radians)')
+        ax3.set_xlabel('Angle of Attack (radians)')
+        ax3.set_ylabel('Flap Deflection (radians)')
+        fig1.colorbar(surf1)
+        fig2.colorbar(surf2)
+        fig3.colorbar(surf3)
+        plt.show()
+
 
 # TESTING CODE -------------------------------------------------
 
@@ -101,4 +201,8 @@ Sail = Sail('Data/E473coordinates.txt', 5, 0.4, 30, panels = 20)
 # print(Sail.get_sail_coefficients(15, np.radians(10)))
 # print(Sail.get_l_d_m(10, np.radians(10), 10))
 # print(Sail.get_l_d_m(0, 0, 10))
-Sail.plot_polar(-10, 20, 0.5, np.radians(15))
+# Sail.plot_polar(-10, 20, 0.5, np.radians(15))
+# Sail.create_interpolation(-10, 20, 0.5, np.radians(0), np.radians(10), np.radians(1))
+# Sail.save_interpolation('Data/test_interpolation.npz')
+Sail.load_interpolation('Data/test_interpolation.npz')
+Sail.plot_2d_polar_Interp()
