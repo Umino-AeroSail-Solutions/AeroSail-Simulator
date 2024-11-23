@@ -197,12 +197,12 @@ class Sail():
 # TESTING CODE -------------------------------------------------
 
 Profile.initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
-Sail = Sail('Data/E473coordinates.txt', 5, 0.4, 30, panels = 20)
+Sail = Sail('Data/E473coordinates.txt', 5, 0.5, 30, panels = 20)
 # print(Sail.get_sail_coefficients(15, np.radians(10)))
 # print(Sail.get_l_d_m(10, np.radians(10), 10))
 # print(Sail.get_l_d_m(0, 0, 10))
 # Sail.plot_polar(-10, 20, 0.5, np.radians(15))
-# Sail.create_interpolation(-10, 20, 0.5, np.radians(0), np.radians(10), np.radians(1))
-# Sail.save_interpolation('Data/test_interpolation.npz')
-Sail.load_interpolation('Data/test_interpolation.npz')
+Sail.create_interpolation(-10, 20, 0.2, np.radians(0), np.radians(15), np.radians(0.5))
+Sail.save_interpolation('Data/interpolationCR5.npz')
+# Sail.load_interpolation('Data/interpolationCR4.npz')
 Sail.plot_2d_polar_interp()
