@@ -166,7 +166,7 @@ class Sail():
         self.InterpCloCds = npzfile['interpCloCds']
 
     # Plots the interpolation arrays
-    def plot_2d_polar_Interp(self):
+    def plot_2d_polar_interp(self):
         plt.figure()
         fig1 = plt.figure()
         fig2 = plt.figure()
@@ -205,4 +205,4 @@ Sail = Sail('Data/E473coordinates.txt', 5, 0.4, 30, panels = 20)
 # Sail.create_interpolation(-10, 20, 0.5, np.radians(0), np.radians(10), np.radians(1))
 # Sail.save_interpolation('Data/test_interpolation.npz')
 Sail.load_interpolation('Data/test_interpolation.npz')
-Sail.plot_2d_polar_Interp()
+Sail.plot_2d_polar_interp()
