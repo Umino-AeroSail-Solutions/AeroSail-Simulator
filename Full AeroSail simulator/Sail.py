@@ -1,6 +1,7 @@
 from re import match
 from unittest import case
 
+from scipy.interpolate import RegularGridInterpolator
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -146,10 +147,12 @@ class Sail():
                 Cd[i, j] = coefficients[1]
                 CloCd[i, j] = Cl[i, j]/Cd[i, j]
         self.InterpAlphas = alphas
-        self.InterpFlaps = Flaps
+        self.InterpFlaps = flaps
         self.InterpCls = Cl
         self.InterpCds = Cd
         self.InterpCloCds = CloCd
+        self.interp_func_cl = RegularGridInterpolator((self.InterpAlphas, self.InterpFlaps), self.InterpCls, method='cubic')
+        self.interp_func_cd = RegularGridInterpolator((self.InterpAlphas, self.InterpFlaps), self.InterpCds, method='cubic')
         return alphas, flaps, Cl, Cd, CloCd
 
     # Saves the interpolation arrays in a npz file
@@ -164,6 +167,8 @@ class Sail():
         self.InterpCls = npzfile['interpCls']
         self.InterpCds = npzfile['interpCds']
         self.InterpCloCds = npzfile['interpCloCds']
+        self.interp_func_cl = RegularGridInterpolator((self.InterpAlphas, self.InterpFlaps), self.InterpCls, method='cubic')
+        self.interp_func_cd = RegularGridInterpolator((self.InterpAlphas, self.InterpFlaps), self.InterpCds, method='cubic')
 
     # Plots the interpolation arrays
     def plot_2d_polar_interp(self):
@@ -194,15 +199,24 @@ class Sail():
         plt.show()
 
 
+    def get_sail_coefficients_interp(self, alpha, flapdeflection):
+        cl = self.interp_func_cl((alpha, flapdeflection))
+        cd = self.interp_func_cd((alpha, flapdeflection))
+        return cl, cd
+
+
+
+
 # TESTING CODE -------------------------------------------------
 
 Profile.initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
-Sail = Sail('Data/E473coordinates.txt', 5, 0.5, 30, panels = 20)
+Sail = Sail('Data/E473coordinates.txt', 5, 0.4, 30, panels = 20)
 # print(Sail.get_sail_coefficients(15, np.radians(10)))
 # print(Sail.get_l_d_m(10, np.radians(10), 10))
 # print(Sail.get_l_d_m(0, 0, 10))
 # Sail.plot_polar(-10, 20, 0.5, np.radians(15))
 Sail.create_interpolation(-10, 20, 0.2, np.radians(0), np.radians(15), np.radians(0.5))
-Sail.save_interpolation('Data/interpolationCR5.npz')
-# Sail.load_interpolation('Data/interpolationCR4.npz')
+Sail.save_interpolation('Data/interpolationCR4.npz')
+Sail.load_interpolation('Data/interpolationCR4.npz')
 Sail.plot_2d_polar_interp()
+print(Sail.get_sail_coefficients_interp(10,np.radians(10.567)))
