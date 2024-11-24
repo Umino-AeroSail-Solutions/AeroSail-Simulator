@@ -167,9 +167,7 @@ class Sail():
         self.InterpCls = npzfile['interpCls']
         self.InterpCds = npzfile['interpCds']
         self.InterpCloCds = npzfile['interpCloCds']
-        self.interp_func_cl = RegularGridInterpolator((self.InterpAlphas, self.InterpFlaps), self.InterpCls, method='cubic')
-        self.interp_func_cd = RegularGridInterpolator((self.InterpAlphas, self.InterpFlaps), self.InterpCds, method='cubic')
-
+        # =
     # Plots the interpolation arrays
     def plot_2d_polar_interp(self):
         plt.figure()
@@ -215,8 +213,8 @@ Sail = Sail('Data/E473coordinates.txt', 5, 0.4, 30, panels = 20)
 # print(Sail.get_l_d_m(10, np.radians(10), 10))
 # print(Sail.get_l_d_m(0, 0, 10))
 # Sail.plot_polar(-10, 20, 0.5, np.radians(15))
-Sail.create_interpolation(-10, 20, 0.2, np.radians(0), np.radians(15), np.radians(0.5))
-Sail.save_interpolation('Data/interpolationCR4.npz')
+# Sail.create_interpolation(-10, 20, 0.2, np.radians(0), np.radians(15), np.radians(0.5))
+# Sail.save_interpolation('Data/interpolationCR4.npz')
 Sail.load_interpolation('Data/interpolationCR4.npz')
 Sail.plot_2d_polar_interp()
 print(Sail.get_sail_coefficients_interp(10,np.radians(10.567)))
