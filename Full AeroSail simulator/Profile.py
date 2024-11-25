@@ -28,40 +28,53 @@ class Profile():
     # Adds a flap at the end of the profile with a certain chord ratio to the total chord and a deflection. It can save it to an optional target file
     # NOTE: If a flap is added and another flap is added over it then a double flap will be created unless reset foil is set to true
     def add_flap(self, chordratio, radiansdeflection, optionaltargetfile=None, reset_foil=False):
+        print(f"Initial deflection: {self.flapdeflection}, New deflection: {radiansdeflection}")
 
         # WARNING: THIS ONLY WORKS UP TO A DEFLECTION AROUND 30 DEGREES
         self.chordratio = chordratio
-        self.x = self.PlainDAT[:, 0]
-        self.y = self.PlainDAT[:, 1]
-        self.flapdeflection += radiansdeflection
         if reset_foil:
+            self.x = self.PlainDAT[:, 0]
+            self.y = self.PlainDAT[:, 1]
             self.flapdeflection = radiansdeflection
-        self.flappedProfile = self.PlainDAT
-        for i in range(np.size(self.x, axis=0)):
+            print("Foil reset.")
+        else:
+            self.flapdeflection += radiansdeflection
 
-            rotatedpointx = (1 - chordratio) + ((np.cos(-radiansdeflection) * (self.x[i] - (1 - chordratio))) - np.sin(-radiansdeflection) * (self.y[i]))
-            rotatedpointy = ((np.sin(-radiansdeflection) * (self.x[i] - (1 - chordratio))) + (np.cos(-radiansdeflection) * (self.y[i])))
+        print(f"Flap deflection after update: {self.flapdeflection}")
+
+        self.flappedProfile = self.PlainDAT.copy()
+        for i in range(np.size(self.x, axis=0)):
+            rotatedpointx = (1 - chordratio) + (
+                        np.cos(-self.flapdeflection) * (self.x[i] - (1 - chordratio)) - np.sin(-self.flapdeflection) *
+                        self.y[i])
+            rotatedpointy = (
+                        np.sin(-self.flapdeflection) * (self.x[i] - (1 - chordratio)) + np.cos(-self.flapdeflection) *
+                        self.y[i])
 
             if self.flappedProfile[i, 0] > (1 - chordratio):
-                if radiansdeflection > 0:
+                if self.flapdeflection > 0:
                     if rotatedpointy < self.y[i]:
                         self.flappedProfile[i, 0] = rotatedpointx
                         self.flappedProfile[i, 1] = rotatedpointy
-                    elif radiansdeflection > np.radians(36):
+                    elif self.flapdeflection > np.radians(36):
                         self.flappedProfile[i, 1] = -self.y[i]
-
                 elif rotatedpointy > self.y[i]:
                     self.flappedProfile[i, 0] = rotatedpointx
                     self.flappedProfile[i, 1] = rotatedpointy
-                elif radiansdeflection < np.radians(-36):
+                elif self.flapdeflection < np.radians(-36):
                     self.flappedProfile[i, 1] = -self.y[i]
 
         if optionaltargetfile is not None:
             np.savetxt(optionaltargetfile, self.flappedProfile, fmt=['%.3f', '%.3f'])
-        # update xs and ys
+
+        # Update xs and ys
         self.x = self.flappedProfile[:, 0]
         self.y = self.flappedProfile[:, 1]
-        return self.flappedProfile # Outputs an array with all the points of the new airfoil
+
+        # Debugging: Print updated points
+        print(f"Updated flap profile: \n{self.flappedProfile}")
+
+        return self.flappedProfile
 
     # Computes the coefficients for a certain condition. Saves them and returns them as [Cl, Cd, Cm]
     def get_coefficients(self, alpha, mach, re, errorstep = 0.1, errorange=2, interpolate=None):
