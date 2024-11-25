@@ -82,13 +82,13 @@ class Sail():
     # Adds a flap to the entire wing at a certain deflection
     def add_flap(self, flapdeflection):
         self.airfoil = Profile.Profile(self.plainfoil)
-        self.airfoil.add_flap(self.chordratio, flapdeflection)
+        self.airfoil.add_flap(self.chordratio, flapdeflection, reset_foil=True)
 
     # Returns the whole sail coefficients using the Prandtl approximation: https://webstor.srmist.edu.in/web_assets/srm_mainsite/files/downloads/class4-2012.pdf
     # RETURNS [0,0,0] IF IT COULDN'T GET THE COEFFICIENTS --> PYXFOIL RETURNED NONE
-    def get_sail_coefficients(self, alpha, flapdeflection):
+    def get_sail_coefficients(self, alpha, flapdeflection, p_interpolation=None):
         self.add_flap(flapdeflection)
-        airfoil_coefficients = self.airfoil.get_coefficients(alpha, self.mach, self.re)
+        airfoil_coefficients = self.airfoil.get_coefficients(alpha, self.mach, self.re, interpolate=p_interpolation)
         if (airfoil_coefficients[0] is not None) and (airfoil_coefficients[1] is not None) and (airfoil_coefficients[2] is not None):
             profile_cl = airfoil_coefficients[0]
             profile_cd = airfoil_coefficients[1]
@@ -131,7 +131,7 @@ class Sail():
         return alphas, cl, cd
 
     # Creates some arrays with polar values and saves it in local lists
-    def create_interpolation(self, almin, almax, alstep, flapmin, flapmax, flapstep):
+    def create_interpolation(self, almin, almax, alstep, flapmin, flapmax, flapstep, p_interpolation=None):
         alphas = np.arange(almin, almax, alstep)
         flaps = np.arange(flapmin, flapmax, flapstep)
         Alphas, Flaps = np.meshgrid(alphas, flaps)
@@ -142,7 +142,7 @@ class Sail():
             for j in range(len(alphas)):
                 alpha = alphas[j]
                 flapdeflection = flaps[i]
-                coefficients = self.get_sail_coefficients(alpha, flapdeflection)
+                coefficients = self.get_sail_coefficients(alpha, flapdeflection, p_interpolation=p_interpolation)
                 Cl[i, j] = coefficients[0]
                 Cd[i, j] = coefficients[1]
                 CloCd[i, j] = Cl[i, j]/Cd[i, j]
@@ -197,12 +197,6 @@ class Sail():
         plt.show()
 
 
-    def get_sail_coefficients_interp(self, alpha, flapdeflection):
-        cl = self.interp_func_cl((alpha, flapdeflection))
-        cd = self.interp_func_cd((alpha, flapdeflection))
-        return cl, cd
-
-
 
 
 # TESTING CODE -------------------------------------------------
@@ -213,8 +207,7 @@ Sail = Sail('Data/E473coordinates.txt', 5, 0.4, 30, panels = 20)
 # print(Sail.get_l_d_m(10, np.radians(10), 10))
 # print(Sail.get_l_d_m(0, 0, 10))
 # Sail.plot_polar(-10, 20, 0.5, np.radians(15))
-# Sail.create_interpolation(-10, 20, 0.2, np.radians(0), np.radians(15), np.radians(0.5))
-# Sail.save_interpolation('Data/interpolationCR4.npz')
-Sail.load_interpolation('Data/interpolationCR4.npz')
+Sail.create_interpolation(-10, 20, 0.2, np.radians(0), np.radians(15), np.radians(0.5), p_interpolation='Data/interp0.4profile.npz')
+Sail.save_interpolation('Data/interpolationCR4.npz')
+# Sail.load_interpolation('Data/interpolationCR4.npz')
 Sail.plot_2d_polar_interp()
-print(Sail.get_sail_coefficients_interp(10,np.radians(10.567)))

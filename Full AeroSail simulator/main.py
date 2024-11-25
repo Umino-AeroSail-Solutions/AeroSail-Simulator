@@ -43,7 +43,7 @@ class AeroSail():
         else:
             self.reynolds = reynolds
         self.wing.set_p('re', self.reynolds)
-    def get_t_sf_coefficients(self):
+    # def get_t_sf_coefficients(self):
 
 
 # class Ship():

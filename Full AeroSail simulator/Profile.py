@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from pyxfoil import Xfoil, set_workdir, set_xfoilexe
+from scipy.interpolate import griddata
 
 # Creates a Profile class to compute Cl Cd Cm coefficients to a manipulable profile started from a standard DAT file
 
@@ -15,6 +16,8 @@ class Profile():
         self.y = self.PlainDAT[:,1]
         self.panels = None
         self.createXfoil_foil()
+        self.flapdeflection = 0
+        self.chordratio = 0.4
         self.cp = [] # Alpha, mach, re, results
         # print(self.PlainDAT)
 
@@ -23,11 +26,16 @@ class Profile():
         self.panels = panels
 
     # Adds a flap at the end of the profile with a certain chord ratio to the total chord and a deflection. It can save it to an optional target file
-    # NOTE: If a flap is added and another flap is added over it then a double flap will be created
-    def add_flap(self, chordratio, radiansdeflection, optionaltargetfile=None):
+    # NOTE: If a flap is added and another flap is added over it then a double flap will be created unless reset foil is set to true
+    def add_flap(self, chordratio, radiansdeflection, optionaltargetfile=None, reset_foil=False):
 
         # WARNING: THIS ONLY WORKS UP TO A DEFLECTION AROUND 30 DEGREES
-
+        self.chordratio = chordratio
+        self.x = self.PlainDAT[:, 0]
+        self.y = self.PlainDAT[:, 1]
+        self.flapdeflection += radiansdeflection
+        if reset_foil:
+            self.flapdeflection = radiansdeflection
         self.flappedProfile = self.PlainDAT
         for i in range(np.size(self.x, axis=0)):
 
@@ -56,48 +64,54 @@ class Profile():
         return self.flappedProfile # Outputs an array with all the points of the new airfoil
 
     # Computes the coefficients for a certain condition. Saves them and returns them as [Cl, Cd, Cm]
-    def get_coefficients(self, alpha, mach, re, errorstep = 0.1, errorange=1):
+    def get_coefficients(self, alpha, mach, re, errorstep = 0.1, errorange=2, interpolate=None):
+        if interpolate is None:
+            # Computes the coefficients, returns [Cl, Cd, Cm]
+            self.createXfoil_foil()
 
-        # Computes the coefficients, returns [Cl, Cd, Cm]
-        self.createXfoil_foil()
-
-        self.Cl , self.Cd, self.Cm = None, None, None
-        polar = self.xfoil.run_polar(alpha, alpha+0.2, 0.2, mach=mach, re=re)
-        if (len(polar.cd) != 0) and (len(polar.cl) != 0) and (len(polar.cm) != 0):  # Only if it does converge
-            self.Cl = polar.cl[0]
-            self.Cd = polar.cd[0]
-            self.Cm = polar.cm[0]
-        else: # Did not converge :( --> Try and linearly interpolate the value with values around it
-            solvedleft = False
-            alphat = alpha
-            while(not solvedleft):
-                alphat -= errorstep
-                if alphat < alpha-errorange:
-                    break
-                polar = self.xfoil.run_polar(alphat, alphat + 0.2, 0.2, mach=mach, re=re)
-                if (len(polar.cd) != 0) and (len(polar.cl) != 0) and (len(polar.cm) != 0):  # Only if it does converge
-                    Clleft = polar.cl[0]
-                    Cdleft = polar.cd[0]
-                    Cmleft = polar.cm[0]
-                    alphaleft = alphat
-                    solvedleft = True
-            if solvedleft:
+            self.Cl , self.Cd, self.Cm = None, None, None
+            polar = self.xfoil.run_polar(alpha, alpha+0.2, 0.2, mach=mach, re=re)
+            if (len(polar.cd) != 0) and (len(polar.cl) != 0) and (len(polar.cm) != 0):  # Only if it does converge
+                self.Cl = polar.cl[0]
+                self.Cd = polar.cd[0]
+                self.Cm = polar.cm[0]
+            else: # Did not converge :( --> Try and linearly interpolate the value with values around it
+                solvedleft = False
                 alphat = alpha
-                solvedright = False
-                while alphat < alpha+errorange:
-                    alphat += errorstep
+                while(not solvedleft):
+                    alphat -= errorstep
+                    if alphat < alpha-errorange:
+                        break
                     polar = self.xfoil.run_polar(alphat, alphat + 0.2, 0.2, mach=mach, re=re)
                     if (len(polar.cd) != 0) and (len(polar.cl) != 0) and (len(polar.cm) != 0):  # Only if it does converge
-                        Clright = polar.cl[0]
-                        Cdright = polar.cd[0]
-                        Cmright = polar.cm[0]
-                        alpharight = alphat
-                        solvedright = True
-            if solvedright and solvedleft:
-                alphas = np.array([alphaleft, alpharight])
-                cls, cds, cms = np.array([Clleft, Clright]), np.array([Cdleft, Cdright]), np.array([Cmleft, Cmright])
-                self.Cl, self.Cd, self.Cm = np.interp(alpha, alphas, cls), np.interp(alpha, alphas, cds), np.interp(alpha, alphas, cms)
-
+                        Clleft = polar.cl[0]
+                        Cdleft = polar.cd[0]
+                        Cmleft = polar.cm[0]
+                        alphaleft = alphat
+                        solvedleft = True
+                if solvedleft:
+                    alphat = alpha
+                    solvedright = False
+                    while alphat < alpha+errorange:
+                        alphat += errorstep
+                        polar = self.xfoil.run_polar(alphat, alphat + 0.2, 0.2, mach=mach, re=re)
+                        if (len(polar.cd) != 0) and (len(polar.cl) != 0) and (len(polar.cm) != 0):  # Only if it does converge
+                            Clright = polar.cl[0]
+                            Cdright = polar.cd[0]
+                            Cmright = polar.cm[0]
+                            alpharight = alphat
+                            solvedright = True
+                if solvedright and solvedleft:
+                    alphas = np.array([alphaleft, alpharight])
+                    cls, cds, cms = np.array([Clleft, Clright]), np.array([Cdleft, Cdright]), np.array([Cmleft, Cmright])
+                    self.Cl, self.Cd, self.Cm = np.interp(alpha, alphas, cls), np.interp(alpha, alphas, cds), np.interp(alpha, alphas, cms)
+        else:
+            self.load_interpolation(interpolate)
+            Alphas, Flaps = np.meshgrid(self.interpalphas, self.interpflaps)
+            points = np.vstack((Alphas.flatten(), Flaps.flatten())).T
+            self.Cl = griddata(points, self.interpCl.flatten(), (alpha, self.flapdeflection), method='linear').item()
+            self.Cd = griddata(points, self.interpCd.flatten(), (alpha, self.flapdeflection), method='linear').item()
+            self.Cm = griddata(points, self.interpCloCd.flatten(), (alpha, self.flapdeflection), method='linear').item()
         return [self.Cl, self.Cd, self.Cm]
 
     # Plots the airfoil
@@ -122,6 +136,32 @@ class Profile():
         _ = ax.legend()
         plt.show()
 
+    def create_interpolation(self, almin, almax, alint, flapmin, flapmaxs, flapint, mach, re, filename=None):
+        self.interpflaps = np.arange(flapmin, flapmaxs, flapint)
+        self.interpalphas = np.arange(almin, almax, alint)
+        Alphas, Flaps = np.meshgrid(self.interpalphas, self.interpflaps)
+
+        self.interpCl = np.zeros((len(self.interpalphas), len(self.interpflaps)))
+        self.interpCd = np.zeros((len(self.interpalphas), len(self.interpflaps)))
+        self.interpCloCd = np.zeros((len(self.interpalphas), len(self.interpflaps)))
+        self.interpCm = np.zeros((len(self.interpalphas), len(self.interpflaps)))
+
+        for j in range(len(self.interpflaps)):
+            self.add_flap(self.chordratio, self.interpflaps[j], reset_foil=True)
+            self.plot_foil()
+            for i in range(len(self.interpalphas)):
+                coefficients = self.get_coefficients(self.interpalphas[i], mach,re)
+                self.interpCl[i, j] = coefficients[0]
+                self.interpCd[i, j] = coefficients[1]
+                self.interpCloCd[i, j] = coefficients[0]/coefficients[1]
+                self.interpCm[i, j] = coefficients[2]
+
+
+        if filename is not None:
+            self.save_interpolation(filename)
+
+
+
     # Creates the PyXfoil object
     def createXfoil_foil(self):
         self.xfoil = Xfoil('Flapped E473')
@@ -131,21 +171,30 @@ class Profile():
         else:
             self.xfoil.set_ppar(160)
 
+    def save_interpolation(self, filename):
+        np.savez(filename, interpalphas=self.interpalphas, interpflaps=self.interpflaps, interpCl=self.interpCl, interpCd=self.interpCd, interpCloCd=self.interpCloCd, interpCm=self.interpCm)
+
+    # Loads the interpolation arrays from a npz file
+    def load_interpolation(self, filename):
+        npzfile = np.load(filename)
+        self.interpalphas = npzfile['interpalphas']
+        self.interpflaps = npzfile['interpflaps']
+        self.interpCl = npzfile['interpCl']
+        self.interpCd = npzfile['interpCd']
+        self.interpCloCd = npzfile['interpCloCd']
+        self.interpCm = npzfile['interpCm']
+
+
 # TESTING CODE -------------------------------------------------
 
 initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
 testProfile = Profile('data/E473coordinates.txt')
 testProfile.plot_foil()
-testProfile.add_flap(0.4, np.radians(0))
+testProfile.add_flap(0.4, np.radians(5), reset_foil=True)
+testProfile.plot_foil()
+testProfile.add_flap(0.4, np.radians(0), reset_foil=True)
 testProfile.plot_foil()
 # testProfile.plot_cp(5, 0, 1000000)
-testProfile.plot_curve(-10, 20, 0.5, 0, 1000000, 'alpha', 'cl')
-# print(testProfile.get_coefficients(5, 0, 1000000))
-testProfile.add_flap(0.4, np.radians(5))
-testProfile.plot_foil()
-# testProfile.plot_cp(5, 0, 1000000)
-testProfile.plot_curve(-10, 20, 0.5, 0, 1000000, 'alpha', 'cl')
-testProfile.add_flap(0.4, np.radians(5))
-testProfile.plot_foil()
-# testProfile.plot_cp(5, 0, 1000000)
-testProfile.plot_curve(-10, 20, 0.5, 0, 1000000, 'alpha', 'cl')
+# testProfile.plot_curve(-10, 20, 0.5, 0, 1000000, 'alpha', 'cl')
+testProfile.create_interpolation(-10, 20, 1, np.radians(0), np.radians(20), np.radians(1), 0, 1000000, 'data/interp0.4profile')
+print(testProfile.get_coefficients(10, 0, 1000000, interpolate='Data/interp0.4profile.npz'))
