@@ -28,7 +28,7 @@ class Profile():
     # Adds a flap at the end of the profile with a certain chord ratio to the total chord and a deflection. It can save it to an optional target file
     # NOTE: If a flap is added and another flap is added over it then a double flap will be created unless reset foil is set to true
     def add_flap(self, chordratio, radiansdeflection, optionaltargetfile=None, reset_foil=False):
-        print(f"Initial deflection: {self.flapdeflection}, New deflection: {radiansdeflection}")
+        # print(f"Initial deflection: {self.flapdeflection}, New deflection: {radiansdeflection}")
 
         # WARNING: THIS ONLY WORKS UP TO A DEFLECTION AROUND 30 DEGREES
         self.chordratio = chordratio
@@ -36,11 +36,11 @@ class Profile():
             self.x = self.PlainDAT[:, 0]
             self.y = self.PlainDAT[:, 1]
             self.flapdeflection = radiansdeflection
-            print("Foil reset.")
+            # print("Foil reset.")
         else:
             self.flapdeflection += radiansdeflection
 
-        print(f"Flap deflection after update: {self.flapdeflection}")
+        # print(f"Flap deflection after update: {self.flapdeflection}")
 
         self.flappedProfile = self.PlainDAT.copy()
         for i in range(np.size(self.x, axis=0)):
@@ -72,7 +72,7 @@ class Profile():
         self.y = self.flappedProfile[:, 1]
 
         # Debugging: Print updated points
-        print(f"Updated flap profile: \n{self.flappedProfile}")
+        # print(f"Updated flap profile: \n{self.flappedProfile}")
 
         return self.flappedProfile
 
@@ -205,9 +205,9 @@ testProfile = Profile('data/E473coordinates.txt')
 testProfile.plot_foil()
 testProfile.add_flap(0.4, np.radians(5), reset_foil=True)
 testProfile.plot_foil()
-testProfile.add_flap(0.4, np.radians(0), reset_foil=True)
+testProfile.add_flap(0.4, np.radians(12), reset_foil=True)
 testProfile.plot_foil()
 # testProfile.plot_cp(5, 0, 1000000)
 # testProfile.plot_curve(-10, 20, 0.5, 0, 1000000, 'alpha', 'cl')
-testProfile.create_interpolation(-10, 20, 1, np.radians(0), np.radians(20), np.radians(1), 0, 1000000, 'data/interp0.4profile')
+# testProfile.create_interpolation(-10, 20, 1, np.radians(0), np.radians(20), np.radians(1), 0, 1000000, 'data/interp0.4profile')
 print(testProfile.get_coefficients(10, 0, 1000000, interpolate='Data/interp0.4profile.npz'))

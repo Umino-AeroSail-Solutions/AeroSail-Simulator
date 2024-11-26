@@ -95,7 +95,7 @@ class Sail():
             self.cm = airfoil_coefficients[2]
             self.cl = profile_cl / (1 + (profile_cl / (np.pi * self.oswalde * self.ar)))
             self.cd = profile_cd + ((self.cl ** 2 )/ (np.pi * self.oswalde * self.ar))
-            print([self.cl, self.cd, self.cm])
+            # print([self.cl, self.cd, self.cm])
             return [self.cl, self.cd, self.cm]
         else:
             print("FAILURE")
@@ -146,13 +146,12 @@ class Sail():
                 Cl[i, j] = coefficients[0]
                 Cd[i, j] = coefficients[1]
                 CloCd[i, j] = Cl[i, j]/Cd[i, j]
+                print([alpha, flapdeflection, Cl[i, j], Cd[i, j]])
         self.InterpAlphas = alphas
         self.InterpFlaps = flaps
         self.InterpCls = Cl
         self.InterpCds = Cd
         self.InterpCloCds = CloCd
-        self.interp_func_cl = RegularGridInterpolator((self.InterpAlphas, self.InterpFlaps), self.InterpCls, method='cubic')
-        self.interp_func_cd = RegularGridInterpolator((self.InterpAlphas, self.InterpFlaps), self.InterpCds, method='cubic')
         return alphas, flaps, Cl, Cd, CloCd
 
     # Saves the interpolation arrays in a npz file
@@ -167,7 +166,6 @@ class Sail():
         self.InterpCls = npzfile['interpCls']
         self.InterpCds = npzfile['interpCds']
         self.InterpCloCds = npzfile['interpCloCds']
-        # =
     # Plots the interpolation arrays
     def plot_2d_polar_interp(self):
         plt.figure()
@@ -207,7 +205,8 @@ Sail = Sail('Data/E473coordinates.txt', 5, 0.4, 30, panels = 20)
 # print(Sail.get_l_d_m(10, np.radians(10), 10))
 # print(Sail.get_l_d_m(0, 0, 10))
 # Sail.plot_polar(-10, 20, 0.5, np.radians(15))
-Sail.create_interpolation(-10, 20, 0.2, np.radians(0), np.radians(15), np.radians(0.5), p_interpolation='Data/interp0.4profile.npz')
-Sail.save_interpolation('Data/interpolationCR4.npz')
-# Sail.load_interpolation('Data/interpolationCR4.npz')
-Sail.plot_2d_polar_interp()
+# Sail.create_interpolation(-10, 19, 0.2, np.radians(0), np.radians(8), np.radians(0.5), p_interpolation='Data/interp0.4profile.npz')
+# Sail.save_interpolation('Data/interpolationCR4.npz')
+Sail.load_interpolation('Data/interpolationCR4.npz')
+print(Sail.InterpAlphas, Sail.InterpFlaps, Sail.InterpCds, Sail.InterpCloCds)
+# Sail.plot_2d_polar_interp()
