@@ -10,7 +10,6 @@ mastLength = sailHeight+contHeight #Length of the mast [m]
 nRibs = 8 #Number of ribs [m]
 
 #Mast cross section
-
 c = 5 #Maximum assumed chord length [m] (i made this up)
 w = 0.14 * c #Width of the mast cross-section ASSUMING 14% OF CHORD LENGTH (NOT FINAL) 
 t = 0.05
@@ -19,7 +18,8 @@ Ixx = t*w**3/6 + w**2 * t #Area moment of inertia (for square cross-section)
 Qmax = w**2 *t * 3/4 #Maximum First moment of area (for square cross-section)
 
 #Force distribution at ribs
-totForce = 200 #Total aerodynamic forcee [N]
+totForce = 2000 #Total aerodynamic forcee [N]
+
 
 fList = []
 hList = []
