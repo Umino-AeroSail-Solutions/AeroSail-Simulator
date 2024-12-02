@@ -132,12 +132,12 @@ class Sail():
 
     # Creates some arrays with polar values and saves it in local lists
     def create_interpolation(self, almin, almax, alstep, flapmin, flapmax, flapstep, p_interpolation=None):
-        alphas = np.arange(almin, almax, alstep)
-        flaps = np.arange(flapmin, flapmax, flapstep)
+        alphas = np.arange(almin, almax, alstep, dtype=float)
+        flaps = np.arange(flapmin, flapmax, flapstep, dtype=float)
         Alphas, Flaps = np.meshgrid(alphas, flaps)
-        Cl = np.zeros_like(Alphas)
-        Cd = np.zeros_like(Alphas)
-        CloCd = np.zeros_like(Alphas)
+        Cl = np.zeros_like(Alphas, dtype=float)
+        Cd = np.zeros_like(Alphas, dtype=float)
+        CloCd = np.zeros_like(Alphas, dtype=float)
         for i in range(len(flaps)):
             for j in range(len(alphas)):
                 alpha = alphas[j]
@@ -145,7 +145,8 @@ class Sail():
                 coefficients = self.get_sail_coefficients(alpha, flapdeflection, p_interpolation=p_interpolation)
                 Cl[i, j] = coefficients[0]
                 Cd[i, j] = coefficients[1]
-                CloCd[i, j] = Cl[i, j]/Cd[i, j]
+                # CloCd[i, j] = Cl[i, j]/Cd[i, j]
+                CloCd[i, j] = Cl[i, j] # Just for testing
                 print([alpha, flapdeflection, Cl[i, j], Cd[i, j]])
         self.InterpAlphas = alphas
         self.InterpFlaps = flaps
@@ -168,33 +169,35 @@ class Sail():
         self.InterpCloCds = npzfile['interpCloCds']
     # Plots the interpolation arrays
     def plot_2d_polar_interp(self):
-        plt.figure()
-        fig1 = plt.figure()
-        fig2 = plt.figure()
-        fig3 = plt.figure()
-        ax1 = fig1.add_subplot(111, projection='3d')
-        ax2 = fig2.add_subplot(111, projection='3d')
-        ax3 = fig3.add_subplot(111, projection='3d')
-        surf1 = ax1.plot_surface(self.InterpAlphas, self.InterpFlaps, self.InterpCls, cmap='plasma')
-        ax1.set_zlabel('Lift Coefficient (Cl)')
-        plt.title('3D Surface Plot of Cl')
-        surf2 = ax2.plot_surface(self.InterpAlphas, self.InterpFlaps, self.InterpCds, cmap='plasma')
-        ax2.set_zlabel('Drag Coefficient (Cd)')
-        plt.title('3D Surface Plot of Cd')
-        surf3 = ax3.plot_surface(self.InterpAlphas, self.InterpFlaps, self.InterpCloCds, cmap='plasma')
-        ax3.set_zlabel('(CloCd)')
-        ax1.set_xlabel('Angle of Attack (radians)')
-        ax1.set_ylabel('Flap Deflection (radians)')
-        ax2.set_xlabel('Angle of Attack (radians)')
-        ax2.set_ylabel('Flap Deflection (radians)')
-        ax3.set_xlabel('Angle of Attack (radians)')
-        ax3.set_ylabel('Flap Deflection (radians)')
-        fig1.colorbar(surf1)
-        fig2.colorbar(surf2)
-        fig3.colorbar(surf3)
+        fig = plt.figure(figsize=(18, 6))
+        Alphas, Flaps = np.meshgrid(self.InterpAlphas, self.InterpFlaps)
+
+        # Plot Cl
+        ax1 = fig.add_subplot(131, projection='3d')
+        ax1.plot_surface(Alphas, Flaps, self.InterpCls, cmap='coolwarm')
+        ax1.set_xlabel('Alpha (Degrees)')
+        ax1.set_ylabel('Flap Deflection (Radians)')
+        ax1.set_zlabel('Cl')
+        ax1.set_title('3D Interpolation of Cl')
+
+        # Plot Cd
+        ax2 = fig.add_subplot(132, projection='3d')
+        ax2.plot_surface(Alphas, Flaps, self.InterpCds, cmap='plasma')
+        ax2.set_xlabel('Alpha (Degrees)')
+        ax2.set_ylabel('Flap Deflection (Radians)')
+        ax2.set_zlabel('Cd')
+        ax2.set_title('3D Interpolation of Cd')
+
+        # Plot Cl/Cd
+        ax3 = fig.add_subplot(133, projection='3d')
+        ax3.plot_surface(Alphas, Flaps, self.InterpCloCds, cmap='viridis')
+        ax3.set_xlabel('Alpha (Degrees)')
+        ax3.set_ylabel('Flap Deflection (Radians)')
+        ax3.set_zlabel('Cl/Cd')
+        ax3.set_title('3D Interpolation of Cl/Cd')
+
+        plt.tight_layout()
         plt.show()
-
-
 
 
 # TESTING CODE -------------------------------------------------
@@ -205,8 +208,8 @@ Sail = Sail('Data/E473coordinates.txt', 5, 0.4, 30, panels = 20)
 # print(Sail.get_l_d_m(10, np.radians(10), 10))
 # print(Sail.get_l_d_m(0, 0, 10))
 # Sail.plot_polar(-10, 20, 0.5, np.radians(15))
-# Sail.create_interpolation(-10, 19, 0.2, np.radians(0), np.radians(8), np.radians(0.5), p_interpolation='Data/interp0.4profile.npz')
-# Sail.save_interpolation('Data/interpolationCR4.npz')
-Sail.load_interpolation('Data/interpolationCR4.npz')
+Sail.create_interpolation(-10, 20, 1, np.radians(0), np.radians(20), np.radians(1), p_interpolation='Data/interp0.4profile.npz')
+Sail.save_interpolation('Data/interpolationCR4sail.npz')
+Sail.load_interpolation('Data/interpolationCR4sail.npz')
 print(Sail.InterpAlphas, Sail.InterpFlaps, Sail.InterpCds, Sail.InterpCloCds)
-# Sail.plot_2d_polar_interp()
+Sail.plot_2d_polar_interp()
