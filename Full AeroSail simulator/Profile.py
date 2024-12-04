@@ -135,6 +135,13 @@ class Profile():
         else:
             self.load_interpolation(interpolate)
             Alphas, Flaps = np.meshgrid(self.interpalphas, self.interpflaps)
+            # Check and transpose arrays if their shapes do not match
+            if Alphas.shape != self.interpCl.shape:
+                self.interpCl = self.interpCl.T
+            if Alphas.shape != self.interpCd.shape:
+                self.interpCd = self.interpCd.T
+            if Alphas.shape != self.interpCloCd.shape:
+                self.interpCloCd = self.interpCloCd.T
             points = np.vstack((Alphas.flatten(), Flaps.flatten())).T
             self.Cl = griddata(points, self.interpCl.flatten(), (alpha, self.flapdeflection), method='linear').item()
             self.Cd = griddata(points, self.interpCd.flatten(), (alpha, self.flapdeflection), method='linear').item()
@@ -314,4 +321,4 @@ testProfile.load_interpolation('Data/interp0.4profile.npz')
 # testProfile.create_interpolation(-10, 20, 1, np.radians(0), np.radians(20), np.radians(1), 0, 1000000, 'data/interp0.4profile')
 print(testProfile.get_coefficients(10, 0, 1000000, interpolate='Data/interp0.4profile.npz'))
 testProfile.plot_2d_polar_interp()
-testProfile.plot_random_interpolated_points(num_points=100)
+# testProfile.plot_random_interpolated_points(num_points=200)
