@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import Profile
-
+import XFLR5_interpolarion_creator as XFLR5_interp
 # This Sail class computes atributes for a finite wing from profile parameters. It also works with flaps :)
 
 
@@ -152,7 +152,7 @@ class Sail():
         self.InterpFlaps = flaps
         self.InterpCls = Cl
         self.InterpCds = Cd
-        self.InterpCloCds = CloCd
+        self.InterpCloCds = np.divide(Cl, Cd, out=np.zeros_like(Cl), where=Cd != 0)
         return alphas, flaps, Cl, Cd, CloCd
 
     # Saves the interpolation arrays in a npz file
@@ -198,6 +198,8 @@ class Sail():
 
         plt.tight_layout()
         plt.show()
+    def create_XFLR5_interpolation(self, dir):
+        self.InterpAlphas, self.InterpFlaps, self.InterpCls, self.InterpCds, self.InterpCloCds = XFLR5_interp.crt_XFLR5_interpolation(dir)
 
 
 # TESTING CODE -------------------------------------------------
@@ -209,7 +211,8 @@ Sail = Sail('Data/E473coordinates.txt', 5, 0.4, 30, panels = 20)
 # print(Sail.get_l_d_m(0, 0, 10))
 # Sail.plot_polar(-10, 20, 0.5, np.radians(15))
 # Sail.create_interpolation(-10, 20, 1, np.radians(0), np.radians(20), np.radians(1), p_interpolation='Data/interp0.4profile.npz')
-# Sail.save_interpolation('Data/interpolationCR4sail.npz')
-Sail.load_interpolation('Data/interpolationCR4sail.npz')
+Sail.create_XFLR5_interpolation('Data/XFLR5_5_30_0,5_10m_s_INTERPOLATION')
+Sail.save_interpolation('Data/interpolationCR4sail_XFLR5.npz')
+Sail.load_interpolation('Data/interpolationCR4sail_XFLR5.npz')
 print(Sail.InterpAlphas, Sail.InterpFlaps, Sail.InterpCds, Sail.InterpCloCds)
 Sail.plot_2d_polar_interp()

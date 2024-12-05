@@ -48,12 +48,13 @@ def read_polar_data(file_path):
     QInf = np.array(QInf)
     XCP = np.array(XCP)
 
-    return alphas, CL, CDi, CDv, CD, CY, Cl, Cm, Cn, Cni, QInf, XCP
+    return [alphas, CL, CDi, CDv, CD, CY, Cl, Cm, Cn, Cni, QInf, XCP]
 
 
 # Example usage:
 file_path = 'Data/T1-10_0_m_s-LLT-Flap-10.txt'
-alphas, CL, CDi, CDv, CD, CY, Cl, Cm, Cn, Cni, QInf, XCP = read_polar_data(file_path)
+alphas = read_polar_data(file_path)[0]
+CL = read_polar_data(file_path)[1]
 
 # Print some example data
 print('Alphas:', alphas)
