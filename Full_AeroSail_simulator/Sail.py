@@ -1,7 +1,7 @@
 from re import match
 from unittest import case
 
-from scipy.interpolate import RegularGridInterpolator
+from scipy.interpolate import RegularGridInterpolator, griddata
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -87,20 +87,37 @@ class Sail():
 
     # Returns the whole sail coefficients using the Prandtl approximation: https://webstor.srmist.edu.in/web_assets/srm_mainsite/files/downloads/class4-2012.pdf
     # RETURNS [0,0,0] IF IT COULDN'T GET THE COEFFICIENTS --> PYXFOIL RETURNED NONE
-    def get_sail_coefficients(self, alpha, flapdeflection, p_interpolation=None):
-        self.add_flap(flapdeflection)
-        airfoil_coefficients = self.airfoil.get_coefficients(alpha, self.mach, self.re, interpolate=p_interpolation)
-        if (airfoil_coefficients[0] is not None) and (airfoil_coefficients[1] is not None) and (airfoil_coefficients[2] is not None):
-            profile_cl = airfoil_coefficients[0]
-            profile_cd = airfoil_coefficients[1]
-            self.cm = airfoil_coefficients[2]
-            self.cl = profile_cl / (1 + (profile_cl / (np.pi * self.oswalde * self.ar)))
-            self.cd = profile_cd + ((self.cl ** 2 )/ (np.pi * self.oswalde * self.ar))
-            # print([self.cl, self.cd, self.cm])
-            return [self.cl, self.cd, self.cm]
+    def get_sail_coefficients(self, alpha, flapdeflection, p_interpolation=None, s_interpolation=None):
+        if s_interpolation is None:
+            self.add_flap(flapdeflection)
+            airfoil_coefficients = self.airfoil.get_coefficients(alpha, self.mach, self.re, interpolate=p_interpolation)
+            if (airfoil_coefficients[0] is not None) and (airfoil_coefficients[1] is not None) and (airfoil_coefficients[2] is not None):
+                profile_cl = airfoil_coefficients[0]
+                profile_cd = airfoil_coefficients[1]
+                self.cm = airfoil_coefficients[2]
+                self.cl = profile_cl / (1 + (profile_cl / (np.pi * self.oswalde * self.ar)))
+                self.cd = profile_cd + ((self.cl ** 2 )/ (np.pi * self.oswalde * self.ar))
+                # print([self.cl, self.cd, self.cm])
+                return [self.cl, self.cd, self.cm]
+            else:
+                print("FAILURE")
+                return [0,0,0]
         else:
-            print("FAILURE")
-            return [0,0,0]
+            self.load_interpolation(s_interpolation)
+            Alphas, Flaps = np.meshgrid(self.InterpAlphas, self.InterpFlaps)
+            # Check and transpose arrays if their shapes do not match
+            if Alphas.shape != self.InterpCls.shape:
+                self.InterpCls = self.InterpCls.T
+            if Alphas.shape != self.InterpCds.shape:
+                self.InterpCds = self.InterpCds.T
+            if Alphas.shape != self.InterpCloCds.shape:
+                self.InterpCloCds = self.InterpCloCds.T
+            points = np.vstack((Alphas.flatten(), Flaps.flatten())).T
+            self.cl = griddata(points, self.InterpCls.flatten(), (alpha, flapdeflection), method='linear').item()
+            self.cd = griddata(points, self.InterpCds.flatten(), (alpha, flapdeflection), method='linear').item()
+            # self.cm = griddata(points, self.InterpCms.flatten(), (alpha, flapdeflection), method='linear').item()
+            self.cm = 0
+            return [self.cl, self.cd, self.cm]
 
     # Returns the whole sail lift and drag using the area
     def get_l_d_m(self, alpha, flapdeflection, V, rho=1.225):
@@ -218,10 +235,16 @@ class Sail():
         self.cts = np.add(np.multiply(self.InterpCls, np.sin(AWA)), np.multiply(self.InterpCds, -1*np.cos(AWA)))
         return self.cts
     def get_opt_pos(self, AWA):
-        self.get_cts(AWA)
+        if AWA > np.pi:
+            AWA -= 2*np.pi
+        self.get_cts(abs(AWA))
         maxloc = np.unravel_index(np.argmax(self.cts), self.cts.shape)
-        self.opt_alpha = self.InterpAlphas[maxloc[1]]
-        self.opt_flap = self.InterpFlaps[maxloc[0]]
+        if AWA >= 0:
+            self.opt_flap = self.InterpFlaps[maxloc[0]]
+            self.opt_alpha = self.InterpAlphas[maxloc[1]]
+        else:
+            self.opt_flap = -self.InterpFlaps[maxloc[0]]
+            self.opt_alpha = -self.InterpAlphas[maxloc[1]]
         return self.opt_alpha, self.opt_flap
     def plot_cts_for_AWA(self, AWA):
         # Calculate cts

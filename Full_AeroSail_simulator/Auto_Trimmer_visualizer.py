@@ -6,6 +6,7 @@ import Profile as P
 P.initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
 sail_instance = S.Sail('Data/E473coordinates.txt', 5, 0.4, 30, panels=20)
 sail_instance.load_interpolation('Data/interpolationCR4sail.npz')
+interpolation = 'Data/interpolationCR4sail.npz'
 
 # Initialize Pygame
 pygame.init()
@@ -66,6 +67,15 @@ def draw_awa_arrow(screen, origin, angle, length, color):
         (end_pos[0] - 10 * np.cos(angle + np.pi / 6), end_pos[1] + 10 * np.sin(angle + np.pi / 6))
     ])
 
+def draw_arrow(screen, origin, angle, length, color):
+    end_pos = (origin[0] + length * np.cos(angle), origin[1] - length * np.sin(angle))
+    pygame.draw.line(screen, color, origin, end_pos, 3)
+    pygame.draw.polygon(screen, color, [
+        (end_pos[0], end_pos[1]),
+        (end_pos[0] - 10 * np.cos(angle - np.pi / 6), end_pos[1] + 10 * np.sin(angle - np.pi / 6)),
+        (end_pos[0] - 10 * np.cos(angle + np.pi / 6), end_pos[1] + 10 * np.sin(angle + np.pi / 6))
+    ])
+
 
 def draw_text(screen, text, position, color):
     text_surface = font.render(text, True, color)
@@ -86,9 +96,8 @@ while running:
     sail_angle = AWA - np.radians(sail_instance.opt_alpha)
     flap_angle = sail_angle - sail_instance.opt_flap  # Example flap adjustment, change as needed
 
-    # Calculate thrust vector magnitude cf (example calculation, customize as needed)
+    # Calculate thrust vector magnitude cf
     cf = sail_instance.cts.max()  # Replace with actual calculation logic
-
     # Draw sail, flap, thrust vector, and AWA arrow
     sail_origin = (WIDTH // 2, HEIGHT // 2)
     sail_end = draw_sail(screen, sail_origin, sail_angle, BLUE)
@@ -99,9 +108,24 @@ while running:
     # Draw text for angles in degrees and thrust magnitude
     sail_angle_degrees = sail_instance.opt_alpha
     flap_angle_degrees = np.degrees(sail_instance.opt_flap)
+    coefficients = sail_instance.get_sail_coefficients(abs(sail_instance.opt_alpha), abs(sail_instance.opt_flap), s_interpolation=interpolation)
+    cl = coefficients[0]
+    cd = coefficients[1]
+
     draw_text(screen, f"Sail Angle: {sail_angle_degrees:.2f}°", (20, 20), WHITE)
     draw_text(screen, f"Flap Angle: {flap_angle_degrees:.2f}°", (20, 50), WHITE)
-    draw_text(screen, f"Thrust Magnitude: {cf:.2f}", (20, 80), WHITE)
+    draw_text(screen, f"Thrust Coefficient Magnitude: {cf:.2f}", (20, 80), WHITE)
+    draw_text(screen, f"Lift Coefficient Magnitude: {cl:.2f}", (20, 110), WHITE)
+    draw_text(screen, f"Drag Coefficient Magnitude: {cd:.2f}", (20, 140), WHITE)
+    draw_text(screen, f"Cl/Cd: {(cl/cd):.2f}", (20, 170), WHITE)
+
+    # Draw lift
+    if sail_angle_degrees > 0:
+        draw_arrow(screen, sail_origin, sail_angle+(np.pi/2), cl*100, (0,10,100))
+    else:
+        draw_arrow(screen, sail_origin, sail_angle-(np.pi/2), cl*100, (0,10,100))
+    # Draw drag
+    draw_arrow(screen, sail_origin, sail_angle, cd * 100, (100, 10, 0))
 
     # Update the display
     pygame.display.flip()
