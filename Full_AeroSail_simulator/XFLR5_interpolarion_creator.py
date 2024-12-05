@@ -16,7 +16,7 @@ def crt_XFLR5_interpolation(dir):
     InterpAlphas = None
 
     for i, file in enumerate(files):
-        flapdeflection = float((Path(file).stem).split('-')[-1])
+        flapdeflection = np.radians(float((Path(file).stem).split('-')[-1]))
         alphas, CL, CDi, CDv, CD, CY, Cl, Cm, Cn, Cni, QInf, XCP = XFScrp.read_polar_data(dir + '/' + file)
 
         if InterpAlphas is None:
@@ -43,5 +43,5 @@ def crt_XFLR5_interpolation(dir):
 InterpAlphas, InterpFlaps, Cl, Cd, CloCd = crt_XFLR5_interpolation(dir)
 
 # Print some example data
-print('InterpAlphas:', InterpAlphas)
-print('InterpFlaps:', InterpFlaps)
+# print('InterpAlphas:', InterpAlphas)
+# print('InterpFlaps:', InterpFlaps)

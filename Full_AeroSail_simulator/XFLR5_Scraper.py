@@ -57,5 +57,5 @@ alphas = read_polar_data(file_path)[0]
 CL = read_polar_data(file_path)[1]
 
 # Print some example data
-print('Alphas:', alphas)
-print('CL:', CL)
+# print('Alphas:', alphas)
+# print('CL:', CL)
