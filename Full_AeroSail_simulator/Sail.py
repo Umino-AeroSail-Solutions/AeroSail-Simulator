@@ -7,10 +7,10 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import Profile
 import XFLR5_interpolarion_creator as XFLR5_interp
-# This Sail class computes atributes for a finite wing from profile parameters. It also works with flaps :)
+# This Sail_Class class computes atributes for a finite wing from profile parameters. It also works with flaps :)
 
 
-class Sail():
+class Sail_Class():
     def __init__(self, plainfoil, chord, chordratio, height=None, oswalde = 1, panels=160):
         self.chord = chord
         self.chordratio = chordratio
@@ -272,8 +272,8 @@ class Sail():
         optimal_flaps = []
         for AWA in AWA_range:
             opt_alpha, opt_flap = self.get_opt_pos(AWA)
-            optimal_alphas.append(opt_alpha)
-            optimal_flaps.append(opt_flap)
+            optimal_alphas.append(abs(opt_alpha))
+            optimal_flaps.append(abs(opt_flap))
 
         plt.figure(figsize=(10, 6))
         plt.plot(np.degrees(AWA_range), optimal_alphas, label='Optimal Alpha')
@@ -292,8 +292,8 @@ class Sail():
 
         for AWA in AWA_range:
             opt_alpha, opt_flap = self.get_opt_pos(AWA)
-            optimal_alphas.append(opt_alpha)
-            optimal_flaps.append(np.degrees(opt_flap))  # Convert flap deflection to degrees
+            optimal_alphas.append(abs(opt_alpha))
+            optimal_flaps.append(abs(np.degrees(opt_flap)))  # Convert flap deflection to degrees
             optimal_cts.append(self.cts.max())
 
         optimal_alphas = np.array(optimal_alphas)
@@ -334,25 +334,26 @@ class Sail():
 
 
 # TESTING CODE -------------------------------------------------
-
-# Profile.initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
-# Sail = Sail('Data/E473coordinates.txt', 5, 0.4, 30, panels = 20)
-# # print(Sail.get_sail_coefficients(15, np.radians(10)))
-# # print(Sail.get_l_d_m(10, np.radians(10), 10))
-# # print(Sail.get_l_d_m(0, 0, 10))
-# # Sail.plot_polar(-10, 20, 0.5, np.radians(15))
-# # Sail.create_interpolation(-10, 20, 1, np.radians(0), np.radians(20), np.radians(1), p_interpolation='Data/interp0.4profile.npz')
-# # Sail.create_XFLR5_interpolation('Data/XFLR5_5_30_0,5_10m_s_INTERPOLATION')
-# # Sail.save_interpolation('Data/interpolationCR4sail_XFLR5.npz')
-# Sail.load_interpolation('Data/interpolationCR4sail_XFLR5.npz')
 #
-# # print(Sail.InterpAlphas, Sail.InterpFlaps, Sail.InterpCds, Sail.InterpCloCds)
-# # Sail.plot_2d_polar_interp()
+# Profile.initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
+# Sail = Sail_Class('Data/E473coordinates.txt', 5, 0.4, 30, panels = 20)
+# # # print(Sail.get_sail_coefficients(15, np.radians(10)))
+# # # print(Sail.get_l_d_m(10, np.radians(10), 10))
+# # # print(Sail.get_l_d_m(0, 0, 10))
+# # # Sail.plot_polar(-10, 20, 0.5, np.radians(15))
+# # # Sail.create_interpolation(-10, 20, 1, np.radians(0), np.radians(20), np.radians(1), p_interpolation='Data/interp0.4profile.npz')
+# Sail.create_XFLR5_interpolation('Data/XFLR5_5_30_0,5_10m_s_INTERPOLATION')
+# Sail.save_interpolation('Data/interpolationCR4sail_XFLR5.npz')
+# Sail.load_interpolation('Data/interpolationCR4sail_XFLR5.npz')
+# #
+# # # print(Sail.InterpAlphas, Sail.InterpFlaps, Sail.InterpCds, Sail.InterpCloCds)
+# Sail.plot_2d_polar_interp()
 # Sail.get_cf()
-# Sail.plot_cts_for_AWA(np.radians(5))
-# print(Sail.get_opt_pos(np.radians(10)))
-# print(Sail.get_opt_pos(np.radians(120)))
-# # Sail.plot_optimal_values(np.arange(np.radians(5), np.radians(180), np.radians(0.5)))
-# Sail.plot_optimal_values_polar(np.arange(np.radians(180), np.radians(180), np.radians(0.5)))
-# Sail.load_interpolation('Data/interpolationCR4sail.npz')
-# Sail.plot_optimal_values_polar(np.arange(np.radians(-180), np.radians(180), np.radians(0.5)))
+# # Sail.plot_cts_for_AWA(np.radians(5))
+# # # print(Sail.get_opt_pos(np.radians(10)))
+# # # print(Sail.get_opt_pos(np.radians(120)))
+# # # Sail.plot_optimal_values(np.arange(np.radians(5), np.radians(180), np.radians(0.5)))
+# # # Sail.plot_optimal_values_polar(np.arange(np.radians(180), np.radians(180), np.radians(0.5)))
+# Sail.load_interpolation('Data/interpolationCR4sail_XFLR5.npz')
+# Sail.plot_optimal_values(np.arange(np.radians(5), np.radians(180), np.radians(0.01)))
+# Sail.plot_optimal_values_polar(np.arange(np.radians(-180), np.radians(180), np.radians(0.01)))

@@ -4,9 +4,9 @@ import Sail as S
 import Profile as P
 
 P.initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
-sail_instance = S.Sail('Data/E473coordinates.txt', 5, 0.4, 30, panels=20)
-sail_instance.load_interpolation('Data/interpolationCR4sail.npz')
-interpolation = 'Data/interpolationCR4sail.npz'
+sail_instance = S.Sail_Class('Data/E473coordinates.txt', 5, 0.4, 30, panels=20)
+sail_instance.load_interpolation('Data/interpolationCR4sail_XFLR5.npz')
+interpolation = 'Data/interpolationCR4sail_XFLR5.npz'
 
 # Initialize Pygame
 pygame.init()
@@ -121,11 +121,11 @@ while running:
 
     # Draw lift
     if sail_angle_degrees > 0:
-        draw_arrow(screen, sail_origin, sail_angle+(np.pi/2), cl*100, (0,10,100))
+        draw_arrow(screen, sail_origin, AWA+(np.pi/2), cl*100, (0,10,100))
     else:
-        draw_arrow(screen, sail_origin, sail_angle-(np.pi/2), cl*100, (0,10,100))
+        draw_arrow(screen, sail_origin, AWA-(np.pi/2), cl*100, (0,10,100))
     # Draw drag
-    draw_arrow(screen, sail_origin, sail_angle, cd * 100, (100, 10, 0))
+    draw_arrow(screen, sail_origin, AWA, cd * 100, (100, 10, 0))
 
     # Update the display
     pygame.display.flip()
