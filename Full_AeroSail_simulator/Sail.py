@@ -27,9 +27,8 @@ class Sail_Class():
         self.panels = panels
         self.airfoil.set_panels(panels)
         self.yaw = 0.0
-
-    # Sets a parameter (set in the string) to a value (set as an input)
     def set_p(self, parameter, value):
+        '''Sets a parameter (set in the string) to a value (set as an input)'''
         match parameter:
             case 'chord':
                 self.chord = value
@@ -53,9 +52,8 @@ class Sail_Class():
             case 'panels':
                 self.panels = value
                 self.airfoil.set_panels(self.panels)
-
-    # Returns a specified parameter
     def get_p(self, parameter):
+        '''Returns a specified parameter'''
         match parameter:
             case 'chord':
                 return self.chord
@@ -79,15 +77,13 @@ class Sail_Class():
                 return self.ar
             case 'area':
                 return self.area
-
-    # Adds a flap to the entire wing at a certain deflection
     def add_flap(self, flapdeflection):
+        '''Adds a flap to the entire wing at a certain deflection'''
         self.airfoil = Profile.Profile(self.plainfoil)
         self.airfoil.add_flap(self.chordratio, flapdeflection, reset_foil=True)
-
-    # Returns the whole sail coefficients using the Prandtl approximation: https://webstor.srmist.edu.in/web_assets/srm_mainsite/files/downloads/class4-2012.pdf
-    # RETURNS [0,0,0] IF IT COULDN'T GET THE COEFFICIENTS --> PYXFOIL RETURNED NONE
     def get_sail_coefficients(self, alpha, flapdeflection, p_interpolation=None, s_interpolation=None):
+        '''Returns the whole sail coefficients using the Prandtl approximation: https://webstor.srmist.edu.in/web_assets/srm_mainsite/files/downloads/class4-2012.pdf
+        RETURNS [0,0,0] IF IT COULDN'T GET THE COEFFICIENTS --> PYXFOIL RETURNED NONE'''
         if s_interpolation is None:
             self.add_flap(flapdeflection)
             airfoil_coefficients = self.airfoil.get_coefficients(alpha, self.mach, self.re, interpolate=p_interpolation)
@@ -118,16 +114,14 @@ class Sail_Class():
             # self.cm = griddata(points, self.InterpCms.flatten(), (alpha, flapdeflection), method='linear').item()
             self.cm = 0
             return [self.cl, self.cd, self.cm]
-
-    # Returns the whole sail lift and drag using the area
-    def get_l_d_m(self, alpha, flapdeflection, V, rho=1.225):
-        self.get_sail_coefficients(alpha, flapdeflection)
+    def get_l_d_m(self, alpha, flapdeflection, V, rho=1.225, p_interpolation=None, s_interpolation=None):
+        '''Returns the whole sail lift and drag using the area'''
+        self.get_sail_coefficients(alpha, flapdeflection, p_interpolation=p_interpolation, s_interpolation=s_interpolation)
         q = 0.5 * rho * (V ** 2)
         self.l_d_m = [q * self.cl * self.area, q * self.cd * self.area, q * self.cm * self.area * self.chord]
         return self.l_d_m
-
-    # Plots a polar of the sail, doesn't work at big angles of attack. Returns lists with coefficients
     def plot_polar(self, almin, almax, alint, flapdeflection):
+        '''Plots a polar of the sail, doesn't work at big angles of attack. Returns lists with coefficients'''
         alphas = np.arange(almin, almax, alint)
         cl = np.zeros_like(alphas, dtype=float)
         cd = np.zeros_like(alphas, dtype=float)
@@ -147,9 +141,8 @@ class Sail_Class():
         plt.grid(True)
         plt.show()
         return alphas, cl, cd
-
-    # Creates some arrays with polar values and saves it in local lists
     def create_interpolation(self, almin, almax, alstep, flapmin, flapmax, flapstep, p_interpolation=None):
+        '''Creates some arrays with polar values and saves it in local lists'''
         alphas = np.arange(almin, almax, alstep, dtype=float)
         flaps = np.arange(flapmin, flapmax, flapstep, dtype=float)
         Alphas, Flaps = np.meshgrid(alphas, flaps)
@@ -172,21 +165,19 @@ class Sail_Class():
         self.InterpCds = Cd
         self.InterpCloCds = np.divide(Cl, Cd, out=np.zeros_like(Cl), where=Cd != 0)
         return alphas, flaps, Cl, Cd, CloCd
-
-    # Saves the interpolation arrays in a npz file
     def save_interpolation(self, filename):
+        '''Saves the interpolation arrays in a npz file'''
         np.savez(filename, interpAlphas=self.InterpAlphas, interpFlaps=self.InterpFlaps, interpCls=self.InterpCls, interpCds=self.InterpCds, interpCloCds=self.InterpCloCds)
-
-    # Loads the interpolation arrays from a npz file
     def load_interpolation(self, filename):
+        '''Loads the interpolation arrays from a npz file'''
         npzfile = np.load(filename)
         self.InterpAlphas = npzfile['interpAlphas']
         self.InterpFlaps = npzfile['interpFlaps']
         self.InterpCls = npzfile['interpCls']
         self.InterpCds = npzfile['interpCds']
         self.InterpCloCds = npzfile['interpCloCds']
-    # Plots the interpolation arrays
     def plot_2d_polar_interp(self):
+        '''Plots the interpolation arrays'''
         fig = plt.figure(figsize=(18, 6))
         Alphas, Flaps = np.meshgrid(self.InterpAlphas, self.InterpFlaps)
 
@@ -217,8 +208,10 @@ class Sail_Class():
         plt.tight_layout()
         plt.show()
     def create_XFLR5_interpolation(self, dir):
+        '''Creates an interpolation using XFLR5 files in a directory, ending in "Flap-XX.txt" where XX is the flap deflection'''
         self.InterpAlphas, self.InterpFlaps, self.InterpCls, self.InterpCds, self.InterpCloCds = XFLR5_interp.crt_XFLR5_interpolation(dir)
     def get_cf(self):
+        '''Gets the force coefficient arrays'''
         self.cf = np.sqrt(np.square(self.InterpCls) + np.square(self.InterpCds))
         Alphas, Flaps = np.meshgrid(self.InterpAlphas, self.InterpFlaps)
         fig2 = plt.figure()
@@ -232,9 +225,11 @@ class Sail_Class():
         plt.show( )
         print("Max Cf = " + str(np.max(self.cf)))
     def get_cts(self, AWA):
+        '''Gets the thrust coefficient array'''
         self.cts = np.add(np.multiply(self.InterpCls, np.sin(AWA)), np.multiply(self.InterpCds, -1*np.cos(AWA)))
         return self.cts
     def get_opt_pos(self, AWA):
+        '''Finds the optimum flap deflection and alpha for an Apparent Wind Angle AWA'''
         if AWA > np.pi:
             AWA -= 2*np.pi
         self.get_cts(abs(AWA))
@@ -247,6 +242,7 @@ class Sail_Class():
             self.opt_alpha = -self.InterpAlphas[maxloc[1]]
         return self.opt_alpha, self.opt_flap
     def plot_cts_for_AWA(self, AWA):
+        '''Plots the thrust coefficient arrays'''
         # Calculate cts
         self.get_cts(AWA)
         opt_alpha, opt_flap = self.get_opt_pos(AWA)
@@ -268,6 +264,7 @@ class Sail_Class():
 
         plt.show()
     def plot_optimal_values(self, AWA_range):
+        '''Plots the optimum flap deflection and alpha for an Apparent Wind Angle (AWA) range'''
         optimal_alphas = []
         optimal_flaps = []
         for AWA in AWA_range:
@@ -284,8 +281,8 @@ class Sail_Class():
         plt.legend()
         plt.grid(True)
         plt.show()
-
     def plot_optimal_values_polar(self, AWA_range):
+        '''Plots the optimum flap deflection and alpha for an Apparent Wind Angle (AWA) range in polar graphs'''
         optimal_alphas = []
         optimal_flaps = []
         optimal_cts = []
