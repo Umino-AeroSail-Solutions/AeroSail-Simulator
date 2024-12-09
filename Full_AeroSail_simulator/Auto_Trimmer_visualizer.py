@@ -1,10 +1,10 @@
 import pygame
 import numpy as np
-import Sail as S
+from Sail import Sail_Class
 import Profile as P
 
 P.initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
-sail_instance = S.Sail_Class('Data/E473coordinates.txt', 5, 0.4, 30, panels=20)
+sail_instance = Sail_Class('Data/E473coordinates.txt', 5, 0.4, 30, panels=20)
 sail_instance.load_interpolation('Data/interpolationCR4sail_XFLR5.npz')
 interpolation = 'Data/interpolationCR4sail_XFLR5.npz'
 

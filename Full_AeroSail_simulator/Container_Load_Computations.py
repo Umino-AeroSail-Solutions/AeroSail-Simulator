@@ -49,7 +49,9 @@ def CheckShear(Force, CCLHeight, StackHeight,Containerweight=24390.4, Containerh
 def CheckContainer(Force, CCLHeight, StackHeight,Containerweight=24390.4, Containerheight=2.59, Containerwidth=2.44, Containerlength=12.19, maxLongShear=100000, maxTransShear=491294.638, maxTension=125000, maxCompression=491294.638, SF=1.5):
     '''Returns True if there is no faliure and False otherwise (Force[0] is long and Force[1] is lateral)'''
     ShearOK = CheckShear(Force, CCLHeight, StackHeight,Containerweight=Containerweight, Containerheight=Containerheight, Containerwidth=Containerwidth, Containerlength=Containerlength, maxLongShear=maxLongShear, maxTransShear=maxTransShear, SF=SF)
+    # ShearOK = True
     CornersOK = CheckCornerloads(Force, CCLHeight, StackHeight,Containerweight=Containerweight, Containerheight=Containerheight, Containerwidth=Containerwidth, Containerlength=Containerlength, maxTension=maxTension, maxCompression=maxCompression, SF=SF)
+    # CornersOK = True
     if ShearOK and CornersOK:
         return True
     else:

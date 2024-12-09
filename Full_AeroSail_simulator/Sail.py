@@ -18,10 +18,11 @@ class Sail_Class():
         self.oswalde = oswalde
         self.plainfoil = plainfoil
         self.airfoil = Profile.Profile(self.plainfoil)
-        self.ar = self.height/self.chord
+        if height is not None:
+            self.ar = self.height/self.chord
+            self.area = self.height * self.chord
         self.re = 1000000
         self.mach = 0
-        self.area = self.height * self.chord
         self.l_d_m = [None, None, None]
         self.cl, self.cd, self.cm = 0,0,0
         self.panels = panels
@@ -210,20 +211,22 @@ class Sail_Class():
     def create_XFLR5_interpolation(self, dir):
         '''Creates an interpolation using XFLR5 files in a directory, ending in "Flap-XX.txt" where XX is the flap deflection'''
         self.InterpAlphas, self.InterpFlaps, self.InterpCls, self.InterpCds, self.InterpCloCds = XFLR5_interp.crt_XFLR5_interpolation(dir)
-    def get_cf(self):
+    def get_cf(self, plot=False):
         '''Gets the force coefficient arrays'''
         self.cf = np.sqrt(np.square(self.InterpCls) + np.square(self.InterpCds))
         Alphas, Flaps = np.meshgrid(self.InterpAlphas, self.InterpFlaps)
-        fig2 = plt.figure()
-        cfplot = fig2.add_subplot(111, projection='3d')
-        cfplot.plot_surface(Alphas,Flaps,self.cf, cmap='plasma')
-        cfplot.set_xlabel('Alpha (Degrees)')
-        cfplot.set_ylabel('Flap Deflection (Radians)')
-        cfplot.set_zlabel('Cf')
-        cfplot.set_title('3D Interpolation of Cf')
+        if plot:
+            fig2 = plt.figure()
+            cfplot = fig2.add_subplot(111, projection='3d')
+            cfplot.plot_surface(Alphas,Flaps,self.cf, cmap='plasma')
+            cfplot.set_xlabel('Alpha (Degrees)')
+            cfplot.set_ylabel('Flap Deflection (Radians)')
+            cfplot.set_zlabel('Cf')
+            cfplot.set_title('3D Interpolation of Cf')
 
-        plt.show( )
-        print("Max Cf = " + str(np.max(self.cf)))
+            plt.show( )
+            print("Max Cf = " + str(np.max(self.cf)))
+        return np.max(self.cf)
     def get_cts(self, AWA):
         '''Gets the thrust coefficient array'''
         self.cts = np.add(np.multiply(self.InterpCls, np.sin(AWA)), np.multiply(self.InterpCds, -1*np.cos(AWA)))
