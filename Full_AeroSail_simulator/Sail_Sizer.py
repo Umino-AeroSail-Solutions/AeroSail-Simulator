@@ -9,12 +9,14 @@ sail_instance = Sail_Class('Data/E473coordinates.txt', 5, 0.4, height=None, pane
 interpolation = 'Data/interpolationCR4sail_XFLR5.npz'
 sail_instance.load_interpolation(interpolation)
 
-Stackheight = 4
+Stackheight = 2
 SF=1.3
 max_windspeedknots = 30
 max_windspeed= max_windspeedknots/1.944
 
-initial_height = 15
+panamax_thrust =
+
+initial_height = 5
 height_step = 0.01
 
 aspectratio = 60/5
@@ -32,6 +34,7 @@ while not failure:
     sail_instance.set_p('chord', chord)
     max_cf = sail_instance.get_cf()
     for direction in range(360):
+        print("Testing height: ", height, "     Testing direction: ", direction)
         forcemag = max_cf * 0.5 * 1.225 * (max_windspeed**2) * chord * height
         if forcemag > maxload:
             maxload = forcemag
@@ -40,11 +43,13 @@ while not failure:
         if not ok:
             failure = True
             break
-
-    print("Height: ", height)
-    print("Chord: ", chord)
-    print("Surface area: ", sail_instance.get_p('area'))
-    print("Failure: ", failure)
-    print("Max load: ", maxload)
-    print()
     height += height_step
+print("Max aparent windspeed: ", max_windspeedknots, " kt")
+print("Height: ", height, " m")
+print("Chord: ", chord, " m")
+print("Surface area: ", sail_instance.get_p('area'), " m2")
+print("Failure: ", failure)
+print("Max load: ", maxload, " N")
+print("Stack height: ", Stackheight, " Containers")
+print()
+print()

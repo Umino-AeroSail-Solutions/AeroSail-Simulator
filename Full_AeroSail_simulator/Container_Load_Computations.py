@@ -5,7 +5,7 @@ Force = np.array(([1000, 300]))
 def ComputeTWloads(Force, CCLHeight, StackHeight,Containerweight=24390.4, Containerheight=2.59, Containerwidth=2.44, Containerlength=12.19):
     '''Computes the corner loads and outputs [FWPT, FWSTB, BCKWPT, BCKSTB] array (Force[0] is long and Force[1] is lateral)'''
     ApplicationHeight = CCLHeight+(Containerheight*StackHeight)
-    StackWeight = Containerweight*StackHeight
+    StackWeight = Containerweight*StackHeight*9.81
 
     Forward_moment = Force[0] * ApplicationHeight
     Lateral_moment = Force[1] * ApplicationHeight
@@ -30,6 +30,11 @@ def CheckCornerloads(Force, CCLHeight, StackHeight,Containerweight=24390.4, Cont
     if maxmeasuredtension < maxTension and maxmeasuredcompression < maxCompression:
         return True
     else:
+        print("Failure in corner loads")
+        if maxmeasuredtension > maxTension:
+            print("Maximum tension too high")
+        else:
+            print("Maximum compression too high")
         return False
 
 def ComputeShears(Force, CCLHeight, StackHeight,Containerweight=24390.4, Containerheight=2.59, Containerwidth=2.44, Containerlength=12.19):
@@ -38,14 +43,24 @@ def ComputeShears(Force, CCLHeight, StackHeight,Containerweight=24390.4, Contain
     transverse_shear = CornerLoads[3]-CornerLoads[1]+Force[1]
     return longitudinal_shear, transverse_shear
 
-def CheckShear(Force, CCLHeight, StackHeight,Containerweight=24390.4, Containerheight=2.59, Containerwidth=2.44, Containerlength=12.19, maxLongShear=100000, maxTransShear=491294.638, SF=1.5):
+def CheckShear(Force, CCLHeight, StackHeight, maxtwitlockshear=263000,Containerweight=24390.4, Containerheight=2.59, Containerwidth=2.44, Containerlength=12.19, maxLongShear=75000, maxTransShear=150000, SF=1.5):
     '''Returns True if there is no faliure and False otherwise (Force[0] is long and Force[1] is lateral)'''
     longitudinal_shear, transverse_shear = ComputeShears(Force, CCLHeight, StackHeight,Containerweight=Containerweight, Containerheight=Containerheight, Containerwidth=Containerwidth, Containerlength=Containerlength)
+
+    if SF*np.sqrt((Force[0]**2)+(Force[1]**2))/2 > maxtwitlockshear:
+        print("Failure in twistlock shear: ", maxtwitlockshear/(SF*np.sqrt((Force[0]**2)*(Force[1]**2))/2))
+        print(SF*np.sqrt((Force[0]**2)*(Force[1]**2))/2)
+        return False
+
     if SF*abs(longitudinal_shear) < maxLongShear and SF*abs(transverse_shear) < maxTransShear:
         return True
     else:
+        print("Failure in container shear")
+        if longitudinal_shear > maxLongShear:
+            print("Longitudinal shear too high")
+        else:
+            print("Transverse shear too high")
         return False
-
 def CheckContainer(Force, CCLHeight, StackHeight,Containerweight=24390.4, Containerheight=2.59, Containerwidth=2.44, Containerlength=12.19, maxLongShear=100000, maxTransShear=491294.638, maxTension=125000, maxCompression=491294.638, SF=1.5):
     '''Returns True if there is no faliure and False otherwise (Force[0] is long and Force[1] is lateral)'''
     ShearOK = CheckShear(Force, CCLHeight, StackHeight,Containerweight=Containerweight, Containerheight=Containerheight, Containerwidth=Containerwidth, Containerlength=Containerlength, maxLongShear=maxLongShear, maxTransShear=maxTransShear, SF=SF)
