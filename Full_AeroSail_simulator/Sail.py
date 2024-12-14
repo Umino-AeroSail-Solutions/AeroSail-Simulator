@@ -331,7 +331,34 @@ class Sail_Class():
 
         plt.tight_layout()
         plt.show()
+    def get_max_ct(self):
+        max_ct = 0
+        for AWA in range(180):
+            ct = self.get_cts(AWA).max()
+            if ct > max_ct:
+                max_ct = ct
+        return max_ct
 
+    def plot_cf_level_curve(self, cf_value):
+        '''Plots a level curve for a certain value of cf as a function of alpha and flap deflection, with shading for smaller values.'''
+        Alphas, Flaps = np.meshgrid(self.InterpAlphas, self.InterpFlaps)
+        Cf = self.get_cf()  # Ensure cf is calculated
+
+        # Create a filled contour plot for shading
+        plt.figure()
+        contourf = plt.contourf(Alphas, Flaps, self.cf, levels=np.linspace(np.min(self.cf), cf_value, 100),
+                                cmap='Blues')
+        plt.colorbar(contourf, label='Cf')
+
+        # Add the contour line for the specified cf_value
+        contour = plt.contour(Alphas, Flaps, self.cf, levels=[cf_value], colors='blue')
+        plt.clabel(contour, inline=True, fontsize=8)
+
+        plt.xlabel('Alpha (Degrees)')
+        plt.ylabel('Flap Deflection (Radians)')
+        plt.title(f'Level Curve for Cf = {cf_value}')
+        plt.grid(True)
+        plt.show()
 
 # TESTING CODE -------------------------------------------------
 #
