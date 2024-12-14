@@ -339,26 +339,40 @@ class Sail_Class():
                 max_ct = ct
         return max_ct
 
-    def plot_cf_level_curve(self, cf_value):
+    def plot_cf_level_curve(self, cf_value, ax=None, title='Level Curve for Cf', filling=True):
         '''Plots a level curve for a certain value of cf as a function of alpha and flap deflection, with shading for smaller values.'''
         Alphas, Flaps = np.meshgrid(self.InterpAlphas, self.InterpFlaps)
         Cf = self.get_cf()  # Ensure cf is calculated
 
+        if ax is None:
+            fig, ax = plt.subplots()
+
+        contour = None
+
         # Create a filled contour plot for shading
-        plt.figure()
-        contourf = plt.contourf(Alphas, Flaps, self.cf, levels=np.linspace(np.min(self.cf), cf_value, 100),
-                                cmap='Blues')
-        plt.colorbar(contourf, label='Cf')
+        if filling:
+            ax.contourf(Alphas, Flaps, self.cf, levels=np.linspace(np.min(self.cf), cf_value, 100), cmap='Blues',
+                        alpha=0.5)
 
         # Add the contour line for the specified cf_value
-        contour = plt.contour(Alphas, Flaps, self.cf, levels=[cf_value], colors='blue')
-        plt.clabel(contour, inline=True, fontsize=8)
+        contour = ax.contour(Alphas, Flaps, self.cf, levels=[cf_value], colors='blue')
+        ax.clabel(contour, inline=True, fontsize=8, fmt='%.2f')
 
-        plt.xlabel('Alpha (Degrees)')
-        plt.ylabel('Flap Deflection (Radians)')
-        plt.title(f'Level Curve for Cf = {cf_value}')
-        plt.grid(True)
-        plt.show()
+        ax.set_xlabel('Alpha (Degrees)')
+        ax.set_ylabel('Flap Deflection (Radians)')
+        ax.set_title(title)
+        ax.grid(True)
+
+        return contour
+
+    def get_specific_cf(self, alpha, flap_deflection, interpolation):
+        '''Returns the specific force coefficient cf for a given alpha and flap deflection.'''
+        self.add_flap(flap_deflection)  # Ensure the flap deflection is set
+        coefficients = self.get_sail_coefficients(alpha, flap_deflection, s_interpolation=interpolation)
+        cl = coefficients[0]
+        cd = coefficients[1]
+        cf = np.sqrt(cl ** 2 + cd ** 2)
+        return cf
 
 # TESTING CODE -------------------------------------------------
 #
