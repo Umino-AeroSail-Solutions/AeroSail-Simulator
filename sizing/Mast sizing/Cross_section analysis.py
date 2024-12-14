@@ -83,7 +83,7 @@ def plot_areas(areas, thicknesses):
     # Extract x, y coordinates and sizes
     x = areas[:, 0]
     y = areas[:, 1]
-    sizes = (areas[:, 2]) * 20 + 10  # Adjust scaling factor for better visualization
+    sizes = (areas[:, 2]) * 1000000 + 10  # Adjust scaling factor for better visualization
 
     # Plot points
     plt.scatter(x, y, s=sizes, c='blue', alpha=0.5)
@@ -101,12 +101,89 @@ def plot_areas(areas, thicknesses):
     plt.grid(True)
     plt.show()
 
+def get_distance(x1, y1, x2, y2):
+    return np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+
+def update_areas_bending(areas, thicknesses, Mx, My, Ixx, Iyy, Ixy):
+    i=0
+    for area in areas:
+        term_2 = 2+ compute_bending_tension(Mx, My, Ixx, Iyy, Ixy, areas[i-1, 0], areas[i-1, 1])/compute_bending_tension(Mx, My, Ixx, Iyy, Ixy, areas[i, 0], areas[i, 1])
+        extra_area_1 = term_2*(thicknesses[i-1]*get_distance(areas[i-1, 0], areas[i-1, 1], areas[i,0], areas[i,1]))/6
+        if i+1 < np.size(areas, axis=0):
+            term_2 = 2+ compute_bending_tension(Mx, My, Ixx, Iyy, Ixy, areas[i+1, 0], areas[i+1, 1])/compute_bending_tension(Mx, My, Ixx, Iyy, Ixy, areas[i, 0], areas[i, 1])
+            extra_area_2 = term_2 * (thicknesses[i] * get_distance(areas[i + 1, 0], areas[i + 1, 1], areas[i, 0], areas[i, 1])) / 6
+            areas[i, 2] += extra_area_1+extra_area_2
+        else:
+            term_2 = 2 + compute_bending_tension(Mx, My, Ixx, Iyy, Ixy, areas[0, 0], areas[0, 1]) / compute_bending_tension(Mx, My, Ixx, Iyy, Ixy, areas[i, 0], areas[i, 1])
+            extra_area_2 = term_2 * (thicknesses[i] * get_distance(areas[0, 0], areas[0, 1], areas[i, 0], areas[i, 1])) / 6
+            areas[i, 2] += extra_area_1 + extra_area_2
+        i+=1
+def parallel_axis_theorem(Ic, A, d):
+    return Ic + A * d**2
+def compute_Ixx_Iyy_with_parallel_axis(areas):
+    Ixx = 0
+    Iyy = 0
+    centroid_x = np.mean(areas[:, 0])
+    centroid_y = np.mean(areas[:, 1])
+
+    for area in areas:
+        x, y, A = area
+        d_x = x - centroid_x
+        d_y = y - centroid_y
+        # Assuming point areas
+        Ic = 0  # Moment of inertia for a square about its centroid
+        Ixx += parallel_axis_theorem(Ic, A, d_y)
+        Iyy += parallel_axis_theorem(Ic, A, d_x)
+
+    return Ixx, Iyy
+
+def compute_shear_flows(areas, Vx, Vy):
+    Ixy = 0
+    Ixx, Iyy = compute_Ixx_Iyy_with_parallel_axis(areas)
+    a = -1* (Vy*Iyy)/(Ixx*Iyy)
+    b = -1* (Vx*Ixx)/(Ixx*Iyy)
+    qb = np.empty_like(thicknesses)
+    for i in range(np.size(areas, axis=0)):
+        sum_br_y = np.sum(np.multiply(areas[:i, 2], areas[:i, 1]))
+        sum_br_x = np.sum(np.multiply(areas[:i, 2], areas[:i, 0]))
+        qb[i] = a*sum_br_y + b*sum_br_x
+    return qb, qb.max()
+
+def plot_shear_flows(areas, shear_flows):
+    # Extract x, y coordinates and sizes
+    x = areas[:, 0]
+    y = areas[:, 1]
+    sizes = (areas[:, 2]) * 1000000 + 10  # Adjust scaling factor for better visualization
+
+    # Plot points
+    plt.scatter(x, y, s=sizes, c='blue', alpha=0.5)
+
+    # Plot lines with varying thicknesses and shear flow values as annotations
+    for i in range(len(x) - 1):
+        plt.plot(x[i:i + 2], y[i:i + 2], linestyle='-', color='red', alpha=0.5, linewidth=thicknesses[i] * 1000)
+        plt.text((x[i] + x[i + 1]) / 2, (y[i] + y[i + 1]) / 2, f'{shear_flows[i]:.2f}', color='green')
+
+    # Connect the last point to the first one
+    plt.plot([x[-1], x[0]], [y[-1], y[0]], linestyle='-', color='red', alpha=0.5, linewidth=thicknesses[-1] * 1000)
+    plt.text((x[-1] + x[0]) / 2, (y[-1] + y[0]) / 2, f'{shear_flows[-1]:.2f}', color='green')
+
+    plt.xlabel('X Position')
+    plt.ylabel('Y Position')
+    plt.title('Shear Flows Plot')
+    plt.grid(True)
+    plt.show()
 
 # Example parameters
-w, h, d, a = 1, 0.7, 0.04, 5
-top_thickness = 0.001
-sides_thickness = 0.002
+w, h, d = 1, 0.7, 0.04
+top_thickness = 0.002
+sides_thickness = 0.001
 subdivisions = 20
 
+a=find_areas(w, h, top_thickness, sides_thickness, d, 100, 100, 300, 200000)
+print(a)
+Ixx, Iyy, Ixy = compute_Ixx_Iyy_Ixy(w, h, top_thickness, sides_thickness, d, a)
 areas, thicknesses = create_areas_and_thicknesses(w, h, d, a, subdivisions, top_thickness, sides_thickness)
+update_areas_bending(areas, thicknesses, 100, 300, Ixx, Iyy, Ixy)
 plot_areas(areas, thicknesses)
+qb, qbmax = compute_shear_flows(areas, 150000, 17000)
+plot_shear_flows(areas, qb)
