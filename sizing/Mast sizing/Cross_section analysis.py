@@ -212,7 +212,7 @@ def plot_shear_flows_with_arrows(areas, shear_flows, Vx, Vy):
 
     plt.xlabel('X Position')
     plt.ylabel('Y Position')
-    plt.title('Shear Flows Plot with Arrows and Vx, Vy Vectors')
+    plt.title('Shear Flows Plot with Arrows and Vx, Vy Vector')
     plt.grid(True)
     plt.show()
 
@@ -226,7 +226,7 @@ a=find_areas(w, h, top_thickness, sides_thickness, d, 100, 100, 300, 200000)
 print(a)
 Ixx, Iyy, Ixy = compute_Ixx_Iyy_Ixy(w, h, top_thickness, sides_thickness, d, a)
 areas, thicknesses = create_areas_and_thicknesses(w, h, d, a, subdivisions, top_thickness, sides_thickness)
-update_areas_bending(areas, thicknesses, 100, 300, Ixx, Iyy, Ixy)
+update_areas_bending(areas, thicknesses, 0, 300, Ixx, Iyy, Ixy)
 plot_areas(areas, thicknesses)
 qb, qbmax = compute_shear_flows(areas, 0, -170000)
 print(qb)
