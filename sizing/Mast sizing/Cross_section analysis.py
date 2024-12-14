@@ -51,4 +51,62 @@ def find_areas(w, h, t_top_bottom, t_sides,d, a, Mx, My, tension_max):
         a = a/SF
     return a
 
-print(find_areas(2, 0.7, 0.001, 0.001, 0.08, 100, 100, 300, 100000))
+# SHEAR ANALYSIS-------------------------------------
+
+def create_areas_and_thicknesses(w, h, d, a, subdivisions, top_thickness, side_thickness):
+    up_pos = (h - d) / 2
+    right_pos = (w - d) / 2
+    areas = np.array([[right_pos, up_pos, a]])
+    thicknesses = np.array([side_thickness])
+    for i in range(subdivisions - 1):
+        areas = np.append(areas, np.array([[right_pos, up_pos - ((i + 1) * up_pos * 2 / subdivisions), 0]]), axis=0)
+        thicknesses = np.append(thicknesses, np.array([side_thickness]))
+    areas = np.append(areas, np.array([[right_pos, -up_pos, a]]), axis=0)
+    thicknesses = np.append(thicknesses, np.array([top_thickness]))
+    for i in range(subdivisions - 1):
+        areas = np.append(areas, np.array([[right_pos - ((i + 1) * right_pos * 2 / subdivisions), -up_pos, 0]]), axis=0)
+        thicknesses = np.append(thicknesses, np.array([top_thickness]))
+    areas = np.append(areas, np.array([[-right_pos, -up_pos, a]]), axis=0)
+    thicknesses = np.append(thicknesses, np.array([side_thickness]))
+    for i in range(subdivisions - 1):
+        areas = np.append(areas, np.array([[-right_pos, -up_pos + ((i + 1) * up_pos * 2 / subdivisions), 0]]), axis=0)
+        thicknesses = np.append(thicknesses, np.array([side_thickness]))
+    areas = np.append(areas, np.array([[-right_pos, up_pos, a]]), axis=0)
+    thicknesses = np.append(thicknesses, np.array([top_thickness]))
+    for i in range(subdivisions - 1):
+        areas = np.append(areas, np.array([[-right_pos + ((i + 1) * right_pos * 2 / subdivisions), up_pos, 0]]), axis=0)
+        thicknesses = np.append(thicknesses, np.array([top_thickness]))
+    return areas, thicknesses
+
+
+def plot_areas(areas, thicknesses):
+    # Extract x, y coordinates and sizes
+    x = areas[:, 0]
+    y = areas[:, 1]
+    sizes = (areas[:, 2]) * 20 + 10  # Adjust scaling factor for better visualization
+
+    # Plot points
+    plt.scatter(x, y, s=sizes, c='blue', alpha=0.5)
+
+    # Plot lines with varying thicknesses
+    for i in range(len(x) - 1):
+        plt.plot(x[i:i + 2], y[i:i + 2], linestyle='-', color='red', alpha=0.5, linewidth=thicknesses[i] * 1000)
+
+    # Connect the last point to the first one
+    plt.plot([x[-1], x[0]], [y[-1], y[0]], linestyle='-', color='red', alpha=0.5, linewidth=thicknesses[-1] * 1000)
+
+    plt.xlabel('X Position')
+    plt.ylabel('Y Position')
+    plt.title('Areas Plot')
+    plt.grid(True)
+    plt.show()
+
+
+# Example parameters
+w, h, d, a = 1, 0.7, 0.04, 5
+top_thickness = 0.001
+sides_thickness = 0.002
+subdivisions = 20
+
+areas, thicknesses = create_areas_and_thicknesses(w, h, d, a, subdivisions, top_thickness, sides_thickness)
+plot_areas(areas, thicknesses)
