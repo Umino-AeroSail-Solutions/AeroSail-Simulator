@@ -32,7 +32,7 @@ def drawenvelope(sail_instance, height, chord, windspeedknots, ax, real_containe
     failure = False
     windspeed = windspeedknots / 1.944
     maxcf = 0
-    maxcf_step = 0.0001
+    maxcf_step = 0.001
     while not failure:
         sail_instance.set_p('height', height)
         sail_instance.set_p('chord', chord)

@@ -4,7 +4,7 @@ import math
 import matplotlib.pyplot as plt
 
 #Mast heights
-sailHeight = 32 #Mast height [m]
+sailHeight = 30 #Mast height [m]
 contHeight = 2.896 #Container height [m]
 mastLength = sailHeight+contHeight #Length of the mast [m]
 nRibs = 8 #Number of ribs [m]
