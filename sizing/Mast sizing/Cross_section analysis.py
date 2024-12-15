@@ -240,7 +240,7 @@ def plot_shear_flows_with_arrows_and_tension(areas, shear_flows, Vx, Vy, Mx, My,
     # Extract x, y coordinates and sizes
     x = areas[:, 0]
     y = areas[:, 1]
-    sizes = (areas[:, 2]) * 1000000 + 10  # Adjust scaling factor for better visualization
+    sizes = (areas[:, 2]) * 1000000 + 2  # Adjust scaling factor for better visualization
 
     # Calculate tension/compression at each point
     tensions = np.array([compute_bending_tension(Mx, My, Ixx, Iyy, Ixy, xi, yi) for xi, yi in zip(x, y)])
@@ -293,7 +293,7 @@ def plot_shear_flows_with_arrows_and_tension(areas, shear_flows, Vx, Vy, Mx, My,
 w, h, d = 1, 0.7, 0.04
 top_thickness = 0.002
 sides_thickness = 0.001
-subdivisions = 20
+subdivisions = 14
 
 a = find_areas(w, h, top_thickness, sides_thickness, d, 100, 100, 300, 200000)
 Ixx, Iyy, Ixy = compute_Ixx_Iyy_Ixy(w, h, top_thickness, sides_thickness, d, a)
