@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from numpy.ma.core import empty_like
+
 
 def compute_Ixx_Iyy_Ixy(w, h, t_top_bottom, t_sides,d, a):
     # See Cross_section.png, x is horizontal and centered pointing right. y is vertical and centered asumes corners are squares
@@ -137,17 +139,34 @@ def compute_Ixx_Iyy_with_parallel_axis(areas):
 
     return Ixx, Iyy
 
-def compute_shear_flows(areas, Vx, Vy):
+def compute_shear_flows(areas, Vx, Vy, subdivisions):
     Ixy = 0
     Ixx, Iyy = compute_Ixx_Iyy_with_parallel_axis(areas)
     a = -1* (Vy*Iyy)/(Ixx*Iyy)
     b = -1* (Vx*Ixx)/(Ixx*Iyy)
     qb = np.empty_like(thicknesses)
     for i in range(np.size(areas, axis=0)):
-        sum_br_y = np.sum(np.multiply(areas[:i, 2], areas[:i, 1]))
-        sum_br_x = np.sum(np.multiply(areas[:i, 2], areas[:i, 0]))
+        sum_br_y = np.sum(np.multiply(areas[:(i+1), 2], areas[:(i+1), 1]))
+        sum_br_x = np.sum(np.multiply(areas[:(i+1), 2], areas[:(i+1), 0]))
         qb[i] = a*sum_br_y + b*sum_br_x
-    return qb, qb.max()
+    totaltorque=0
+    moment_arm=(h-d)/2
+    length = (w-d)/subdivisions
+    index=0
+    for i in range(4):
+        if moment_arm==(h-d)/2:
+            moment_arm=(w-d)/2
+            length = (h - d)/subdivisions
+        else:
+            moment_arm=(h-d)/2
+            length = (w - d) / subdivisions
+        for j in range(subdivisions):
+            totaltorque += qb[index]*moment_arm*length
+            index += 1
+    qs0 = np.zeros_like(qb)
+    qs0[:] = -1*(totaltorque/(2*(h-d)*(w-d)))
+    q = np.add(qb, qs0)
+    return q, q.max()
 
 def plot_shear_flows(areas, shear_flows):
     # Extract x, y coordinates and sizes
@@ -220,14 +239,14 @@ def plot_shear_flows_with_arrows(areas, shear_flows, Vx, Vy):
 w, h, d = 1, 0.7, 0.04
 top_thickness = 0.002
 sides_thickness = 0.001
-subdivisions = 5
+subdivisions = 10
 
 a=find_areas(w, h, top_thickness, sides_thickness, d, 100, 100, 300, 200000)
 print(a)
 Ixx, Iyy, Ixy = compute_Ixx_Iyy_Ixy(w, h, top_thickness, sides_thickness, d, a)
 areas, thicknesses = create_areas_and_thicknesses(w, h, d, a, subdivisions, top_thickness, sides_thickness)
-update_areas_bending(areas, thicknesses, 0, 300, Ixx, Iyy, Ixy)
+update_areas_bending(areas, thicknesses, 100, 300, Ixx, Iyy, Ixy)
 plot_areas(areas, thicknesses)
-qb, qbmax = compute_shear_flows(areas, 0, -170000)
+qb, qbmax = compute_shear_flows(areas, 100000, -170000, subdivisions)
 print(qb)
-plot_shear_flows_with_arrows(areas, qb, 0, -170000)
+plot_shear_flows_with_arrows(areas, qb, 100000, -170000)
