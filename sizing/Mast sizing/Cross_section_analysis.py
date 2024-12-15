@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 def compute_Ixx_Iyy_Ixy(w, h, t_top_bottom, t_sides,d, a):
     # See Cross_section.png, x is horizontal and centered pointing right. y is vertical and centered asumes corners are squares
-    Ixx_corner = (1/12) * (d**4) + a*(((h-(d/2))/2)**2)
-    Iyy_corner = (1/12) * (d**4) + a*(((w-(d/2))/2)**2)
+    Ixx_corner = (1/12) * (d**4) + a*(((h/2 - d/2))**2)
+    Iyy_corner = (1/12) * (d**4) + a*(((w/2 - d/2))**2)
     Ixx_corners = Ixx_corner*4
     Iyy_corners = Iyy_corner*4
 
