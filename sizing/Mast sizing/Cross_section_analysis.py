@@ -33,7 +33,7 @@ def compute_bending_tension(Mx, My, Ixx, Iyy, Ixy, x, y):
     a = Mx*Iyy - My*Ixy
     b = My*Ixx - Mx*Ixy
     c = Ixx*Iyy - Ixy*Ixy
-    tension = (-a*y + b*x)/c  #why is there a minus sign here? apparently its going to break
+    tension = (a*y + b*x)/c  #why is there a minus sign here? apparently its going to break
     return tension
 
 #Checked 15/12/2024
@@ -173,6 +173,25 @@ def compute_shear_flows(areas, Vx, Vy, subdivisions):
     q = np.add(qb, qs0)
     return q, q.max()
 
+def check_shear_ok(shear_flow, t_top_bottom, t_sides, max_allow_shear):
+    shear = np.zeros(56)
+    SF_shear = 0
+    for i in range(56):
+        if (i >= 0 and i <= 14) or (i >= 28 and i <= 42):
+            thickness = t_sides
+        else:
+            thickness = t_top_bottom
+
+        shear[i] = np.abs(shear_flow[i] / thickness)
+    SF = max_allow_shear/shear.max() 
+    print(shear)
+    if SF_shear > 1:
+        return True, SF_shear
+    else:
+        return False, SF_shear
+
+
+
 def plot_shear_flows(areas, shear_flows):
     # Extract x, y coordinates and sizes
     x = areas[:, 0]
@@ -306,5 +325,7 @@ areas, thicknesses = create_areas_and_thicknesses(w, h, d, a, subdivisions, top_
 update_areas_bending(areas, thicknesses, 100, 100, Ixx, Iyy, Ixy)
 plot_areas(areas, thicknesses)
 qb, qbmax = compute_shear_flows(areas, 100000, -100000, subdivisions)
-print(qb)
+#print(qb)
+#283000000 is the aluminium 2024 shear strength
+check_shear_ok(qb, top_thickness, sides_thickness, 283000000)
 plot_shear_flows_with_arrows_and_tension(areas, qb, 100000, -100000, 100, 100, Ixx, Iyy, Ixy)
