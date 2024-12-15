@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+
+#Checked 15/12/2024
 def compute_Ixx_Iyy_Ixy(w, h, t_top_bottom, t_sides,d, a):
     # See Cross_section.png, x is horizontal and centered pointing right. y is vertical and centered asumes corners are squares
     Ixx_corner = (1/12) * (d**4) + a*(((h/2 - d/2))**2)
@@ -22,9 +24,11 @@ def compute_Ixx_Iyy_Ixy(w, h, t_top_bottom, t_sides,d, a):
 
     return Ixx, Iyy, Ixy
 
+#Checked 15/12/2024
 def compute_area(w, h, t_top_bottom, t_sides,d, a):
     return 4*a + 2*t_top_bottom*w + 2*t_sides*h
 
+#Checked 15/12/2024
 def compute_bending_tension(Mx, My, Ixx, Iyy, Ixy, x, y):
     a = Mx*Iyy - My*Ixy
     b = My*Ixx - Mx*Ixy
@@ -32,6 +36,7 @@ def compute_bending_tension(Mx, My, Ixx, Iyy, Ixy, x, y):
     tension = (-a*y + b*x)/c  #why is there a minus sign here? apparently its going to break
     return tension
 
+#Checked 15/12/2024
 def check_bending_ok(w, h, t_top_bottom, t_sides,d, a, Mx, My, tension_max):
     '''Returns true, SF if nothing breaks and false, SF if tension_max is reached'''
     Ixx, Iyy, Ixy = compute_Ixx_Iyy_Ixy(w, h, t_top_bottom, t_sides,d, a)
@@ -45,6 +50,7 @@ def check_bending_ok(w, h, t_top_bottom, t_sides,d, a, Mx, My, tension_max):
     else:
         return False, SF
 
+#Checked 15/12/2024
 def find_areas(w, h, t_top_bottom, t_sides,d, a, Mx, My, tension_max):
     failure, SF = check_bending_ok(w, h, t_top_bottom, t_sides,d, a, Mx, My, tension_max)
     while SF > 1.01 or SF < 1:
