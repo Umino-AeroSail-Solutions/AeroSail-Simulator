@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from numpy.ma.core import empty_like
 
 
 def compute_Ixx_Iyy_Ixy(w, h, t_top_bottom, t_sides,d, a):
