@@ -30,7 +30,7 @@ def compute_bending_tension(Mx, My, Ixx, Iyy, Ixy, x, y):
     a = Mx*Iyy - My*Ixy
     b = My*Ixx - Mx*Ixy
     c = Ixx*Iyy - Ixy*Ixy
-    tension = (a*y + b*x)/c
+    tension = (-a*y + b*x)/c
     return tension
 
 def check_bending_ok(w, h, t_top_bottom, t_sides,d, a, Mx, My, tension_max):
@@ -235,18 +235,71 @@ def plot_shear_flows_with_arrows(areas, shear_flows, Vx, Vy):
     plt.grid(True)
     plt.show()
 
-# Example parameters
+
+def plot_shear_flows_with_arrows_and_tension(areas, shear_flows, Vx, Vy, Mx, My, Ixx, Iyy, Ixy):
+    # Extract x, y coordinates and sizes
+    x = areas[:, 0]
+    y = areas[:, 1]
+    sizes = (areas[:, 2]) * 1000000 + 10  # Adjust scaling factor for better visualization
+
+    # Calculate tension/compression at each point
+    tensions = np.array([compute_bending_tension(Mx, My, Ixx, Iyy, Ixy, xi, yi) for xi, yi in zip(x, y)])
+
+    # Define colors based on tension and compression
+    colors = ['red' if t > 0 else 'blue' for t in tensions]
+
+    # Plot points with colors based on tension/compression
+    plt.scatter(x, y, s=sizes, c=colors, alpha=0.5)
+
+    # Compute arrow directions and lengths
+    dx = np.diff(x, append=x[0])
+    dy = np.diff(y, append=y[0])
+
+    # Adjust start positions and directions based on the sign of shear flows
+    start_x = np.zeros_like(x)
+    start_y = np.zeros_like(y)
+    for i in range(len(shear_flows)):
+        if shear_flows[i] < 0:
+            if i + 1 < np.size(x):
+                start_x[i], start_y[i] = x[i + 1], y[i + 1]
+            else:
+                start_x[i], start_y[i] = x[0], y[0]
+            dx[i], dy[i] = -dx[i], -dy[i]
+        else:
+            start_x[i], start_y[i] = x[i], y[i]
+
+    # Normalize the lengths of the arrows based on shear flows
+    lengths = np.sqrt(dx ** 2 + dy ** 2)
+    arrow_lengths = shear_flows / np.max(np.abs(shear_flows)) * lengths
+
+    # Plot arrows for shear flows
+    plt.quiver(start_x, start_y, dx, dy, shear_flows, angles='xy', scale_units='xy', scale=1, color='green')
+
+    # Plot Vx and Vy vectors
+    centroid_x = np.mean(x)
+    centroid_y = np.mean(y)
+    plt.quiver(centroid_x, centroid_y, Vx, Vy, color='purple', scale=1000000, scale_units='xy', angles='xy')
+    plt.quiver(centroid_x, centroid_y, Mx, My, color='green', scale=1000, scale_units='xy', angles='xy')
+    plt.quiver(centroid_x, centroid_y, Mx, My, color='green', scale=1300, scale_units='xy', angles='xy')
+
+    plt.xlabel('X Position')
+    plt.ylabel('Y Position')
+    plt.title('Shear Flows Plot with Arrows, Vx, Vy Vector, and Tension/Compression')
+    plt.grid(True)
+    plt.show()
+
+
+# Example usage with your current setup
 w, h, d = 1, 0.7, 0.04
 top_thickness = 0.002
 sides_thickness = 0.001
-subdivisions = 10
+subdivisions = 20
 
-a=find_areas(w, h, top_thickness, sides_thickness, d, 100, 100, 300, 200000)
-print(a)
+a = find_areas(w, h, top_thickness, sides_thickness, d, 100, 100, 300, 200000)
 Ixx, Iyy, Ixy = compute_Ixx_Iyy_Ixy(w, h, top_thickness, sides_thickness, d, a)
 areas, thicknesses = create_areas_and_thicknesses(w, h, d, a, subdivisions, top_thickness, sides_thickness)
-update_areas_bending(areas, thicknesses, 100, 300, Ixx, Iyy, Ixy)
+update_areas_bending(areas, thicknesses, 100, 100, Ixx, Iyy, Ixy)
 plot_areas(areas, thicknesses)
-qb, qbmax = compute_shear_flows(areas, 100000, -170000, subdivisions)
+qb, qbmax = compute_shear_flows(areas, 100000, -100000, subdivisions)
 print(qb)
-plot_shear_flows_with_arrows(areas, qb, 100000, -170000)
+plot_shear_flows_with_arrows_and_tension(areas, qb, 100000, -100000, 100, 100, Ixx, Iyy, Ixy)
