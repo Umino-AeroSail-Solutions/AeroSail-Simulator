@@ -29,7 +29,7 @@ def compute_bending_tension(Mx, My, Ixx, Iyy, Ixy, x, y):
     a = Mx*Iyy - My*Ixy
     b = My*Ixx - Mx*Ixy
     c = Ixx*Iyy - Ixy*Ixy
-    tension = (-a*y + b*x)/c
+    tension = (-a*y + b*x)/c  #why is there a minus sign here? apparently its going to break
     return tension
 
 def check_bending_ok(w, h, t_top_bottom, t_sides,d, a, Mx, My, tension_max):
