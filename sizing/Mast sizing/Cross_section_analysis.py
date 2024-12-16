@@ -42,13 +42,13 @@ def compute_bending_tension(Mx, My, Ixx, Iyy, Ixy, x, y, Nz=None, area=None):
     return tension
 
 #Checked 15/12/2024
-def check_bending_ok(w, h, t_top_bottom, t_sides,d, a, Mx, My, tension_max, cornerIxx=None):
+def check_bending_ok(w, h, t_top_bottom, t_sides,d, a, Mx, My, tension_max, cornerIxx=None, Nz=None, area=None):
     '''Returns true, SF if nothing breaks and false, SF if tension_max is reached'''
     Ixx, Iyy, Ixy = compute_Ixx_Iyy_Ixy(w, h, t_top_bottom, t_sides,d, a, cornerIxx)
     test_coordinates = np.array([[w/2, h/2],[-w/2, h/2], [-w/2, -h/2], [w/2, -h/2]])
     tensions = np.array([0,0,0,0])
     for i in range(4):
-        tensions[i] = compute_bending_tension(Mx, My, Ixx, Iyy, Ixy, test_coordinates[i,0], test_coordinates[i,1])
+        tensions[i] = compute_bending_tension(Mx, My, Ixx, Iyy, Ixy, test_coordinates[i,0], test_coordinates[i,1], Nz=Nz, area=area)
     SF = tension_max/tensions.max()
     if SF > 1:
         return True, SF

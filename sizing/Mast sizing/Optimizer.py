@@ -13,56 +13,104 @@ SF = 1.5
 max_tension = 200000000.0
 max_shear = 283000000.0
 
-Vx, Vy = 500000, 500000
-Mx, My = -500000, 500000
+windspeed_kt = 30
+windspeed = windspeed_kt/1.944
+density = 1.225
+cf = 0.49
+height = 30
+chord = 5
+surface_area = height*chord
 
-Vx, Vy, Mx, My = Vx * SF, Vy * SF, Mx * SF, My * SF
+F_applied_magnitude = 0.5*density*(windspeed**2) * surface_area * cf
+# print(F_applied_magnitude)
+# Shear computations --> see NVM diagrams
 
-skin_step_thickness = 0.0005
-min_skin_thickness = 0.0005
-max_thickness = 0.01
+G = height/2
+A_top = 2
+A_bot = 2
+L = 8
 
-possible_designs = []
+F_1 = F_applied_magnitude * (((G+L-A_top)/A_bot)-1)
+F_2 = F_applied_magnitude * ((G+L-A_top)/A_bot)
+F_3 = F_applied_magnitude * (G/A_top)
 
-subdivisions = 100
+shear_1 = -1*F_1
+shear_2 = shear_1 + F_2
+shear_3 = shear_2 + F_3
 
-for v_slot in v_slots:
-    a = v_slot[0]
-    d = v_slot[1]
-    cornerIxx = v_slot[2]
-    for top_thickness in np.arange(min_skin_thickness, max_thickness, skin_step_thickness):
-        for side_thickness in np.arange(min_skin_thickness, max_thickness, skin_step_thickness):
-            areas, thicknesses = cs.create_areas_and_thicknesses(w, h, d, a, subdivisions, top_thickness, side_thickness)
-            Ixx, Iyy, Ixy = cs.compute_Ixx_Iyy_Ixy(w, h, top_thickness, side_thickness, d, a, cornerIxx=cornerIxx)
-            bending_ok, bending_sf = cs.check_bending_ok(w, h, top_thickness, side_thickness, d, a, Mx, My, max_tension, cornerIxx=cornerIxx)
-            cs.update_areas_bending(areas, thicknesses, Mx, My, Ixx, Iyy, Ixy)
-            qb, qbmax = cs.compute_shear_flows(areas, Vx, Vy, subdivisions, thicknesses, h, d, w)
-            top_ok, sides_ok, top_SF, sides_SF = cs.check_shear_ok(qb, top_thickness, side_thickness, max_shear, thicknesses)
-            if top_ok and sides_ok and bending_ok:
-                bending_sf=bending_sf*SF
-                top_SF=top_SF*SF
-                sides_SF=sides_SF*SF
-                total_area = 2 * (top_thickness * w + side_thickness * h) + 4 * a
-                possible_designs.append([d, top_thickness, side_thickness, sides_SF, top_SF, bending_sf,total_area])
-                break
-possible_designs = np.array(possible_designs)
-# print(possible_designs)
-if np.size(possible_designs) == 0:
-    print("There is no possible designs available :(")
-    print("Tip: Increase the thickness limit or add bigger vslot channels")
-    print("\nTip: Changing weapons is faster than reloading.......")
-else:
-    # Sort the possible designs by total area (last column)
-    sorted_designs = possible_designs[possible_designs[:, -1].argsort()]
+moment_1 = shear_1 * A_bot
+moment_2 = shear_2 * A_top
 
-    # Output the design with the lowest total area
-    lowest_area_design = sorted_designs[0]
-    print("Design with the Lowest Total Area:")
-    print(f"d: {lowest_area_design[0]}")
-    print(f"Top Thickness: {lowest_area_design[1]}")
-    print(f"Side Thickness: {lowest_area_design[2]}")
-    print(f"Sides SF: {lowest_area_design[3]}")
-    print(f"Top SF: {lowest_area_design[4]}")
-    print(f"Bending SF: {lowest_area_design[5]}")
-    print(f"Total Area: {lowest_area_design[6]}")
+shears = [shear_1, shear_2, shear_3]
+moments = [moment_1, moment_2]
+lod_assumed = 12
+angle = np.arctan(12)
 
+aludenisy= 2710
+# Case 1
+
+Vx, Vy = shears[0]*np.cos(angle), shears[0]*np.sin(angle)
+Mx, My = moments[0]*np.sin(angle), -1*moments[0]*np.cos(angle)
+
+
+def optimize(Vx, Vy, Mx, My, material_density, L):
+    total_area = 0
+    Nz = 0
+    prev_Nz = 2
+    while abs(prev_Nz-Nz) > 1 :
+        prev_Nz  = Nz
+        Nz = total_area * material_density *L
+        Vx, Vy, Mx, My, Nz = Vx * SF, Vy * SF, Mx * SF, My * SF, Nz * SF
+
+        skin_step_thickness = 0.0005
+        min_skin_thickness = 0.0005
+        max_thickness = 0.01
+
+        possible_designs = []
+
+        subdivisions = 100
+
+        for v_slot in v_slots:
+            a = v_slot[0]
+            d = v_slot[1]
+            cornerIxx = v_slot[2]
+            for top_thickness in np.arange(min_skin_thickness, max_thickness, skin_step_thickness):
+                for side_thickness in np.arange(min_skin_thickness, max_thickness, skin_step_thickness):
+                    areas, thicknesses = cs.create_areas_and_thicknesses(w, h, d, a, subdivisions, top_thickness, side_thickness)
+                    Ixx, Iyy, Ixy = cs.compute_Ixx_Iyy_Ixy(w, h, top_thickness, side_thickness, d, a, cornerIxx=cornerIxx)
+                    total_area = 2 * (top_thickness * w + side_thickness * h) + 4 * a
+                    bending_ok, bending_sf = cs.check_bending_ok(w, h, top_thickness, side_thickness, d, a, Mx, My, max_tension, cornerIxx=cornerIxx, Nz=Nz, area=total_area)
+                    cs.update_areas_bending(areas, thicknesses, Mx, My, Ixx, Iyy, Ixy)
+                    qb, qbmax = cs.compute_shear_flows(areas, Vx, Vy, subdivisions, thicknesses, h, d, w)
+                    top_ok, sides_ok, top_SF, sides_SF = cs.check_shear_ok(qb, top_thickness, side_thickness, max_shear, thicknesses)
+                    if top_ok and sides_ok and bending_ok:
+                        bending_sf=bending_sf*SF
+                        top_SF=top_SF*SF
+                        sides_SF=sides_SF*SF
+                        total_area = 2 * (top_thickness * w + side_thickness * h) + 4 * a
+                        possible_designs.append([d, top_thickness, side_thickness, sides_SF, top_SF, bending_sf,total_area])
+                        break
+        possible_designs = np.array(possible_designs)
+        # print(possible_designs)
+        if np.size(possible_designs) == 0:
+            print("There is no possible designs available :(")
+            print("Tip: Increase the thickness limit or add bigger vslot channels")
+            print("\nTip: Changing weapons is faster than reloading.......")
+        else:
+            # Sort the possible designs by total area (last column)
+            sorted_designs = possible_designs[possible_designs[:, -1].argsort()]
+
+            # Output the design with the lowest total area
+            lowest_area_design = sorted_designs[0]
+            print("Design with the Lowest Total Area:")
+            print(f"d: {lowest_area_design[0]}")
+            print(f"Top Thickness: {lowest_area_design[1]}")
+            print(f"Side Thickness: {lowest_area_design[2]}")
+            print(f"Sides SF: {lowest_area_design[3]}")
+            print(f"Top SF: {lowest_area_design[4]}")
+            print(f"Bending SF: {lowest_area_design[5]}")
+            print(f"Total Area: {lowest_area_design[6]}")
+            print(f"Total mass: {(lowest_area_design[6]*L*material_density)}")
+
+
+optimize(Vx, Vy, Mx, My, aludenisy, L)
