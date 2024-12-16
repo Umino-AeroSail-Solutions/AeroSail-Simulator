@@ -4,10 +4,13 @@ import matplotlib.pyplot as plt
 
 
 #Checked 15/12/2024
-def compute_Ixx_Iyy_Ixy(w, h, t_top_bottom, t_sides,d, a):
+def compute_Ixx_Iyy_Ixy(w, h, t_top_bottom, t_sides,d, a, cornerIxx=None):
     # See Cross_section.png, x is horizontal and centered pointing right. y is vertical and centered asumes corners are squares
     Ixx_corner = (1/12) * (d**4) + a*(((h/2 - d/2))**2)
     Iyy_corner = (1/12) * (d**4) + a*(((w/2 - d/2))**2)
+    if cornerIxx is not None:
+        Ixx_corner = cornerIxx + a*(((h/2 - d/2))**2)
+        Iyy_corner = cornerIxx + a*(((w/2 - d/2))**2)
     Ixx_corners = Ixx_corner*4
     Iyy_corners = Iyy_corner*4
 
@@ -37,9 +40,9 @@ def compute_bending_tension(Mx, My, Ixx, Iyy, Ixy, x, y):
     return tension
 
 #Checked 15/12/2024
-def check_bending_ok(w, h, t_top_bottom, t_sides,d, a, Mx, My, tension_max):
+def check_bending_ok(w, h, t_top_bottom, t_sides,d, a, Mx, My, tension_max, cornerIxx=None):
     '''Returns true, SF if nothing breaks and false, SF if tension_max is reached'''
-    Ixx, Iyy, Ixy = compute_Ixx_Iyy_Ixy(w, h, t_top_bottom, t_sides,d, a)
+    Ixx, Iyy, Ixy = compute_Ixx_Iyy_Ixy(w, h, t_top_bottom, t_sides,d, a, cornerIxx)
     test_coordinates = np.array([[w/2, h/2],[-w/2, h/2], [-w/2, -h/2], [w/2, -h/2]])
     tensions = np.array([0,0,0,0])
     for i in range(4):
@@ -144,7 +147,7 @@ def compute_Ixx_Iyy_with_parallel_axis(areas):
 
     return Ixx, Iyy
 
-def compute_shear_flows(areas, Vx, Vy, subdivisions):
+def compute_shear_flows(areas, Vx, Vy, subdivisions,thicknesses, h,d,w):
     Ixy = 0
     Ixx, Iyy = compute_Ixx_Iyy_with_parallel_axis(areas)
     a = -1* (Vy*Iyy)/(Ixx*Iyy)
@@ -173,7 +176,7 @@ def compute_shear_flows(areas, Vx, Vy, subdivisions):
     q = np.add(qb, qs0)
     return q, q.max()
 
-def check_shear_ok(shear_flow, t_top_bottom, t_sides, max_allow_shear):
+def check_shear_ok(shear_flow, t_top_bottom, t_sides, max_allow_shear, thicknesses):
     shear = np.zeros_like(thicknesses)
     SF_shear_top_bottom = 0
     SF_shear_sides = 0
@@ -186,9 +189,9 @@ def check_shear_ok(shear_flow, t_top_bottom, t_sides, max_allow_shear):
 
         shear[i] = np.abs(np.divide(shear_flow[i], thickness))
 
-    shear_in_top_bottom = np.concatenate(shear[0:int(np.size(shear)/4)], shear[int(np.size(shear)/2):int(3*np.size(shear)/4)])
+    shear_in_top_bottom = np.concatenate((shear[0:(int(np.size(shear)/4))], shear[int(np.size(shear)/2):int(3*np.size(shear)/4)]), axis=0)
     SF_shear_top_bottom = max_allow_shear/max(shear_in_top_bottom)
-    shear_in_sides = np.concatenate(shear[int(np.size(shear)/4):int(np.size(shear)/2)], shear[int(3*np.size(shear)/4):int(np.size(shear))])
+    shear_in_sides = np.concatenate((shear[int(np.size(shear)/4):int(np.size(shear)/2)], shear[int(3*np.size(shear)/4):int(np.size(shear))]), axis=0)
     SF_shear_sides = max_allow_shear/max(shear_in_sides)
     '''SF_shear = max_allow_shear/shear.max()
     print(SF_shear)
@@ -200,7 +203,7 @@ def check_shear_ok(shear_flow, t_top_bottom, t_sides, max_allow_shear):
 
 
 
-def plot_shear_flows(areas, shear_flows):
+def plot_shear_flows(areas, shear_flows, thicknesses):
     # Extract x, y coordinates and sizes
     x = areas[:, 0]
     y = areas[:, 1]
@@ -322,18 +325,18 @@ def plot_shear_flows_with_arrows_and_tension(areas, shear_flows, Vx, Vy, Mx, My,
 
 
 # Example usage with your current setup
-w, h, d = 1, 0.7, 0.04
-top_thickness = 0.002
-sides_thickness = 0.001
-subdivisions = 14
-
-a = find_areas(w, h, top_thickness, sides_thickness, d, 100, 100, 300, 200000)
-Ixx, Iyy, Ixy = compute_Ixx_Iyy_Ixy(w, h, top_thickness, sides_thickness, d, a)
-areas, thicknesses = create_areas_and_thicknesses(w, h, d, a, subdivisions, top_thickness, sides_thickness)
-update_areas_bending(areas, thicknesses, 100, 100, Ixx, Iyy, Ixy)
-plot_areas(areas, thicknesses)
-qb, qbmax = compute_shear_flows(areas, 100000, -100000, subdivisions)
-#print(qb)
-#283000000 is the aluminium 2024 shear strength
-check_shear_ok(qb, top_thickness, sides_thickness, 283000000)
-plot_shear_flows_with_arrows_and_tension(areas, qb, 100000, -100000, 100, 100, Ixx, Iyy, Ixy)
+# w, h, d = 1, 0.7, 0.04
+# top_thickness = 0.002
+# sides_thickness = 0.001
+# subdivisions = 14
+#
+# a = find_areas(w, h, top_thickness, sides_thickness, d, 100, 100, 300, 200000)
+# Ixx, Iyy, Ixy = compute_Ixx_Iyy_Ixy(w, h, top_thickness, sides_thickness, d, a)
+# areas, thicknesses = create_areas_and_thicknesses(w, h, d, a, subdivisions, top_thickness, sides_thickness)
+# update_areas_bending(areas, thicknesses, 100, 100, Ixx, Iyy, Ixy)
+# plot_areas(areas, thicknesses)
+# qb, qbmax = compute_shear_flows(areas, 100000, -100000, subdivisions)
+# #print(qb)
+# #283000000 is the aluminium 2024 shear strength
+# check_shear_ok(qb, top_thickness, sides_thickness, 283000000)
+# plot_shear_flows_with_arrows_and_tension(areas, qb, 100000, -100000, 100, 100, Ixx, Iyy, Ixy)
