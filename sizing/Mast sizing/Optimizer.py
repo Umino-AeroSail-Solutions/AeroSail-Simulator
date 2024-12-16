@@ -9,7 +9,10 @@ v_slots = np.array([[.00016210, 0.02, .0000000066881] , [0.000504, 0.04, 0.00000
 
 w, h = 0.6, 0.8
 
+targetSF = 1.2
+
 for v_slot in v_slots:
     a = v_slot[0]
     d = v_slot[1]
     cornerIxx = v_slot[3]
+    while shear_SF < targetSF or shear_SF > targetSF+0.01:

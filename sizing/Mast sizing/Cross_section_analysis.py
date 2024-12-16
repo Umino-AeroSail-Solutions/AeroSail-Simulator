@@ -174,17 +174,17 @@ def compute_shear_flows(areas, Vx, Vy, subdivisions):
     return q, q.max()
 
 def check_shear_ok(shear_flow, t_top_bottom, t_sides, max_allow_shear):
-    shear = np.zeros(56)
+    shear = np.zeros_like(thicknesses)
     SF_shear = 0
-    for i in range(56):
-        if (i >= 0 and i <= 14) or (i >= 28 and i <= 42):
+    for i in range(np.size(shear)):
+        if (i >= 0 and i <= int(np.size(shear)/4)) or (i >= int(np.size(shear)/2) and i <= int(3*np.size(shear)/4)):
             thickness = t_sides
         else:
             thickness = t_top_bottom
 
-        shear[i] = np.abs(shear_flow[i] / thickness)
-    SF = max_allow_shear/shear.max() 
-    print(shear)
+        shear[i] = np.abs(np.divide(shear_flow[i], thickness))
+    SF_shear = max_allow_shear/shear.max()
+    print(SF_shear)
     if SF_shear > 1:
         return True, SF_shear
     else:
