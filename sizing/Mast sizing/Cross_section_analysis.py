@@ -2,10 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def compute_Ixx_Iyy_Ixy(w, h, t_top_bottom, t_sides,d, a):
+def compute_Ixx_Iyy_Ixy(w, h, t_top_bottom, t_sides,d, a, cornerIxx=None):
     # See Cross_section.png, x is horizontal and centered pointing right. y is vertical and centered asumes corners are squares
     Ixx_corner = (1/12) * (d**4) + a*(((h-(d/2))/2)**2)
     Iyy_corner = (1/12) * (d**4) + a*(((w-(d/2))/2)**2)
+    if cornerIxx is not None:
+        Ixx_corner = cornerIxx + a * (((h - (d / 2)) / 2) ** 2)
+        Iyy_corner = cornerIxx + a * (((w - (d / 2)) / 2) ** 2)
     Ixx_corners = Ixx_corner*4
     Iyy_corners = Iyy_corner*4
 
