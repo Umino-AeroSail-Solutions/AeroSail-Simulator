@@ -2,13 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def compute_Ixx_Iyy_Ixy(w, h, t_top_bottom, t_sides,d, a, cornerIxx=None):
+
+#Checked 15/12/2024
+def compute_Ixx_Iyy_Ixy(w, h, t_top_bottom, t_sides,d, a):
     # See Cross_section.png, x is horizontal and centered pointing right. y is vertical and centered asumes corners are squares
-    Ixx_corner = (1/12) * (d**4) + a*(((h-(d/2))/2)**2)
-    Iyy_corner = (1/12) * (d**4) + a*(((w-(d/2))/2)**2)
-    if cornerIxx is not None:
-        Ixx_corner = cornerIxx + a * (((h - (d / 2)) / 2) ** 2)
-        Iyy_corner = cornerIxx + a * (((w - (d / 2)) / 2) ** 2)
+    Ixx_corner = (1/12) * (d**4) + a*(((h/2 - d/2))**2)
+    Iyy_corner = (1/12) * (d**4) + a*(((w/2 - d/2))**2)
     Ixx_corners = Ixx_corner*4
     Iyy_corners = Iyy_corner*4
 
@@ -25,16 +24,19 @@ def compute_Ixx_Iyy_Ixy(w, h, t_top_bottom, t_sides,d, a, cornerIxx=None):
 
     return Ixx, Iyy, Ixy
 
+#Checked 15/12/2024
 def compute_area(w, h, t_top_bottom, t_sides,d, a):
     return 4*a + 2*t_top_bottom*w + 2*t_sides*h
 
+#Checked 15/12/2024
 def compute_bending_tension(Mx, My, Ixx, Iyy, Ixy, x, y):
     a = Mx*Iyy - My*Ixy
     b = My*Ixx - Mx*Ixy
     c = Ixx*Iyy - Ixy*Ixy
-    tension = (-a*y + b*x)/c
+    tension = (a*y + b*x)/c  #why is there a minus sign here? apparently its going to break
     return tension
 
+#Checked 15/12/2024
 def check_bending_ok(w, h, t_top_bottom, t_sides,d, a, Mx, My, tension_max):
     '''Returns true, SF if nothing breaks and false, SF if tension_max is reached'''
     Ixx, Iyy, Ixy = compute_Ixx_Iyy_Ixy(w, h, t_top_bottom, t_sides,d, a)
@@ -48,6 +50,7 @@ def check_bending_ok(w, h, t_top_bottom, t_sides,d, a, Mx, My, tension_max):
     else:
         return False, SF
 
+#Checked 15/12/2024
 def find_areas(w, h, t_top_bottom, t_sides,d, a, Mx, My, tension_max):
     failure, SF = check_bending_ok(w, h, t_top_bottom, t_sides,d, a, Mx, My, tension_max)
     while SF > 1.01 or SF < 1:
@@ -169,6 +172,25 @@ def compute_shear_flows(areas, Vx, Vy, subdivisions):
     qs0[:] = -1*(totaltorque/(2*(h-d)*(w-d)))
     q = np.add(qb, qs0)
     return q, q.max()
+
+def check_shear_ok(shear_flow, t_top_bottom, t_sides, max_allow_shear):
+    shear = np.zeros(56)
+    SF_shear = 0
+    for i in range(56):
+        if (i >= 0 and i <= 14) or (i >= 28 and i <= 42):
+            thickness = t_sides
+        else:
+            thickness = t_top_bottom
+
+        shear[i] = np.abs(shear_flow[i] / thickness)
+    SF = max_allow_shear/shear.max() 
+    print(shear)
+    if SF_shear > 1:
+        return True, SF_shear
+    else:
+        return False, SF_shear
+
+
 
 def plot_shear_flows(areas, shear_flows):
     # Extract x, y coordinates and sizes
@@ -303,5 +325,7 @@ areas, thicknesses = create_areas_and_thicknesses(w, h, d, a, subdivisions, top_
 update_areas_bending(areas, thicknesses, 100, 100, Ixx, Iyy, Ixy)
 plot_areas(areas, thicknesses)
 qb, qbmax = compute_shear_flows(areas, 100000, -100000, subdivisions)
-print(qb)
+#print(qb)
+#283000000 is the aluminium 2024 shear strength
+check_shear_ok(qb, top_thickness, sides_thickness, 283000000)
 plot_shear_flows_with_arrows_and_tension(areas, qb, 100000, -100000, 100, 100, Ixx, Iyy, Ixy)
