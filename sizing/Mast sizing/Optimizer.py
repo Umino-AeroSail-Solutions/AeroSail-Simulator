@@ -8,7 +8,7 @@ v_slots = np.array([[.00016210, 0.02, .0000000066881], [0.000504, 0.04, 0.000000
 
 w, h = 0.6, 0.8
 
-SF = 1.5
+SF = 3
 
 max_tension = 200000000.0
 max_shear = 283000000.0
@@ -43,30 +43,25 @@ moment_2 = shear_2 * A_top
 
 shears = [shear_1, shear_2, shear_3]
 moments = [moment_1, moment_2]
-lod_assumed = 12
-angle = np.arctan(12)
+lod_assumed = 10
+angle = np.arctan(lod_assumed)
 
-aludenisy= 2710
-# Case 1
+added_weight = 300*9.81 # Asumes 700kg of extra weight above the first mast segment
 
-Vx, Vy = shears[0]*np.cos(angle), shears[0]*np.sin(angle)
-Mx, My = moments[0]*np.sin(angle), -1*moments[0]*np.cos(angle)
-
-
-def optimize(Vx, Vy, Mx, My, material_density, L):
+def optimize(Vx, Vy, Mx, My, material_density, L, segmentheight=L):
     total_area = 0
     Nz = 0
     prev_Nz = 2
+    possible_designs = []
     while abs(prev_Nz-Nz) > 1 :
         prev_Nz  = Nz
-        Nz = total_area * material_density *L
+        Nz = total_area * material_density *L + added_weight
         Vx, Vy, Mx, My, Nz = Vx * SF, Vy * SF, Mx * SF, My * SF, Nz * SF
 
         skin_step_thickness = 0.0005
         min_skin_thickness = 0.0005
         max_thickness = 0.01
 
-        possible_designs = []
 
         subdivisions = 100
 
@@ -90,27 +85,51 @@ def optimize(Vx, Vy, Mx, My, material_density, L):
                         total_area = 2 * (top_thickness * w + side_thickness * h) + 4 * a
                         possible_designs.append([d, top_thickness, side_thickness, sides_SF, top_SF, bending_sf,total_area])
                         break
-        possible_designs = np.array(possible_designs)
-        # print(possible_designs)
-        if np.size(possible_designs) == 0:
-            print("There is no possible designs available :(")
-            print("Tip: Increase the thickness limit or add bigger vslot channels")
-            print("\nTip: Changing weapons is faster than reloading.......")
-        else:
-            # Sort the possible designs by total area (last column)
-            sorted_designs = possible_designs[possible_designs[:, -1].argsort()]
+    possible_designs = np.array(possible_designs)
+    # print(possible_designs)
+    if np.size(possible_designs) == 0:
+        print("There is no possible designs available :(")
+        print("Tip: Increase the thickness limit or add bigger vslot channels")
+        print("\nTip: Changing weapons is faster than reloading.......")
+    else:
+        # Sort the possible designs by total area (last column)
+        sorted_designs = possible_designs[possible_designs[:, -1].argsort()]
+        # Output the design with the lowest total area
+        lowest_area_design = sorted_designs[0]
+        print("Design with the Lowest Total Area:")
+        print(f"d: {lowest_area_design[0]}")
+        print(f"Top Thickness: {lowest_area_design[1]}")
+        print(f"Side Thickness: {lowest_area_design[2]}")
+        print(f"Sides SF: {lowest_area_design[3]}")
+        print(f"Top SF: {lowest_area_design[4]}")
+        print(f"Bending SF: {lowest_area_design[5]}")
+        print(f"Total Area: {lowest_area_design[6]}")
+        print(f"Total mass: {(lowest_area_design[6]*L*material_density)}")
 
-            # Output the design with the lowest total area
-            lowest_area_design = sorted_designs[0]
-            print("Design with the Lowest Total Area:")
-            print(f"d: {lowest_area_design[0]}")
-            print(f"Top Thickness: {lowest_area_design[1]}")
-            print(f"Side Thickness: {lowest_area_design[2]}")
-            print(f"Sides SF: {lowest_area_design[3]}")
-            print(f"Top SF: {lowest_area_design[4]}")
-            print(f"Bending SF: {lowest_area_design[5]}")
-            print(f"Total Area: {lowest_area_design[6]}")
-            print(f"Total mass: {(lowest_area_design[6]*L*material_density)}")
+aludenisy= 2710
+# Case 0
 
+print("\nCase 1:\n")
+Mx, My = 0.001, 0.001 # Added to avoid division by zero in safety
+Vx, Vy = shears[0]*np.cos(angle), shears[0]*np.sin(angle)
+optimize(Vx, Vy, Mx, My, aludenisy, (L))
 
-optimize(Vx, Vy, Mx, My, aludenisy, L)
+# Case 1
+print("\nCase 2:\n")
+Vx, Vy = shears[0]*np.cos(angle), shears[0]*np.sin(angle)
+Mx, My = moments[0]*np.sin(angle), -1*moments[0]*np.cos(angle)
+
+optimize(Vx, Vy, Mx, My, aludenisy, (L-A_bot))
+
+# Case 2
+print("\nCase 3:\n")
+
+Vx, Vy = shears[1]*np.cos(angle), shears[1]*np.sin(angle)
+Mx, My = moments[1]*np.sin(angle), -1*moments[1]*np.cos(angle)
+optimize(Vx, Vy, Mx, My, aludenisy, (A_top))
+
+# Case 3
+print("\nCase 4:\n")
+Vx, Vy = shears[2]*np.cos(angle), shears[2]*np.sin(angle)
+Mx, My = moments[1]*np.sin(angle), -1*moments[1]*np.cos(angle)
+optimize(Vx, Vy, Mx, My, aludenisy, (A_top))
