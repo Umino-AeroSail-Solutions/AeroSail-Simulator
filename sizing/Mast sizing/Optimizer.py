@@ -5,30 +5,32 @@ import Cross_section_analysis as cs
 # V-slot options [[area, d, Ixx/Iyy], [...,...]]
 # t-slot 2020, t-slot 4040, t-slot 8080 (quad 4040 version)
 v_slots = np.array([[.00016210, 0.02, .0000000066881], [0.000504, 0.04, 0.000000073272], [.0016122, 0.08, .0000010225207]])
-
-w, h = 0.6, 0.8
+# v_slots = np.array([[.0016122, 0.08, .0000010225207]])
+# w, h = 0.288, 0.14 # I'M FUCKING RETARDED IM SO FUCKING RETARDED
+w, h = 1.44, 0.7 # Proper values
 
 SF = 3
 
-max_tension = 200000000.0
-max_shear = 283000000.0
+max_tension = 200000000.0 # https://struxure.com/wp-content/uploads/2020/05/01-_-6063-T6-Aluminum-MSDS.pdf
+max_shear = 152000000.0
 
 windspeed_kt = 30
 windspeed = windspeed_kt/1.944
-density = 1.225
+density = 1.22522568
 cf = 0.49
 height = 30
 chord = 5
 surface_area = height*chord
 
 F_applied_magnitude = 0.5*density*(windspeed**2) * surface_area * cf
+print(F_applied_magnitude)
 # print(F_applied_magnitude)
 # Shear computations --> see NVM diagrams
 
 G = height/2
 A_top = 2
-A_bot = 2
-L = 8
+A_bot = 1
+L = 9
 
 F_1 = F_applied_magnitude * (((G+L-A_top)/A_bot)-1)
 F_2 = F_applied_magnitude * ((G+L-A_top)/A_bot)
@@ -46,14 +48,14 @@ moments = [moment_1, moment_2]
 lod_assumed = 10
 angle = np.arctan(lod_assumed)
 
-added_weight = 300*9.81 # Asumes 700kg of extra weight above the first mast segment
+added_weight = 1000*9.81 # Asumes 10kg of extra weight above the first mast segment
 
 def optimize(Vx, Vy, Mx, My, material_density, L, segmentheight=L):
     total_area = 0
     Nz = 0
     prev_Nz = 2
     possible_designs = []
-    while abs(prev_Nz-Nz) > 1 :
+    while abs(prev_Nz-Nz) > .1 :
         prev_Nz  = Nz
         Nz = total_area * material_density *L + added_weight
         Vx, Vy, Mx, My, Nz = Vx * SF, Vy * SF, Mx * SF, My * SF, Nz * SF
