@@ -10,7 +10,7 @@ interpolation = 'Data/interpolationCR4sail_XFLR5.npz'
 sail_instance.load_interpolation(interpolation)
 
 Stackheight = 4
-SF=1.5
+SF=2
 max_windspeedknots = 30
 cruise_aws = 23
 max_windspeed= max_windspeedknots/1.944
@@ -34,7 +34,7 @@ chord = height*2/aspectratio
 
 failure = False
 max_cf = sail_instance.get_cf(plot=True) # Cf with full flaps and alpha
-max_cf = 0.5 # Override Cf
+max_cf = 0.8 # Override Cf
 sail_instance.plot_cf_level_curve(max_cf) # Plots allowed area
 maxload = 0
 while not failure:

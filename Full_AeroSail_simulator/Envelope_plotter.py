@@ -23,7 +23,7 @@ chord = 5
 windspeed = 30 / 1.944  # Max windspeed in m/s
 
 Stackheight = 4
-SF = 1.5
+SF = 2
 full_container_weight = 24390.4
 container_load_ratio = 0.8
 real_container_weight = full_container_weight * container_load_ratio
@@ -59,7 +59,7 @@ def drawenvelope(sail_instance, height, chord, windspeedknots, ax, real_containe
 
 
 # testing_windspeeds = np.arange(20, 50, 10)
-testing_windspeeds = [20, 30, 50]
+testing_windspeeds = [30, 40, 50, 70]
 # Plot the allowed envelopes for different wind speeds on the same figure
 fig, ax = plt.subplots()
 colors = viridis(np.linspace(0, 1, len(testing_windspeeds)))
@@ -73,5 +73,5 @@ for windspeed, color in zip(testing_windspeeds, colors):
         c.set_label(f"{windspeed} knots")
 
 # Add a legend to the plot
-ax.legend()
+# ax.legend()
 plt.show()
