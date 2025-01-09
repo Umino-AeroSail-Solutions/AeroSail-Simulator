@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+title: AeroSail Simulator
+message: >-
+  Please use responsibly. Software must be used for good not
+  evil.
+type: software
+authors:
+  - given-names: Andrés
+    family-names: Blanquer Benito
+    email: maquinsa101abb@gmail.com
+    affiliation: Umino AeroSail
+    orcid: 'https://orcid.org/0009-0009-4140-7273'
+  - name: Umino AeroSail Solutions
+    city: Delft
+    country: NL
+    tel: 0034 658845228
+repository-code: 'https://github.com/m5sacode/AeroSail-Simulator'
+abstract: >-
+  Focused on the development of a simulator that simplifies
+  and simulates the behaviour of an AeroSail system
+keywords:
+  - Simulation
+  - Containers
+  - XFLR5
+  - XFoil
+  - Optimization
+  - Structural analysis
+  - Aerodynamics
+version: '0.5'
+date-released: '2025-01-09'
