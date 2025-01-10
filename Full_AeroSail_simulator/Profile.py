@@ -313,7 +313,7 @@ class Profile():
 # testProfile.plot_foil()
 # testProfile.add_flap(0.4, np.radians(5), reset_foil=True)
 # testProfile.plot_foil()
-# testProfile.add_flap(0.4, np.radians(12), reset_foil=True)
+# # testProfile.add_flap(0.4, np.radians(135), reset_foil=True)
 # testProfile.plot_foil()
 # testProfile.load_interpolation('Data/interp0.4profile.npz')
 # # testProfile.plot_cp(5, 0, 1000000)
