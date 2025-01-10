@@ -374,10 +374,41 @@ class Sail_Class():
         cf = np.sqrt(cl ** 2 + cd ** 2)
         return cf
 
+    def plot_optimal_values_polar_with_thrust(self, AWA_range, thrust_min, thrust_max, windspeedkt, radial_angles):
+        '''Plots the optimal thrust for an Apparent Wind Angle (AWA) range in a high-resolution polar graph'''
+        optimal_thrusts = []
+        windspeed = windspeedkt / 1.944
+        for AWA in AWA_range:
+            opt_alpha, opt_flap = self.get_opt_pos(AWA)
+            optimal_thrusts.append(self.cts.max() * 0.5 * 1.225 * (windspeed ** 2) * self.height * self.chord)
+
+        optimal_thrusts = np.array(optimal_thrusts)
+        thrust_min_array = np.array([thrust_min] * len(AWA_range))  # Array for thrust_min
+        thrust_max_array = np.array([thrust_max] * len(AWA_range))  # Array for thrust_max
+
+        # Polar plot for optimal thrust with thrust_min and thrust_max
+        ax = plt.subplot(111, polar=True)
+        ax.plot(AWA_range, optimal_thrusts, 'g-', label='Optimal thrust')
+        ax.plot(AWA_range, thrust_min_array, 'm--', label='Requirement ASV2-STK-02b')
+        ax.plot(AWA_range, thrust_max_array, 'c--', label='Requirement ASV2-STK-02')
+        ax.set_theta_zero_location('N')
+        ax.set_theta_direction(-1)
+        ax.set_rlabel_position(-22.5)  # Move radial labels to prevent overlap
+        ax.set_title('Optimal thrust vs AWA at ' + str(windspeedkt) + ' kt', va='bottom')
+        for angle in radial_angles:
+            ax.axvline(np.radians(angle), color='k', linestyle='--')  # Adding radial lines
+
+        # Move the legend below the graph
+        ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2)
+
+        plt.tight_layout()
+        plt.show()
+
+
 # TESTING CODE -------------------------------------------------
 #
-# Profile.initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
-# Sail = Sail_Class('Data/E473coordinates.txt', 5, 0.4, 30, panels = 20)
+Profile.initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
+Sail = Sail_Class('Data/E473coordinates.txt', 5, 0.4, 30, panels = 20)
 # # # print(Sail.get_sail_coefficients(15, np.radians(10)))
 # # # print(Sail.get_l_d_m(10, np.radians(10), 10))
 # # # print(Sail.get_l_d_m(0, 0, 10))
@@ -385,7 +416,7 @@ class Sail_Class():
 # # # Sail.create_interpolation(-10, 20, 1, np.radians(0), np.radians(20), np.radians(1), p_interpolation='Data/interp0.4profile.npz')
 # Sail.create_XFLR5_interpolation('Data/XFLR5_5_30_0,5_10m_s_INTERPOLATION')
 # Sail.save_interpolation('Data/interpolationCR4sail_XFLR5.npz')
-# Sail.load_interpolation('Data/interpolationCR4sail_XFLR5.npz')
+Sail.load_interpolation('Data/interpolationCR4sail_XFLR5.npz')
 # #
 # # # print(Sail.InterpAlphas, Sail.InterpFlaps, Sail.InterpCds, Sail.InterpCloCds)
 # Sail.plot_2d_polar_interp()
@@ -398,3 +429,4 @@ class Sail_Class():
 # Sail.load_interpolation('Data/interpolationCR4sail_XFLR5.npz')
 # Sail.plot_optimal_values(np.arange(np.radians(5), np.radians(180), np.radians(0.01)))
 # Sail.plot_optimal_values_polar(np.arange(np.radians(-180), np.radians(180), np.radians(0.01)))
+Sail.plot_optimal_values_polar_with_thrust(np.arange(np.radians(-180), np.radians(180), np.radians(0.01)), 5000, 15000, 20, [30,150])
