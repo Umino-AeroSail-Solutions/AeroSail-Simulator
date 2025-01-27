@@ -90,7 +90,7 @@ class Segment():
         moments[3] = moments[4]
         moments[2] = self.top_overlap_top_force * (self.length - positions[2]) - self.top_overlap_bottom_force * (positions[5]-positions[2]) + self.applied_force_vector * (positions[4]-positions[2])
         moments[1] = moments[2]
-        moments[0] = self.top_overlap_top_force * self.length - self.top_overlap_top_force * positions[5]  + self.applied_force_vector * positions[4] - self.bottom_overlap_top_force * positions[1]
+        moments[0] = self.top_overlap_top_force * self.length - self.top_overlap_bottom_force * positions[5]  + self.applied_force_vector * positions[3] - self.bottom_overlap_top_force * positions[1]
         print(moments)
         if np.linalg.norm(moments[0]) > 0.1:
             error = "There is no moment equilibrium in the segment :("
@@ -136,5 +136,5 @@ class Segment():
 
 
 # Example usage
-segment = Segment(100, 10, 2, 0, np.array([0,0]), np.array([0,0]))
+segment = Segment(100, 10, 2, 2, np.array([1000,10000]), np.array([1000,10000]))
 segment.compute_internal_loads(plot=True)
