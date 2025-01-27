@@ -61,7 +61,10 @@ class Segment():
         return self.bottom_overlap_top_force, self.bottom_overlap_bottom_force
     def compute_internal_loads(self, plot=False):
         self.compute_reaction_loads()
-
+        positions = np.array(
+            [0, self.bottom_overlap, self.bottom_overlap, self.length - ((self.length - self.bottom_overlap) * 0.5),
+             self.length - ((self.length - self.bottom_overlap) * 0.5), self.length - self.top_overlap,
+             self.length - self.top_overlap, self.length])
         # Let's first do the shears, they go from 0 to 7 at both sides of the interest points
         shears = np.zeros((8,2))
         shears[7] = 0-self.top_overlap_top_force
@@ -73,25 +76,63 @@ class Segment():
         shears[1] = shears[2]+self.bottom_overlap_top_force
         shears[0] = shears[1]
 
+        if np.linalg.norm(shears[0]-self.bottom_overlap_bottom_force) > 0.1:
+            error = "There is no shear equilibrium in the segment :("
+            print(error)
+
+        # Now we do the internal Moments
+        # Ik there is a more efficient way to write this but this is as fast when running
+        moments = np.zeros((8, 2))
+        moments[7] = 0
+        moments[6] = self.top_overlap_top_force * (self.length - positions[6])
+        moments[5] = moments[6]
+        moments[4] = self.top_overlap_top_force * (self.length - positions[4]) - self.top_overlap_bottom_force * (positions[5]-positions[4])
+        moments[3] = moments[4]
+        moments[2] = self.top_overlap_top_force * (self.length - positions[2]) - self.top_overlap_bottom_force * (positions[5]-positions[2]) + self.applied_force_vector * (positions[4]-positions[2])
+        moments[1] = moments[2]
+        moments[0] = self.top_overlap_top_force * self.length - self.top_overlap_top_force * positions[5]  + self.applied_force_vector * positions[4] - self.bottom_overlap_top_force * positions[1]
+        print(moments)
+        if np.linalg.norm(moments[0]) > 0.1:
+            error = "There is no moment equilibrium in the segment :("
+            print(error)
+        # And now we plot
+
         if plot:
-            positions = np.array([0, self.bottom_overlap, self.bottom_overlap, self.length-((self.length-self.bottom_overlap)*0.5), self.length-((self.length-self.bottom_overlap)*0.5), self.length-self.top_overlap, self.length-self.top_overlap, self.length])
+            fig, ax1 = plt.subplots()
+
+            color = 'tab:blue'
+            ax1.set_xlabel('Position')
+            ax1.set_ylabel('Shear Force', color=color)
             shear_mags = np.zeros(8)
             i=0
             for shear in shears:
                 shear_mags[i] = np.linalg.norm(shear)
                 i+=1
-            plt.plot(positions, shear_mags, marker='o')
-            plt.fill_between(positions, shear_mags, alpha=0.3)
-            plt.xlabel('Position')
-            plt.ylabel('Shear Force')
-            plt.title('Shear Force Distribution')
-            plt.grid(True)
+            ax1.plot(positions, shear_mags, marker='o', color=color)
+            ax1.fill_between(positions, shear_mags, color=color, alpha=0.3)
+            ax1.tick_params(axis='y', labelcolor=color)
             for idx, (pos, shear_mag) in enumerate(zip(positions, shear_mags)):
-                plt.annotate(f'{idx}', xy=(pos, shear_mag), textcoords='offset points', xytext=(0,5), ha='center')
+                ax1.annotate(f'{idx}', xy=(pos, shear_mag), textcoords='offset points', xytext=(0,5), ha='center')
+
+            ax2 = ax1.twinx()
+            color = 'tab:red'
+            ax2.set_ylabel('Moment', color=color)
+            moment_mags = np.zeros(8)
+            i=0
+            for moment in moments:
+                moment_mags[i] = np.linalg.norm(moment)
+                i+=1
+            ax2.plot(positions, moment_mags, marker='x', linestyle='--', color=color)
+            ax2.fill_between(positions, moment_mags, color=color, alpha=0.1)
+            ax2.tick_params(axis='y', labelcolor=color)
+            for idx, (pos, moment_mag) in enumerate(zip(positions, moment_mags)):
+                ax2.annotate(f'{idx}', xy=(pos, moment_mag), textcoords='offset points', xytext=(0,5), ha='center')
+
+            fig.tight_layout()
+            plt.title('Shear Force and Moment Distribution')
+            plt.grid(True)
             plt.show()
-        if np.linalg.norm(shears[0]-self.bottom_overlap_bottom_force) > 0.1:
-            error = "There is no shear equilibrium in the segment :("
-            return error
+
 
 
 # Example usage
