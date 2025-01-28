@@ -103,18 +103,6 @@ class Segment():
             color = 'tab:blue'
             ax1.set_xlabel('Position')
             ax1.set_ylabel('Shear Force', color=color)
-            shear_mags = np.zeros(8)
-            i=0
-            for shear in shears:
-                shear_mags[i] = np.linalg.norm(shear)
-                i+=1
-            # Plots magnitudes ---------------------------------------------------
-            # ax1.plot(positions, shear_mags, marker='o', color=color)
-            # ax1.fill_between(positions, shear_mags, color=color, alpha=0.3)
-            # ax1.tick_params(axis='y', labelcolor=color)
-            # for idx, (pos, shear_mag) in enumerate(zip(positions, shear_mags)):
-            #     ax1.annotate(f'{idx}', xy=(pos, shear_mag), textcoords='offset points', xytext=(0,5), ha='center')
-            #
             # Plots x coordinates
             ax1.plot(positions, shears[:,0], marker='o', color=color)
             ax1.fill_between(positions, shears[:,0], color=color, alpha=0.3)
@@ -125,18 +113,6 @@ class Segment():
             ax2 = ax1.twinx()
             color = 'tab:red'
             ax2.set_ylabel('Moment', color=color)
-            moment_mags = np.zeros(8)
-            i=0
-            for moment in moments:
-                moment_mags[i] = np.linalg.norm(moment)
-                i+=1
-            # Plots magnitudes ---------------------------------------------------
-            # ax2.plot(positions, moment_mags, marker='x', linestyle='--', color=color)
-            # ax2.fill_between(positions, moment_mags, color=color, alpha=0.1)
-            # ax2.tick_params(axis='y', labelcolor=color)
-            # for idx, (pos, moment_mag) in enumerate(zip(positions, moment_mags)):
-            #     ax2.annotate(f'{idx}', xy=(pos, moment_mag), textcoords='offset points', xytext=(0,5), ha='center')
-
             # Plots x coordinates
             ax2.plot(positions, moments[:,0], marker='x', linestyle='--', color=color)
             ax2.fill_between(positions, moments[:,0], color=color, alpha=0.1)
