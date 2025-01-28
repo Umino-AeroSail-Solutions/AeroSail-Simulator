@@ -56,7 +56,7 @@ class Segment():
             self.applied_force_vector = ((self.length - self.bottom_overlap) / (
                 total_height if total_height is not None else height)) * total_force_vector
     def compute_reaction_loads(self):
-        self.bottom_overlap_top_force = (self.top_overlap_top_force * self.length) + self.applied_force_vector * (0.5*(self.length + self.bottom_overlap)) + self.top_overlap_bottom_force * (self.length - self.top_overlap)
+        self.bottom_overlap_top_force = ((self.top_overlap_top_force * self.length) + self.applied_force_vector * (self.length - ((self.length - self.bottom_overlap) * 0.5)) - self.top_overlap_bottom_force * (self.length - self.top_overlap))/self.bottom_overlap
         self.bottom_overlap_bottom_force = self.bottom_overlap_top_force + self.top_overlap_bottom_force - self.applied_force_vector - self.top_overlap_top_force
         return self.bottom_overlap_top_force, self.bottom_overlap_bottom_force
     def compute_internal_loads(self, plot=False):
@@ -108,11 +108,19 @@ class Segment():
             for shear in shears:
                 shear_mags[i] = np.linalg.norm(shear)
                 i+=1
-            ax1.plot(positions, shear_mags, marker='o', color=color)
-            ax1.fill_between(positions, shear_mags, color=color, alpha=0.3)
+            # Plots magnitudes ---------------------------------------------------
+            # ax1.plot(positions, shear_mags, marker='o', color=color)
+            # ax1.fill_between(positions, shear_mags, color=color, alpha=0.3)
+            # ax1.tick_params(axis='y', labelcolor=color)
+            # for idx, (pos, shear_mag) in enumerate(zip(positions, shear_mags)):
+            #     ax1.annotate(f'{idx}', xy=(pos, shear_mag), textcoords='offset points', xytext=(0,5), ha='center')
+            #
+            # Plots x coordinates
+            ax1.plot(positions, shears[:,0], marker='o', color=color)
+            ax1.fill_between(positions, shears[:,0], color=color, alpha=0.3)
             ax1.tick_params(axis='y', labelcolor=color)
-            for idx, (pos, shear_mag) in enumerate(zip(positions, shear_mags)):
-                ax1.annotate(f'{idx}', xy=(pos, shear_mag), textcoords='offset points', xytext=(0,5), ha='center')
+            for idx, (pos, shear) in enumerate(zip(positions, shears[:,0])):
+                ax1.annotate(f'{idx}', xy=(pos, shear), textcoords='offset points', xytext=(0, 5), ha='center')
 
             ax2 = ax1.twinx()
             color = 'tab:red'
@@ -122,11 +130,27 @@ class Segment():
             for moment in moments:
                 moment_mags[i] = np.linalg.norm(moment)
                 i+=1
-            ax2.plot(positions, moment_mags, marker='x', linestyle='--', color=color)
-            ax2.fill_between(positions, moment_mags, color=color, alpha=0.1)
+            # Plots magnitudes ---------------------------------------------------
+            # ax2.plot(positions, moment_mags, marker='x', linestyle='--', color=color)
+            # ax2.fill_between(positions, moment_mags, color=color, alpha=0.1)
+            # ax2.tick_params(axis='y', labelcolor=color)
+            # for idx, (pos, moment_mag) in enumerate(zip(positions, moment_mags)):
+            #     ax2.annotate(f'{idx}', xy=(pos, moment_mag), textcoords='offset points', xytext=(0,5), ha='center')
+
+            # Plots x coordinates
+            ax2.plot(positions, moments[:,0], marker='x', linestyle='--', color=color)
+            ax2.fill_between(positions, moments[:,0], color=color, alpha=0.1)
             ax2.tick_params(axis='y', labelcolor=color)
-            for idx, (pos, moment_mag) in enumerate(zip(positions, moment_mags)):
-                ax2.annotate(f'{idx}', xy=(pos, moment_mag), textcoords='offset points', xytext=(0,5), ha='center')
+            for idx, (pos, moment) in enumerate(zip(positions,moments[:,0])):
+                ax2.annotate(f'{idx}', xy=(pos, moment), textcoords='offset points', xytext=(0, 5), ha='center')
+
+            # Aligning the y=0 axis for both shears and moments
+            shear_min, shear_max = ax1.get_ylim()
+            moment_min, moment_max = ax2.get_ylim()
+            combined_min = min(shear_min, moment_min)
+            combined_max = max(shear_max, moment_max)
+            ax1.set_ylim(combined_min, combined_max)
+            ax2.set_ylim(combined_min, combined_max)
 
             fig.tight_layout()
             plt.title('Shear Force and Moment Distribution')
