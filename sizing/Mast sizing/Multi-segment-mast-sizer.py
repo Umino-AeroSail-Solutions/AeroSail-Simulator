@@ -2,33 +2,9 @@ import numpy as np
 import Cross_section_analysis as cs
 import matplotlib.pyplot as plt
 
-SF = 3
-
-max_tension = 200000000.0 # https://struxure.com/wp-content/uploads/2020/05/01-_-6063-T6-Aluminum-MSDS.pdf
-max_shear = 152000000.0
-
-bottom_w, bottom_h = 1.44, 0.7
-
-windspeed_kt = 30
-windspeed = windspeed_kt/1.944
-density = 1.22522568
-cf = 0.49
-height = 30
-chord = 5
-surface_area = height*chord
-
-F_applied_magnitude = 0.5*density*(windspeed**2) * surface_area * cf * SF
-print("Force applied: ", str(F_applied_magnitude), "N")
-
-lod_assumed = 10
-angle = np.arctan(lod_assumed)
-print("angle: ", np.degrees(angle), "degree")
-total_force_vector = np.array([F_applied_magnitude*np.cos(angle), F_applied_magnitude*np.sin(angle)])
-print("total force vector: ", total_force_vector)
-
 class Segment():
     def __init__(self, added_weight, length, bottom_overlap, top_overlap, top_overlap_top_force,
-                 top_overlap_bottom_force, total_force_vector=total_force_vector, total_height=height):
+                 top_overlap_bottom_force, total_force_vector, total_height):
         self.added_weight = added_weight
         self.length = length
         self.bottom_overlap = bottom_overlap
@@ -297,16 +273,133 @@ class Segment():
         ]
         for label, value in zip(labels, final_cross_section):
             print(f"{label}: {value:.6f}")
+        total_mass = (self.length * final_cross_section[-1] * material_density)
         print("Total mass: ", (self.length * final_cross_section[-1] * material_density))
+        return total_mass, final_cross_section
 
 
-# Example usage
+# Example usage -----------------------------
 
-# V-slot options [[area, d, Ixx/Iyy], [...,...]]
-# t-slot 2020, t-slot 4040, t-slot 8080 (quad 4040 version)
+# V-slot options [[area, d, Ixx/Iyy], [...,...]]-------
+# t-slot 2020, t-slot 4040, t-slot 8080 (quad 4040 version)---------
+# v_slot_options = np.array([[.00016210, 0.02, .0000000066881], [0.000504, 0.04, 0.000000073272], [.0016122, 0.08, .0000010225207]])
+# segment = Segment(100, 10, 2, 0, np.array([0,0]), np.array([0,0]))
+# segment.compute_internal_loads(plot=True)
+# segment.set_width_height(bottom_w, bottom_h)
+# aludenisy= 2710
+# segment.size_it(aludenisy,  max_tension, max_shear, v_slot_options)
+
+# Actual Multi-segment mast sizer -------------------------------------------------------------------------------------
+
+# V-slot options [[area, d, Ixx/Iyy], [...,...]]-------
+# t-slot 2020, t-slot 4040, t-slot 8080 (quad 4040 version)---------
+
+SF = 3
+
+max_tension = 200000000.0 # https://struxure.com/wp-content/uploads/2020/05/01-_-6063-T6-Aluminum-MSDS.pdf
+max_shear = 152000000.0
+
+bottom_w, bottom_h = 1.44, 0.7
+
+windspeed_kt = 30
+windspeed = windspeed_kt/1.944
+density = 1.22522568
+cf = 0.49
+height = 30
+chord = 5
+surface_area = height*chord
+
+F_applied_magnitude = 0.5*density*(windspeed**2) * surface_area * cf * SF
+print("Force applied: ", str(F_applied_magnitude), "N")
+
+lod_assumed = 10
+angle = np.arctan(lod_assumed)
+print("angle: ", np.degrees(angle), "degree")
+total_force_vector = np.array([F_applied_magnitude*np.cos(angle), F_applied_magnitude*np.sin(angle)])
+print("total force vector: ", total_force_vector)
+
 v_slot_options = np.array([[.00016210, 0.02, .0000000066881], [0.000504, 0.04, 0.000000073272], [.0016122, 0.08, .0000010225207]])
-segment = Segment(100, 10, 2, 0, np.array([0,0]), np.array([0,0]))
-segment.compute_internal_loads(plot=True)
-segment.set_width_height(bottom_w, bottom_h)
-aludenisy= 2710
-segment.size_it(aludenisy,  max_tension, max_shear, v_slot_options)
+
+aludenisy = 2710
+
+max_segment_length = 10
+min_segment_length_difference = 0.5 # Space to allow for ribs and storage
+
+# First guess
+
+segment_4_length = 10
+segment_3_length = segment_4_length - min_segment_length_difference
+segment_2_length = segment_3_length - min_segment_length_difference
+segment_1_length = segment_2_length - min_segment_length_difference
+
+overlap_01 = 2.8
+total_overlap_possible = (segment_4_length +segment_3_length +segment_2_length +segment_1_length -overlap_01) - height
+# print("total overlap possible: ", total_overlap_possible)
+overlap_12 =  total_overlap_possible/3
+overlap_23 = overlap_12
+overlap_34 = overlap_12
+
+w1, h1, d1 = bottom_w, bottom_h, 0.02
+w2, h2, d2 = bottom_w-2*d1, bottom_h-2*d1, 0.02
+w3, h3, d3 = w2-2*d2, h2-2*d2, 0.02
+w4, h4, d4 = w3-2*d3, h3-2*d3, 0.02
+
+def update_dimensions():
+    w1, h1, d1 = bottom_w, bottom_h, 0.08
+    w2, h2, d2 = bottom_w - 2 * d1, bottom_h - 2 * d1, 0.04
+    w3, h3, d3 = w2 - 2 * d2, h2 - 2 * d2, 0.04
+    w4, h4, d4 = w3 - 2 * d3, h3 - 2 * d3, 0.02
+
+def get_possible_overlap():
+    return (segment_4_length +segment_3_length +segment_2_length +segment_1_length -overlap_01 -overlap_12 -overlap_23 -overlap_34) - height
+# print("possible overlap: ", get_possible_overlap())
+
+sail_weight_4 = 100*9.81 # MADE UP SHIT _______________________________________________________________________________
+sail_weight_3 = 100*9.81
+sail_weight_2 = 100*9.81
+sail_weight_1 = 100*9.81
+
+segment_4 = Segment(sail_weight_4, segment_4_length, overlap_34, 0, np.array([0,0]), np.array([0,0]), total_force_vector, height)
+segment_4.compute_internal_loads(plot=True)
+segment_3_top_force_top, segment_3_top_force_bottom = segment_4.compute_reaction_loads()
+
+print("Segment 4 design: \n")
+
+segment_4.set_width_height(w4, h4)
+
+segment_4_mass, segment_4_design = segment_4.size_it(aludenisy, max_tension, max_shear, v_slot_options)
+
+segment_3 = Segment(sail_weight_4 + sail_weight_3 + 9.81*segment_4_mass, segment_3_length, overlap_23, overlap_34, segment_3_top_force_top, segment_3_top_force_bottom,total_force_vector, height)
+segment_3.compute_internal_loads(plot=True)
+segment_2_top_force_top, segment_2_top_force_bottom = segment_3.compute_reaction_loads()
+
+print("Segment 3 design: \n")
+
+segment_3.set_width_height(w3, h3)
+
+segment_3_mass, segment_3_design = segment_3.size_it(aludenisy, max_tension, max_shear, v_slot_options)
+
+segment_2 = Segment(sail_weight_4 + sail_weight_3 + 9.81*segment_4_mass + sail_weight_2 + 9.81*segment_3_mass, segment_2_length, overlap_12, overlap_23, segment_2_top_force_top, segment_2_top_force_bottom,total_force_vector, height)
+segment_2.compute_internal_loads(plot=True)
+segment_1_top_force_top, segment_1_top_force_bottom = segment_2.compute_reaction_loads()
+
+print("Segment 2 design: \n")
+
+segment_2.set_width_height(w2, h2)
+
+segment_2_mass, segment_2_design = segment_2.size_it(aludenisy, max_tension, max_shear, v_slot_options)
+
+segment_1 = Segment(sail_weight_4 + sail_weight_3 + 9.81*segment_4_mass + sail_weight_2 + 9.81*segment_3_mass + sail_weight_1 + 9.91*segment_2_mass, segment_1_length, overlap_01, overlap_12, segment_1_top_force_top, segment_1_top_force_bottom,total_force_vector, height)
+segment_1.compute_internal_loads(plot=True)
+reaction_force_top, reaction_force_bottom = segment_1.compute_reaction_loads()
+
+print("Segment 1 design: \n")
+
+segment_1.set_width_height(w1, h1)
+
+segment_1_mass, segment_1_design = segment_1.size_it(aludenisy, max_tension, max_shear, v_slot_options)
+
+print("\nTotal mast mass: ", (segment_1_mass + segment_2_mass + segment_3_mass + segment_4_mass))
+print("Total sail planform mass: ", ((sail_weight_1 + sail_weight_2 + sail_weight_3 + sail_weight_4))/9.81)
+
+print("Total sail mass: ", ((segment_1_mass + segment_2_mass + segment_3_mass + segment_4_mass)+((sail_weight_1 + sail_weight_2 + sail_weight_3 + sail_weight_4))/9.81))

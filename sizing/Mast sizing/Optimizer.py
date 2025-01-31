@@ -48,7 +48,7 @@ moments = [moment_1, moment_2]
 lod_assumed = 10
 angle = np.arctan(lod_assumed)
 
-added_weight = 1000*9.81 # Asumes 10kg of extra weight above the first mast segment
+added_weight = 1000*9.81 # Asumes 1000kg of extra weight above the first mast segment
 
 def optimize(Vx, Vy, Mx, My, material_density, L, segmentheight=L):
     total_area = 0
