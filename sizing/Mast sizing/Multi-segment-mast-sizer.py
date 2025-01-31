@@ -195,7 +195,7 @@ class Segment():
         if np.size(possible_designs) == 0:
             print("There is no possible designs available :(")
             print("Tip: Increase the thickness limit or add bigger vslot channels")
-            print("\nTip: Changing weapons is faster than reloading.......")
+            print("Tip 2: Changing weapons is faster than reloading.......")
             return None
         else:
             # Sort the possible designs by total area (last column)
@@ -223,16 +223,82 @@ class Segment():
         cross_sections = np.array(cross_sections)
 
         # [d, top_thickness, side_thickness, sides_SF, top_SF, bending_sf,total_area]
-        final_cross_section = [max(cross_sections[0,:]), max(cross_sections[1,:]), max(cross_sections[2,:]), None, None, None, None]
+        final_cross_section = [max(cross_sections[:,0]), max(cross_sections[:,1]), max(cross_sections[:,2]), None, None, None, None]
         a = 0
-
+        # V-slot options [[area, d, Ixx/Iyy], [...,...]]
+        used_v_slot = np.zeros_like(v_slots[0])
         for v_slot in v_slots:
             if v_slot[1] == final_cross_section[0]:
                 a = v_slot[0]
+                used_v_slot = v_slot
+                print("Chosen v-slot: ")
+                print(used_v_slot)
 
         final_cross_section[-1] = 2 * (final_cross_section[1] * self.width + final_cross_section[2] * self.height) + 4 * a
 
-        # and now we should find the actual safety factors with the updated crossection applied but i'm finished for today
+        # and now we should find the actual safety factors with the updated crossection applied but i'm finished for today <-- lazy ass bastard
+
+        w = self.width
+        h = self.height
+        d = used_v_slot[1]
+        subdivisions = 100
+        top_thickness = final_cross_section[1]
+        side_thickness = final_cross_section[2]
+        cornerIxx = used_v_slot[2]
+
+        safety_factors = []
+
+        for idx in range(self.shears.shape[0]):
+            Nz = self.added_weight + (self.length - self.positions[idx]) * final_cross_section[-1] * material_density * 9.81
+            Mx = self.moments[idx,0]
+            My = self.moments[idx,1]
+            Vx = self.shears[idx,0]
+            Vy = self.shears[idx,1]
+
+            # To avoid dividing by zero
+            if Mx == 0:
+                Mx += 0.01
+            if My == 0:
+                My += 0.01
+            if Vx == 0:
+                Vx += 0.01
+            if Vy == 0:
+                Vy += 0.01
+
+            areas, thicknesses = cs.create_areas_and_thicknesses(w, h, d, a, subdivisions, top_thickness,
+                                                                 side_thickness)
+            Ixx, Iyy, Ixy = cs.compute_Ixx_Iyy_Ixy(w, h, top_thickness, side_thickness, d, a, cornerIxx=cornerIxx)
+            total_area = 2 * (top_thickness * w + side_thickness * h) + 4 * a
+            bending_ok, bending_sf = cs.check_bending_ok(w, h, top_thickness, side_thickness, d, a, Mx, My, max_tension,
+                                                         cornerIxx=cornerIxx, Nz=Nz, area=total_area)
+            cs.update_areas_bending(areas, thicknesses, Mx, My, Ixx, Iyy, Ixy)
+            qb, qbmax = cs.compute_shear_flows(areas, Vx, Vy, subdivisions, thicknesses, h, d, w)
+            top_ok, sides_ok, top_SF, sides_SF = cs.check_shear_ok(qb, top_thickness, side_thickness, max_shear,
+                                                                   thicknesses)
+
+            safety_factors.append([bending_sf, top_SF, sides_SF])
+
+        safety_factors = np.array(safety_factors)
+        min_safety_factors = np.array([np.min(safety_factors[:,0]), np.min(safety_factors[:,1]), np.min(safety_factors[:,2])])
+
+        final_cross_section[3] = min_safety_factors[2]
+        final_cross_section[4] = min_safety_factors[1]
+        final_cross_section[5] = min_safety_factors[0]
+
+        print('\n Final design:')
+        labels = [
+            "V-slot side size",
+            "Top Thickness",
+            "Side Thickness",
+            "Side Safety Factor",
+            "Top Safety Factor",
+            "Bending Safety Factor",
+            "Total Area"
+        ]
+        for label, value in zip(labels, final_cross_section):
+            print(f"{label}: {value:.6f}")
+        print("Total mass: ", (self.length * final_cross_section[-1] * material_density))
+
 
 # Example usage
 
