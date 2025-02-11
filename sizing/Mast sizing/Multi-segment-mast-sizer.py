@@ -1,6 +1,7 @@
 import numpy as np
 import Cross_section_analysis as cs
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 class Segment():
     def __init__(self, added_weight, length, bottom_overlap, top_overlap, top_overlap_top_force,
@@ -193,8 +194,9 @@ class Segment():
         self.compute_internal_loads()
         cross_sections = []
         for idx in range(self.shears.shape[0]):
-            print("Analyizing position: ", idx)
+            # print("Analyizing position: ", idx)
             cross_sections.append(self.optimize_cross_section(self.shears[idx,0], self.shears[idx,1], self.moments[idx,0], self.moments[idx,1], material_density, self.length-self.positions[idx], self.added_weight, v_slots, skin_step_thickness=skin_step_thickness, min_skin_thickness=min_skin_thickness, max_thickness=max_thickness))
+            pbar.update(1)
         # Now we choose the final cross-section based on the maximum of every parameter
         cross_sections = np.array(cross_sections)
 
@@ -261,7 +263,7 @@ class Segment():
         final_cross_section[4] = min_safety_factors[1]
         final_cross_section[5] = min_safety_factors[0]
 
-        print('\n Final design:')
+        # print('\n Final design:')
         labels = [
             "V-slot side size",
             "Top Thickness",
@@ -271,10 +273,11 @@ class Segment():
             "Bending Safety Factor",
             "Total Area"
         ]
-        for label, value in zip(labels, final_cross_section):
-            print(f"{label}: {value:.6f}")
+
+        # for label, value in zip(labels, final_cross_section):
+        #     print(f"{label}: {value:.6f}")
         total_mass = (self.length * final_cross_section[-1] * material_density)
-        print("Total mass: ", (self.length * final_cross_section[-1] * material_density))
+        # print("Total mass: ", (self.length * final_cross_section[-1] * material_density))
         return total_mass, final_cross_section
     # def optimize_bottom_overlap(self): # Does not work
     #     self.compute_internal_loads()
@@ -392,68 +395,121 @@ def get_bool(prompt):
             return False
 
 compute_cross_section = get_bool("Compute cross section? [y/N]")
+def optimize_mast(Print=False,plot=False):
+    segment_4 = Segment(sail_weight_4, segment_4_length, overlap_34, 0, np.array([0,0]), np.array([0,0]), total_force_vector, height)
+    segment_4.compute_internal_loads(plot)
+    segment_3_top_force_top, segment_3_top_force_bottom = segment_4.compute_reaction_loads()
 
-segment_4 = Segment(sail_weight_4, segment_4_length, overlap_34, 0, np.array([0,0]), np.array([0,0]), total_force_vector, height)
-segment_4.compute_internal_loads(plot=True)
-segment_3_top_force_top, segment_3_top_force_bottom = segment_4.compute_reaction_loads()
+    segment_4_mass = 0
 
-segment_4_mass = 0
+    if compute_cross_section:
+        if Print:
+            print()
+            print("Segment 4 design: \n")
 
-if compute_cross_section:
-    print()
+        segment_4.set_width_height(w4, h4)
 
-    print("Segment 4 design: \n")
+        segment_4_mass, segment_4_design = segment_4.size_it(aludenisy, max_tension, max_shear, v_slot_options)
 
-    segment_4.set_width_height(w4, h4)
+    segment_3 = Segment(sail_weight_4 + sail_weight_3 + 9.81*segment_4_mass, segment_3_length, overlap_23, overlap_34, segment_3_top_force_top, segment_3_top_force_bottom,total_force_vector, height)
+    # segment_3.optimize_bottom_overlap()
+    segment_3.compute_internal_loads(plot)
+    segment_2_top_force_top, segment_2_top_force_bottom = segment_3.compute_reaction_loads()
 
-    segment_4_mass, segment_4_design = segment_4.size_it(aludenisy, max_tension, max_shear, v_slot_options)
+    segment_3_mass = 0
 
-segment_3 = Segment(sail_weight_4 + sail_weight_3 + 9.81*segment_4_mass, segment_3_length, overlap_23, overlap_34, segment_3_top_force_top, segment_3_top_force_bottom,total_force_vector, height)
-# segment_3.optimize_bottom_overlap()
-segment_3.compute_internal_loads(plot=True)
-segment_2_top_force_top, segment_2_top_force_bottom = segment_3.compute_reaction_loads()
+    if compute_cross_section:
+        if Print:
+            print()
+            print("Segment 3 design: \n")
 
-segment_3_mass = 0
+        segment_3.set_width_height(w3, h3)
 
-if compute_cross_section:
-    print()
-    print("Segment 3 design: \n")
+        segment_3_mass, segment_3_design = segment_3.size_it(aludenisy, max_tension, max_shear, v_slot_options)
 
-    segment_3.set_width_height(w3, h3)
+    segment_2 = Segment(sail_weight_4 + sail_weight_3 + 9.81*segment_4_mass + sail_weight_2 + 9.81*segment_3_mass, segment_2_length, overlap_12, overlap_23, segment_2_top_force_top, segment_2_top_force_bottom,total_force_vector, height)
+    # segment_2.optimize_bottom_overlap()
+    segment_2.compute_internal_loads(plot)
+    segment_1_top_force_top, segment_1_top_force_bottom = segment_2.compute_reaction_loads()
 
-    segment_3_mass, segment_3_design = segment_3.size_it(aludenisy, max_tension, max_shear, v_slot_options)
+    segment_2_mass = 0
 
-segment_2 = Segment(sail_weight_4 + sail_weight_3 + 9.81*segment_4_mass + sail_weight_2 + 9.81*segment_3_mass, segment_2_length, overlap_12, overlap_23, segment_2_top_force_top, segment_2_top_force_bottom,total_force_vector, height)
-# segment_2.optimize_bottom_overlap()
-segment_2.compute_internal_loads(plot=True)
-segment_1_top_force_top, segment_1_top_force_bottom = segment_2.compute_reaction_loads()
+    if compute_cross_section:
+        if Print:
+            print()
+            print("Segment 2 design: \n")
 
-segment_2_mass = 0
+        segment_2.set_width_height(w2, h2)
 
-if compute_cross_section:
-    print()
-    print("Segment 2 design: \n")
+        segment_2_mass, segment_2_design = segment_2.size_it(aludenisy, max_tension, max_shear, v_slot_options)
 
-    segment_2.set_width_height(w2, h2)
+    segment_1 = Segment(sail_weight_4 + sail_weight_3 + 9.81*segment_4_mass + sail_weight_2 + 9.81*segment_3_mass + sail_weight_1 + 9.91*segment_2_mass, segment_1_length, overlap_01, overlap_12, segment_1_top_force_top, segment_1_top_force_bottom,total_force_vector, height)
+    # segment_1.optimize_bottom_overlap()
+    segment_1.compute_internal_loads(plot)
+    reaction_force_top, reaction_force_bottom = segment_1.compute_reaction_loads()
 
-    segment_2_mass, segment_2_design = segment_2.size_it(aludenisy, max_tension, max_shear, v_slot_options)
+    segment_1_mass = 0
 
-segment_1 = Segment(sail_weight_4 + sail_weight_3 + 9.81*segment_4_mass + sail_weight_2 + 9.81*segment_3_mass + sail_weight_1 + 9.91*segment_2_mass, segment_1_length, overlap_01, overlap_12, segment_1_top_force_top, segment_1_top_force_bottom,total_force_vector, height)
-# segment_1.optimize_bottom_overlap()
-segment_1.compute_internal_loads(plot=True)
-reaction_force_top, reaction_force_bottom = segment_1.compute_reaction_loads()
+    if compute_cross_section:
+        if Print:
+            print()
+            print("Segment 1 design: \n")
 
-segment_1_mass = 0
+        segment_1.set_width_height(w1, h1)
 
-if compute_cross_section:
-    print()
-    print("Segment 1 design: \n")
+        segment_1_mass, segment_1_design = segment_1.size_it(aludenisy, max_tension, max_shear, v_slot_options)
+    if compute_cross_section and Print:
+        print("\nTotal mast mass: ", (segment_1_mass + segment_2_mass + segment_3_mass + segment_4_mass))
+        print("Total sail planform mass: ", ((sail_weight_1 + sail_weight_2 + sail_weight_3 + sail_weight_4))/9.81)
 
-    segment_1.set_width_height(w1, h1)
+        print("Total sail mass: ", ((segment_1_mass + segment_2_mass + segment_3_mass + segment_4_mass)+((sail_weight_1 + sail_weight_2 + sail_weight_3 + sail_weight_4))/9.81))
+    return ((segment_1_mass + segment_2_mass + segment_3_mass + segment_4_mass)+((sail_weight_1 + sail_weight_2 + sail_weight_3 + sail_weight_4))/9.81)
 
-    segment_1_mass, segment_1_design = segment_1.size_it(aludenisy, max_tension, max_shear, v_slot_options)
+# Seeding code
 
-print("\nTotal mast mass: ", (segment_1_mass + segment_2_mass + segment_3_mass + segment_4_mass))
-print("Total sail planform mass: ", ((sail_weight_1 + sail_weight_2 + sail_weight_3 + sail_weight_4))/9.81)
+overlap_34_range = [0.5, 1.4]
+overlap_23_range = [0.9, 2]
 
-print("Total sail mass: ", ((segment_1_mass + segment_2_mass + segment_3_mass + segment_4_mass)+((sail_weight_1 + sail_weight_2 + sail_weight_3 + sail_weight_4))/9.81))
+ol_34_iterations = 4
+ol_23_iterations = 3
+
+seed_deepness = 3
+
+inseed_zoom = 2  # how much around the point does it go
+
+optimum_overlaps = []
+optimum_mass = 4000
+
+# Collect seeding locations for plotting
+seeding_locations = []
+
+for i in range(seed_deepness):
+    overlaps_34 = np.linspace(overlap_34_range[0], overlap_34_range[1], ol_34_iterations)
+    overlaps_23 = np.linspace(overlap_23_range[0], overlap_23_range[1], ol_23_iterations)
+    seed_spacing_34 = (overlap_34_range[1] - overlap_34_range[0])/ol_34_iterations
+    seed_spacing_23 = (overlap_23_range[1] - overlap_23_range[0])/ol_23_iterations
+    total_iterations = len(overlaps_34) * len(overlaps_23) * 4 * 8
+    with tqdm(total=total_iterations, desc=f'Seed Iteration {i + 1}/{seed_deepness}') as pbar:
+        for overlap_34 in overlaps_34:
+            for overlap_23 in overlaps_23:
+                overlap_12 = total_overlap_possible - overlap_34 - overlap_23
+                mass = optimize_mast()
+                if mass < optimum_mass:
+                    optimum_mass = mass
+                    optimum_overlaps = [overlap_23, overlap_34]
+                seeding_locations.append((overlap_23, overlap_34))  # Store the seeding location
+    overlap_34_range = [optimum_overlaps[1]-(seed_spacing_34*inseed_zoom),
+                        optimum_overlaps[1]+(seed_spacing_34*inseed_zoom)]
+    overlap_23_range = [optimum_overlaps[0] - (seed_spacing_23 * inseed_zoom),
+                        optimum_overlaps[0] + (seed_spacing_23 * inseed_zoom)]
+
+# Plotting the seeding locations
+seeding_locations = np.array(seeding_locations)
+plt.figure(figsize=(10, 6))
+plt.scatter(seeding_locations[:, 0], seeding_locations[:, 1], c='blue', marker='o', label='Seeding Locations')
+plt.xlabel('Overlap 23')
+plt.ylabel('Overlap 34')
+plt.title('Seeding Locations for Overlap Optimization')
+plt.legend()
+plt.grid(True)
+plt.show()
