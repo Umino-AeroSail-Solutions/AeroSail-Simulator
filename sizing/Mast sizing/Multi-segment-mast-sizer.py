@@ -178,22 +178,22 @@ class Segment():
             sorted_designs = possible_designs[possible_designs[:, -1].argsort()]
             # Output the design with the lowest total area
             lowest_area_design = sorted_designs[0]
-            print("Design with the Lowest Total Area:")
-            print(f"d: {lowest_area_design[0]}")
-            print(f"Top Thickness: {lowest_area_design[1]}")
-            print(f"Side Thickness: {lowest_area_design[2]}")
-            print(f"Sides SF: {lowest_area_design[3]}")
-            print(f"Top SF: {lowest_area_design[4]}")
-            print(f"Bending SF: {lowest_area_design[5]}")
-            print(f"Total Area: {lowest_area_design[6]}")
-            print(f"Total mass: {(lowest_area_design[6] * self.length * material_density)}")
+            # print("Design with the Lowest Total Area:")
+            # print(f"d: {lowest_area_design[0]}")
+            # print(f"Top Thickness: {lowest_area_design[1]}")
+            # print(f"Side Thickness: {lowest_area_design[2]}")
+            # print(f"Sides SF: {lowest_area_design[3]}")
+            # print(f"Top SF: {lowest_area_design[4]}")
+            # print(f"Bending SF: {lowest_area_design[5]}")
+            # print(f"Total Area: {lowest_area_design[6]}")
+            # print(f"Total mass: {(lowest_area_design[6] * self.length * material_density)}")
             return lowest_area_design
     def size_it(self, material_density,max_tension, max_shear, v_slots, skin_step_thickness=0.0005,
                 min_skin_thickness=0.0005, max_thickness=0.01):
         self.compute_internal_loads()
         cross_sections = []
         for idx in range(self.shears.shape[0]):
-            print("\n Analyizing position: ", idx)
+            print("Analyizing position: ", idx)
             cross_sections.append(self.optimize_cross_section(self.shears[idx,0], self.shears[idx,1], self.moments[idx,0], self.moments[idx,1], material_density, self.length-self.positions[idx], self.added_weight, v_slots, skin_step_thickness=skin_step_thickness, min_skin_thickness=min_skin_thickness, max_thickness=max_thickness))
         # Now we choose the final cross-section based on the maximum of every parameter
         cross_sections = np.array(cross_sections)
@@ -207,8 +207,8 @@ class Segment():
             if v_slot[1] == final_cross_section[0]:
                 a = v_slot[0]
                 used_v_slot = v_slot
-                print("Chosen v-slot: ")
-                print(used_v_slot)
+                # print("Chosen v-slot: ")
+                # print(used_v_slot)
 
         final_cross_section[-1] = 2 * (final_cross_section[1] * self.width + final_cross_section[2] * self.height) + 4 * a
 
@@ -276,7 +276,21 @@ class Segment():
         total_mass = (self.length * final_cross_section[-1] * material_density)
         print("Total mass: ", (self.length * final_cross_section[-1] * material_density))
         return total_mass, final_cross_section
-
+    # def optimize_bottom_overlap(self): # Does not work
+    #     self.compute_internal_loads()
+    #     top_moment = np.linalg.norm(self.moments[5])
+    #     bot_moment = np.linalg.norm(self.moments[2])
+    #     ratio = bot_moment / top_moment
+    #     while ratio < 0.9 or ratio > 1.1:
+    #         old_bottom_overlap = self.bottom_overlap
+    #         self.bottom_overlap = self.bottom_overlap * ratio
+    #         self.top_overlap = self.top_overlap - (old_bottom_overlap - self.bottom_overlap)
+    #         self.compute_internal_loads()
+    #         top_moment = np.linalg.norm(self.moments[5])
+    #         bot_moment = np.linalg.norm(self.moments[2])
+    #         ratio = bot_moment / top_moment
+    #     print("Bottom overlap: ", self.bottom_overlap)
+    #     print("Ratio: ", ratio)
 
 # Example usage -----------------------------
 
@@ -334,21 +348,29 @@ segment_1_length = segment_2_length - min_segment_length_difference
 
 overlap_01 = 2.8
 total_overlap_possible = (segment_4_length +segment_3_length +segment_2_length +segment_1_length -overlap_01) - height
-# print("total overlap possible: ", total_overlap_possible)
-overlap_12 =  total_overlap_possible/3
-overlap_23 = overlap_12
-overlap_34 = overlap_12
+print("total overlap possible: ", total_overlap_possible)
 
-w1, h1, d1 = bottom_w, bottom_h, 0.02
-w2, h2, d2 = bottom_w-2*d1, bottom_h-2*d1, 0.02
-w3, h3, d3 = w2-2*d2, h2-2*d2, 0.02
+# Equal overlaps:
+
+overlap_34 = total_overlap_possible/3
+overlap_23 = total_overlap_possible/3
+overlap_12 = total_overlap_possible/3
+
+# overlap_34 = 0.8
+# overlap_23 = 1.1
+# overlap_12 = total_overlap_possible - overlap_34 - overlap_23
+print()
+print("overlap_34: ", overlap_34)
+print("overlap_23: ", overlap_23)
+print("overlap_12: ", overlap_12)
+print("overlap_01: ", overlap_01)
+print()
+print()
+
+w1, h1, d1 = bottom_w, bottom_h, 0.08
+w2, h2, d2 = bottom_w-2*d1, bottom_h-2*d1, 0.08
+w3, h3, d3 = w2-2*d2, h2-2*d2, 0.04
 w4, h4, d4 = w3-2*d3, h3-2*d3, 0.02
-
-def update_dimensions():
-    w1, h1, d1 = bottom_w, bottom_h, 0.08
-    w2, h2, d2 = bottom_w - 2 * d1, bottom_h - 2 * d1, 0.04
-    w3, h3, d3 = w2 - 2 * d2, h2 - 2 * d2, 0.04
-    w4, h4, d4 = w3 - 2 * d3, h3 - 2 * d3, 0.02
 
 def get_possible_overlap():
     return (segment_4_length +segment_3_length +segment_2_length +segment_1_length -overlap_01 -overlap_12 -overlap_23 -overlap_34) - height
@@ -359,45 +381,75 @@ sail_weight_3 = 100*9.81
 sail_weight_2 = 100*9.81
 sail_weight_1 = 100*9.81
 
+def get_bool(prompt):
+    while True:
+        try:
+            return {"y":True,"n":False}[input(prompt).lower()]
+        except KeyError:
+            print("Invalid input please enter y or n!")
+            return False
+
+compute_cross_section = get_bool("Compute cross section? [y/N]")
+
 segment_4 = Segment(sail_weight_4, segment_4_length, overlap_34, 0, np.array([0,0]), np.array([0,0]), total_force_vector, height)
 segment_4.compute_internal_loads(plot=True)
 segment_3_top_force_top, segment_3_top_force_bottom = segment_4.compute_reaction_loads()
 
-print("Segment 4 design: \n")
+segment_4_mass = 0
 
-segment_4.set_width_height(w4, h4)
+if compute_cross_section:
+    print()
 
-segment_4_mass, segment_4_design = segment_4.size_it(aludenisy, max_tension, max_shear, v_slot_options)
+    print("Segment 4 design: \n")
+
+    segment_4.set_width_height(w4, h4)
+
+    segment_4_mass, segment_4_design = segment_4.size_it(aludenisy, max_tension, max_shear, v_slot_options)
 
 segment_3 = Segment(sail_weight_4 + sail_weight_3 + 9.81*segment_4_mass, segment_3_length, overlap_23, overlap_34, segment_3_top_force_top, segment_3_top_force_bottom,total_force_vector, height)
+# segment_3.optimize_bottom_overlap()
 segment_3.compute_internal_loads(plot=True)
 segment_2_top_force_top, segment_2_top_force_bottom = segment_3.compute_reaction_loads()
 
-print("Segment 3 design: \n")
+segment_3_mass = 0
 
-segment_3.set_width_height(w3, h3)
+if compute_cross_section:
+    print()
+    print("Segment 3 design: \n")
 
-segment_3_mass, segment_3_design = segment_3.size_it(aludenisy, max_tension, max_shear, v_slot_options)
+    segment_3.set_width_height(w3, h3)
+
+    segment_3_mass, segment_3_design = segment_3.size_it(aludenisy, max_tension, max_shear, v_slot_options)
 
 segment_2 = Segment(sail_weight_4 + sail_weight_3 + 9.81*segment_4_mass + sail_weight_2 + 9.81*segment_3_mass, segment_2_length, overlap_12, overlap_23, segment_2_top_force_top, segment_2_top_force_bottom,total_force_vector, height)
+# segment_2.optimize_bottom_overlap()
 segment_2.compute_internal_loads(plot=True)
 segment_1_top_force_top, segment_1_top_force_bottom = segment_2.compute_reaction_loads()
 
-print("Segment 2 design: \n")
+segment_2_mass = 0
 
-segment_2.set_width_height(w2, h2)
+if compute_cross_section:
+    print()
+    print("Segment 2 design: \n")
 
-segment_2_mass, segment_2_design = segment_2.size_it(aludenisy, max_tension, max_shear, v_slot_options)
+    segment_2.set_width_height(w2, h2)
+
+    segment_2_mass, segment_2_design = segment_2.size_it(aludenisy, max_tension, max_shear, v_slot_options)
 
 segment_1 = Segment(sail_weight_4 + sail_weight_3 + 9.81*segment_4_mass + sail_weight_2 + 9.81*segment_3_mass + sail_weight_1 + 9.91*segment_2_mass, segment_1_length, overlap_01, overlap_12, segment_1_top_force_top, segment_1_top_force_bottom,total_force_vector, height)
+# segment_1.optimize_bottom_overlap()
 segment_1.compute_internal_loads(plot=True)
 reaction_force_top, reaction_force_bottom = segment_1.compute_reaction_loads()
 
-print("Segment 1 design: \n")
+segment_1_mass = 0
 
-segment_1.set_width_height(w1, h1)
+if compute_cross_section:
+    print()
+    print("Segment 1 design: \n")
 
-segment_1_mass, segment_1_design = segment_1.size_it(aludenisy, max_tension, max_shear, v_slot_options)
+    segment_1.set_width_height(w1, h1)
+
+    segment_1_mass, segment_1_design = segment_1.size_it(aludenisy, max_tension, max_shear, v_slot_options)
 
 print("\nTotal mast mass: ", (segment_1_mass + segment_2_mass + segment_3_mass + segment_4_mass))
 print("Total sail planform mass: ", ((sail_weight_1 + sail_weight_2 + sail_weight_3 + sail_weight_4))/9.81)
