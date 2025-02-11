@@ -3,6 +3,8 @@ import Cross_section_analysis as cs
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
+from scipy.optimize import minimize
+
 class Segment():
     def __init__(self, added_weight, length, bottom_overlap, top_overlap, top_overlap_top_force,
                  top_overlap_bottom_force, total_force_vector, total_height):
@@ -197,7 +199,7 @@ class Segment():
             # print("Analyizing position: ", idx)
             cross_sections.append(self.optimize_cross_section(self.shears[idx,0], self.shears[idx,1], self.moments[idx,0], self.moments[idx,1], material_density, self.length-self.positions[idx], self.added_weight, v_slots, skin_step_thickness=skin_step_thickness, min_skin_thickness=min_skin_thickness, max_thickness=max_thickness))
 
-            pbar.update(1)
+            # pbar.update(1)
         # Now we choose the final cross-section based on the maximum of every parameter
         cross_sections = np.array(cross_sections)
 
@@ -484,35 +486,20 @@ optimum_mass = 4000
 # Collect seeding locations for plotting
 seeding_locations = []
 
-for i in range(seed_deepness):
-    overlaps_34 = np.linspace(overlap_34_range[0], overlap_34_range[1], ol_34_iterations)
-    overlaps_23 = np.linspace(overlap_23_range[0], overlap_23_range[1], ol_23_iterations)
-    seed_spacing_34 = (overlap_34_range[1] - overlap_34_range[0])/ol_34_iterations
-    seed_spacing_23 = (overlap_23_range[1] - overlap_23_range[0])/ol_23_iterations
-    total_iterations = len(overlaps_34) * len(overlaps_23) * 4 * 8
-    with tqdm(total=total_iterations, desc=f'Seed Iteration {i + 1}/{seed_deepness}') as pbar:
-        for overlap_34 in overlaps_34:
-            for overlap_23 in overlaps_23:
-                overlap_12 = total_overlap_possible - overlap_34 - overlap_23
-                mass = optimize_mast()
-                if mass < optimum_mass:
-                    optimum_mass = mass
-                    optimum_overlaps = [overlap_23, overlap_34]
-                seeding_locations.append((overlap_23, overlap_34))  # Store the seeding location
-                # Plotting the seeding locations
-                seeding_locations = np.array(seeding_locations)
-                plt.figure(figsize=(10, 6))
-                plt.scatter(seeding_locations[:, 0], seeding_locations[:, 1], c='blue', marker='o',
-                            label='Seeding Locations')
-                plt.scatter(optimum_overlaps[0], optimum_overlaps[1], c='red', marker='x', s=10, label='Optimal Point')
-                plt.xlabel('Overlap 23')
-                plt.ylabel('Overlap 34')
-                plt.title('Seeding Locations for Overlap Optimization')
-                plt.legend()
-                plt.grid(True)
-                plt.show()
-    overlap_34_range = [optimum_overlaps[1]-(seed_spacing_34*inseed_zoom),
-                        optimum_overlaps[1]+(seed_spacing_34*inseed_zoom)]
-    overlap_23_range = [optimum_overlaps[0] - (seed_spacing_23 * inseed_zoom),
-                        optimum_overlaps[0] + (seed_spacing_23 * inseed_zoom)]
+# Define the optimization function
+def optimization_function(overlaps):
+    overlap_23, overlap_34 = overlaps
+    overlap_12 = total_overlap_possible - overlap_34 - overlap_23
 
+    mass = optimize_mast()
+    return mass
+
+# Initial guess for the overlaps
+initial_guess = [overlap_23_range[0], overlap_34_range[0]]
+
+# Perform the optimization
+result = minimize(optimization_function, initial_guess, method='Nelder-Mead')
+
+optimum_overlaps = result.x
+
+print(optimum_overlaps)
