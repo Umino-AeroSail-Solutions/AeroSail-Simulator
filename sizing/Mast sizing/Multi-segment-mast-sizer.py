@@ -471,12 +471,12 @@ def optimize_mast(Print=False,plot=False):
 overlap_34_range = [0.5, 1.4]
 overlap_23_range = [0.9, 2]
 
-ol_34_iterations = 4
+ol_34_iterations = 3
 ol_23_iterations = 3
 
-seed_deepness = 3
+seed_deepness = 5
 
-inseed_zoom = 2  # how much around the point does it go
+inseed_zoom = 0.75  # how much around the point does it go
 
 optimum_overlaps = []
 optimum_mass = 4000
@@ -495,14 +495,15 @@ for i in range(seed_deepness):
             for overlap_23 in overlaps_23:
                 overlap_12 = total_overlap_possible - overlap_34 - overlap_23
                 mass = optimize_mast()
+                print("Run completed. Mass:", mass)
                 if mass < optimum_mass:
                     optimum_mass = mass
                     optimum_overlaps = [overlap_23, overlap_34]
                 seeding_locations.append((overlap_23, overlap_34))  # Store the seeding location
                 # Plotting the seeding locations
-                seeding_locations = np.array(seeding_locations)
+                seeding_locations_array = np.array(seeding_locations)
                 plt.figure(figsize=(10, 6))
-                plt.scatter(seeding_locations[:, 0], seeding_locations[:, 1], c='blue', marker='o',
+                plt.scatter(seeding_locations_array[:, 0], seeding_locations_array[:, 1], c='blue', marker='o',
                             label='Seeding Locations')
                 plt.scatter(optimum_overlaps[0], optimum_overlaps[1], c='red', marker='x', s=50, label='Optimal Point')
                 plt.xlabel('Overlap 23')
