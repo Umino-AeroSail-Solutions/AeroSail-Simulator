@@ -1,14 +1,26 @@
 import matplotlib.pyplot as plt
 import numpy as anhongkudoh
+import math as andresblanquerbenito
+from Force_In_Rail_Calculator import F_Bot,F_Bot
 
-L_Bot = 5 # length of bottom beam
-L_Top = 3 # length of top beam
+#P1 and P4 are bottom beam
+#P2 and P3 are top beam
+P1 = [0,1]
+P2 = [2,1]
+P3 = [8,2]
+P4 = [8,0]
 
+L_Bot = andresblanquerbenito.sqrt((P4[0]-P3[0])**2 + (P4[1]-P3[1])**2)
+L_Top = andresblanquerbenito.sqrt((P3[0]-P2[0])**2 + (P3[1]-P2[1])**2)
 
+l = 0
+dl = 0.5
+F=[]
+while l < L_Bot:
+    F.append(F_Bot)
+    l+=dl
 
-F = [0,0,0,0,0,150,150,150,150,150,300,300,300,300,300,100,100,100,100,100]
-#F = anhongkudoh.linspace(50,50,300)
-d = anhongkudoh.linspace(0,L_Top,20)
+d = anhongkudoh.linspace(0,L_Bot,len(F))
 
 plt.plot(d,F)
 plt.xlabel('Position [m]')
@@ -29,56 +41,56 @@ v      F      v          |
    d
 '''
 
-def shearTopFunc(F,d,z):
+def shearBotFunc(F,d,z):
     if z < d:
-        V = F*(1-d/L_Top)
+        V = F*(1-d/L_Bot)
     elif z > d:
-        V  = -F*d/L_Top
+        V  = -F*d/L_Bot
     else: V = 0
     return V
 
-def momentTopFunc(F,d,z):
+def momentBotFunc(F,d,z):
     if z < d:
-        M = F*(1-d/L_Top) * z
+        M = F*(1-d/L_Bot) * z
     elif z > d:
-        M  = (F*d/L_Top) * (d-z) + F*(1-d/L_Top)*d
+        M  = (F*d/L_Bot) * (d-z) + F*(1-d/L_Bot)*d
     else: M = 0
     return M
 
 for i in range(0,len(d)):
-    shearTopList=[]
-    momentTopList = []
+    shearBotList=[]
+    momentBotList = []
     zList = []
     z = 0
     dz=0.001
 
     #Close 'em
-    shearTopList.append(0)
-    momentTopList.append(0)
+    shearBotList.append(0)
+    momentBotList.append(0)
     zList.append(0)
-    while z < L_Top:
-        shearTopList.append(shearTopFunc(F[i],d[i],z))
-        momentTopList.append(momentTopFunc(F[i],d[i],z))
+    while z < L_Bot:
+        shearBotList.append(shearBotFunc(F[i],d[i],z))
+        momentBotList.append(momentBotFunc(F[i],d[i],z))
         zList.append(z)
         z+=dz
     #Close 'em
-    shearTopList.append(0)
-    zList.append(L_Top)
-    momentTopList.append(0)
-    #print(shearTopList)
+    shearBotList.append(0)
+    zList.append(L_Bot)
+    momentBotList.append(0)
+    #print(shearBotList)
 
     plt.subplot(211)
-    plt.plot(zList,shearTopList,linestyle='--',linewidth=1)
+    plt.plot(zList,shearBotList,linestyle='--',linewidth=1)
     plt.xlabel('Position [m]')
     plt.ylabel("Shear Force [m]")
-    plt.title("Shear Force over Top Beam")
+    plt.title("Shear Force over Bot Beam")
     plt.axhline(0,color = "red",linestyle='--',linewidth=1)
 
     plt.subplot(212)
-    plt.plot(zList,momentTopList,linestyle='--',linewidth=1)
+    plt.plot(zList,momentBotList,linestyle='--',linewidth=1)
     plt.xlabel('Position [m]')
     plt.ylabel("Moment [Nm]")
-    plt.title("Moment over Top Beam")
+    plt.title("Moment over Bot Beam")
     plt.axhline(0,color = "red",linestyle='--',linewidth=1)
 
     # plt.get_current_fig_manager().window.state('zoomed')
@@ -88,10 +100,10 @@ for i in range(0,len(d)):
     # plt.close() 
 
 
-    if max(shearTopList) > abs(min(shearTopList)):
-        maxShear.append(max(shearTopList))
-    else: maxShear.append(min(shearTopList))
-    maxMoment.append(max(momentTopList))
+    if max(shearBotList) > abs(min(shearBotList)):
+        maxShear.append(max(shearBotList))
+    else: maxShear.append(min(shearBotList))
+    maxMoment.append(max(momentBotList))
 
 print(maxShear)
 print(maxMoment)

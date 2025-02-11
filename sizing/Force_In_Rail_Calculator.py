@@ -2,6 +2,7 @@ import math
 from sympy.solvers import solve
 from sympy import Symbol
 import sympy
+from UAS_Railing import l
 x2 = Symbol('x2')
 M = 2000000
 H = 30
@@ -14,7 +15,7 @@ P1 = [0,1]
 P2 = [2,1]
 P3 = [8,2]
 P4 = [8,0]
-l = 3
+
 
 alpha = math.atan((P4[1] - P1[1])/(P4[0] - P1[0]))
 beta = math.atan((P3[1] - P2[1])/(P3[0] - P2[0]))
@@ -51,5 +52,7 @@ T = (R2 * (math.cos(beta) * math.tan(alpha) + math.sin(beta)) - M * 9.81 * math.
 R1 = (M * 9.81 + T * math.sin(alpha) - R2 * math.cos(beta)) / math.cos(alpha)
 
 print(R1)
+F_Bot = R1
 print(R2)
+F_Top = R2
 print(T)
