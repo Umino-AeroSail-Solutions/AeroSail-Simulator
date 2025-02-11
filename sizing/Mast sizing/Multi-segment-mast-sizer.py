@@ -352,13 +352,15 @@ print("total overlap possible: ", total_overlap_possible)
 
 # Equal overlaps:
 
-overlap_34 = total_overlap_possible/3
-overlap_23 = total_overlap_possible/3
-overlap_12 = total_overlap_possible/3
+# overlap_34 = total_overlap_possible/3
+# overlap_23 = total_overlap_possible/3
+# overlap_12 = total_overlap_possible/3
 
-# overlap_34 = 0.8
-# overlap_23 = 1.1
-# overlap_12 = total_overlap_possible - overlap_34 - overlap_23
+# Different overlaps overwrite:
+
+overlap_34 = 0.8
+overlap_23 = 1.1
+overlap_12 = total_overlap_possible - overlap_34 - overlap_23
 print()
 print("overlap_34: ", overlap_34)
 print("overlap_23: ", overlap_23)
