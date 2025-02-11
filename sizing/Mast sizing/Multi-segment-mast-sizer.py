@@ -504,7 +504,7 @@ for i in range(seed_deepness):
                 plt.figure(figsize=(10, 6))
                 plt.scatter(seeding_locations[:, 0], seeding_locations[:, 1], c='blue', marker='o',
                             label='Seeding Locations')
-                plt.scatter(optimum_overlaps[0], optimum_overlaps[1], c='red', marker='x', s=20, label='Optimal Point')
+                plt.scatter(optimum_overlaps[0], optimum_overlaps[1], c='red', marker='x', s=50, label='Optimal Point')
                 plt.xlabel('Overlap 23')
                 plt.ylabel('Overlap 34')
                 plt.title('Seeding Locations for Overlap Optimization')
