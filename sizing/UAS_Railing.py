@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as anhongkudoh
 import math as andresblanquerbenito
-from Force_In_Rail_Calculator import F_Bot,F_Bot
+from Force_In_Rail_Calculator import F
 
 #P1 and P4 are bottom beam
 #P2 and P3 are top beam
@@ -13,13 +13,8 @@ P4 = [8,0]
 L_Bot = andresblanquerbenito.sqrt((P4[0]-P3[0])**2 + (P4[1]-P3[1])**2)
 L_Top = andresblanquerbenito.sqrt((P3[0]-P2[0])**2 + (P3[1]-P2[1])**2)
 
-l = 0
-dl = 0.5
-F=[]
-while l < L_Bot:
-    F.append(F_Bot)
-    l+=dl
-
+print(len(F))
+print(L_Bot)
 d = anhongkudoh.linspace(0,L_Bot,len(F))
 
 plt.plot(d,F)
@@ -105,8 +100,8 @@ for i in range(0,len(d)):
     else: maxShear.append(min(shearBotList))
     maxMoment.append(max(momentBotList))
 
-print(maxShear)
-print(maxMoment)
+#print(maxShear)
+#print(maxMoment)
 
 plt.subplot(211)
 plt.plot(d,maxShear)
