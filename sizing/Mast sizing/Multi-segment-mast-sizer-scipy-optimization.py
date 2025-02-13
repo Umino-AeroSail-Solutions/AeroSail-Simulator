@@ -237,14 +237,14 @@ class Segment():
             Vy = self.shears[idx,1]
 
             # To avoid dividing by zero
-            if Mx == 0:
-                Mx += 0.01
-            if My == 0:
-                My += 0.01
-            if Vx == 0:
-                Vx += 0.01
-            if Vy == 0:
-                Vy += 0.01
+            if abs(Mx) < 0.1 :
+                Mx += 0.1
+            if abs(My) < 0.1:
+                My += 0.1
+            if abs(Vx) < 0.1:
+                Vx += 0.1
+            if abs(Vy) < 0.1:
+                Vy += 0.1
 
             areas, thicknesses = cs.create_areas_and_thicknesses(w, h, d, a, subdivisions, top_thickness,
                                                                  side_thickness)
