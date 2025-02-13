@@ -467,8 +467,8 @@ def optimize_mast(Print=False,plot=False):
 
 # Seeding code
 
-overlap_34_range = [0.5, 1.4]
-overlap_23_range = [0.9, 2]
+overlap_34_range = [0.7, 1.2]
+overlap_23_range = [1.2, 1.7]
 
 ol_34_iterations = 3
 ol_23_iterations = 3
