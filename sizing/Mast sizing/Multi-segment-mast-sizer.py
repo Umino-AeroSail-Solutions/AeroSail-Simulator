@@ -119,7 +119,7 @@ class Segment():
         self.height = height
 
     def optimize_cross_section(self, Vx, Vy, Mx, My, material_density, L, added_weight, v_slots,subdivisions=100,
-                               skin_step_thickness=0.0005, min_skin_thickness=0.0005, max_thickness=0.01):
+                               skin_step_thickness=0.0005, min_skin_thickness=0.0005, max_thickness=0.01, Print=False):
         #To avoid dividing by zero
         if Mx == 0:
             Mx += 0.01
@@ -179,25 +179,24 @@ class Segment():
             sorted_designs = possible_designs[possible_designs[:, -1].argsort()]
             # Output the design with the lowest total area
             lowest_area_design = sorted_designs[0]
-            # print("Design with the Lowest Total Area:")
-            # print(f"d: {lowest_area_design[0]}")
-            # print(f"Top Thickness: {lowest_area_design[1]}")
-            # print(f"Side Thickness: {lowest_area_design[2]}")
-            # print(f"Sides SF: {lowest_area_design[3]}")
-            # print(f"Top SF: {lowest_area_design[4]}")
-            # print(f"Bending SF: {lowest_area_design[5]}")
-            # print(f"Total Area: {lowest_area_design[6]}")
-            # print(f"Total mass: {(lowest_area_design[6] * self.length * material_density)}")
+            if Print:
+                print("Design with the Lowest Total Area:")
+                print(f"d: {lowest_area_design[0]}")
+                print(f"Top Thickness: {lowest_area_design[1]}")
+                print(f"Side Thickness: {lowest_area_design[2]}")
+                print(f"Sides SF: {lowest_area_design[3]}")
+                print(f"Top SF: {lowest_area_design[4]}")
+                print(f"Bending SF: {lowest_area_design[5]}")
+                print(f"Total Area: {lowest_area_design[6]}")
+                print(f"Total mass: {(lowest_area_design[6] * self.length * material_density)}")
             return lowest_area_design
     def size_it(self, material_density,max_tension, max_shear, v_slots, skin_step_thickness=0.0005,
-                min_skin_thickness=0.0005, max_thickness=0.01):
+                min_skin_thickness=0.0005, max_thickness=0.01, Print=False):
         self.compute_internal_loads()
         cross_sections = []
         for idx in range(self.shears.shape[0]):
             # print("Analyizing position: ", idx)
-            cross_sections.append(self.optimize_cross_section(self.shears[idx,0], self.shears[idx,1], self.moments[idx,0], self.moments[idx,1], material_density, self.length-self.positions[idx], self.added_weight, v_slots, skin_step_thickness=skin_step_thickness, min_skin_thickness=min_skin_thickness, max_thickness=max_thickness))
-
-            pbar.update(1)
+            cross_sections.append(self.optimize_cross_section(self.shears[idx,0], self.shears[idx,1], self.moments[idx,0], self.moments[idx,1], material_density, self.length-self.positions[idx], self.added_weight, v_slots, skin_step_thickness=skin_step_thickness, min_skin_thickness=min_skin_thickness, max_thickness=max_thickness, Print=Print))
         # Now we choose the final cross-section based on the maximum of every parameter
         cross_sections = np.array(cross_sections)
 
@@ -274,11 +273,12 @@ class Segment():
             "Bending Safety Factor",
             "Total Area"
         ]
-
-        # for label, value in zip(labels, final_cross_section):
-        #     print(f"{label}: {value:.6f}")
+        if Print:
+            for label, value in zip(labels, final_cross_section):
+                print(f"{label}: {value:.6f}")
         total_mass = (self.length * final_cross_section[-1] * material_density)
-        # print("Total mass: ", (self.length * final_cross_section[-1] * material_density))
+        if Print:
+            print("Total mass: ", (self.length * final_cross_section[-1] * material_density))
         return total_mass, final_cross_section
     # def optimize_bottom_overlap(self): # Does not work
     #     self.compute_internal_loads()
@@ -410,7 +410,7 @@ def optimize_mast(Print=False,plot=False):
 
         segment_4.set_width_height(w4, h4)
 
-        segment_4_mass, segment_4_design = segment_4.size_it(aludenisy, max_tension, max_shear, v_slot_options)
+        segment_4_mass, segment_4_design = segment_4.size_it(aludenisy, max_tension, max_shear, v_slot_options, Print=Print)
 
     segment_3 = Segment(sail_weight_4 + sail_weight_3 + 9.81*segment_4_mass, segment_3_length, overlap_23, overlap_34, segment_3_top_force_top, segment_3_top_force_bottom,total_force_vector, height)
     # segment_3.optimize_bottom_overlap()
@@ -489,12 +489,13 @@ for i in range(seed_deepness):
     overlaps_23 = np.linspace(overlap_23_range[0], overlap_23_range[1], ol_23_iterations)
     seed_spacing_34 = (overlap_34_range[1] - overlap_34_range[0])/ol_34_iterations
     seed_spacing_23 = (overlap_23_range[1] - overlap_23_range[0])/ol_23_iterations
-    total_iterations = len(overlaps_34) * len(overlaps_23) * 4 * 8
+    total_iterations = len(overlaps_34) * len(overlaps_23)
     with tqdm(total=total_iterations, desc=f'Seed Iteration {i + 1}/{seed_deepness}') as pbar:
         for overlap_34 in overlaps_34:
             for overlap_23 in overlaps_23:
                 overlap_12 = total_overlap_possible - overlap_34 - overlap_23
-                mass = optimize_mast()
+                mass = optimize_mast(Print=True)
+                pbar.update(1)
                 print("Run completed. Mass:", mass)
                 if mass < optimum_mass:
                     optimum_mass = mass
