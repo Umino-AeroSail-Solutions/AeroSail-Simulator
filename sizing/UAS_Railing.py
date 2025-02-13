@@ -7,8 +7,8 @@ from Force_In_Rail_Calculator import F
 #P2 and P3 are top beam
 P1 = [0,1]
 P2 = [2,1]
-P3 = [8,2]
-P4 = [8,0]
+P3 = [6,2]
+P4 = [6,0]
 
 L_Bot = andresblanquerbenito.sqrt((P4[0]-P1[0])**2 + (P4[1]-P1[1])**2)
 L_Top = andresblanquerbenito.sqrt((P3[0]-P2[0])**2 + (P3[1]-P2[1])**2)

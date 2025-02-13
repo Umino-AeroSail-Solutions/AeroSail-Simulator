@@ -12,8 +12,8 @@ H = 30
 
 P1 = [0,1]
 P2 = [2,1]
-P3 = [8,2]
-P4 = [8,0]
+P3 = [40,11]
+P4 = [6,0]
 
 L_Bot = math.sqrt((P4[0]-P1[0])**2 + (P4[1]-P1[1])**2)
 
@@ -27,7 +27,7 @@ def y1(l):
 
 def solve_for_x2(l):
     x2_Value = 0
-    solutions = solve(abs(P2[0] - P1[0]) - sympy.sqrt(pow((x2 - l),2) + pow((((P3[1] - P2[1])/(P3[0] - P2[0]) * x2 + P2[1]) - ((P4[1] - P1[1])/(P4[0] - P1[0]) * l * math.cos(alpha) + P1[1])), 2)), x2)
+    solutions = solve(abs(P2[0] - P1[0]) - (sympy.sqrt(pow((x2 - l),2) + pow((((P3[1] - P2[1])/(P3[0] - P2[0]) * x2 + P2[1]) - ((P4[1] - P1[1])/(P4[0] - P1[0]) * l * math.cos(alpha) + P1[1])), 2))), x2)
     #print(solutions)
     for solution in solutions:
         if x2_Value < solution:
@@ -49,11 +49,12 @@ F = []
 
 print(L_Bot)
 
-while l < D:
+while l < L_Bot:
 
     x1 = l * math.cos(alpha)
 
-    phi = math.atan((y2(solve_for_x2(l)) - y1(l))/(solve_for_x2(l) - x1))
+    phi = abs(math.atan((y2(solve_for_x2(l)) - y1(l))/(solve_for_x2(l) - x1)))
+    print(phi)
 
     R2 = (M * 9.81 * H * math.sin(phi)) / D * math.cos(90 - phi + beta)
     T = (R2 * (math.cos(beta) * math.tan(alpha) + math.sin(beta)) - M * 9.81 * math.tan(alpha)) / (math.tan(alpha) * math.sin(alpha) + math.cos(alpha))
@@ -66,4 +67,4 @@ while l < D:
     print(R1)
     # print(R2)
     # print(T)
-print(F)
+#print(F)
