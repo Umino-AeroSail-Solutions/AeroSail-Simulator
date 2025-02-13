@@ -15,6 +15,8 @@ P2 = [2,1]
 P3 = [8,2]
 P4 = [8,0]
 
+L_Bot = math.sqrt((P4[0]-P1[0])**2 + (P4[1]-P1[1])**2)
+
 D = abs(P2[0] - P1[0])
 
 def y1(l):
@@ -42,10 +44,10 @@ alpha = math.atan((P4[1] - P1[1])/(P4[0] - P1[0]))
 beta = math.atan((P3[1] - P2[1])/(P3[0] - P2[0]))
 
 l = 0
-dl = 0.05
+dl = 0.1
 F = []
 
-print(D)
+print(L_Bot)
 
 while l < D:
 
@@ -59,8 +61,9 @@ while l < D:
 
     F.append(R1)
     l+=dl
+    print(l)
 
-    # print(R1)
+    print(R1)
     # print(R2)
     # print(T)
-#print(F)
+print(F)

@@ -10,7 +10,7 @@ P2 = [2,1]
 P3 = [8,2]
 P4 = [8,0]
 
-L_Bot = andresblanquerbenito.sqrt((P4[0]-P3[0])**2 + (P4[1]-P3[1])**2)
+L_Bot = andresblanquerbenito.sqrt((P4[0]-P1[0])**2 + (P4[1]-P1[1])**2)
 L_Top = andresblanquerbenito.sqrt((P3[0]-P2[0])**2 + (P3[1]-P2[1])**2)
 
 print(len(F))
@@ -94,8 +94,8 @@ for i in range(0,len(d)):
     # plt.pause(.5)
     # plt.close() 
 
-
-    if max(shearBotList) > abs(min(shearBotList)):
+    # Get maximum / minimum
+    if max(shearBotList) > abs(min(shearBotList)): 
         maxShear.append(max(shearBotList))
     else: maxShear.append(min(shearBotList))
     maxMoment.append(max(momentBotList))
