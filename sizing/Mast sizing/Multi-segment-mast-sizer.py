@@ -411,7 +411,8 @@ def optimize_mast(Print=False,plot=False):
 
         segment_4_mass, segment_4_design = segment_4.size_it(aludenisy, max_tension, max_shear, v_slot_options, Print=Print)
         pbar.update(1) # Pbar option for once every section
-    segment_3 = Segment(sail_weight_4 + sail_weight_3 + 9.81*segment_4_mass, segment_3_length, overlap_23, overlap_34, segment_3_top_force_top, segment_3_top_force_bottom,total_force_vector, height)
+    added_weight = sail_weight_4*2 + sail_weight_3 + 9.81*segment_4_mass*2 # Weight from segment 4 is doubled due to the pulley effects
+    segment_3 = Segment(added_weight, segment_3_length, overlap_23, overlap_34, segment_3_top_force_top, segment_3_top_force_bottom,total_force_vector, height)
     # segment_3.optimize_bottom_overlap()
     segment_3.compute_internal_loads(plot)
     segment_2_top_force_top, segment_2_top_force_bottom = segment_3.compute_reaction_loads()
@@ -427,7 +428,8 @@ def optimize_mast(Print=False,plot=False):
 
         segment_3_mass, segment_3_design = segment_3.size_it(aludenisy, max_tension, max_shear, v_slot_options)
         pbar.update(1) # Pbar option for once every section
-    segment_2 = Segment(sail_weight_4 + sail_weight_3 + 9.81*segment_4_mass + sail_weight_2 + 9.81*segment_3_mass, segment_2_length, overlap_12, overlap_23, segment_2_top_force_top, segment_2_top_force_bottom,total_force_vector, height)
+    added_weight = sail_weight_4 + sail_weight_3*2 + 9.81*segment_4_mass + sail_weight_2 + 9.81*segment_3_mass*2 # Check pulley effect
+    segment_2 = Segment(added_weight, segment_2_length, overlap_12, overlap_23, segment_2_top_force_top, segment_2_top_force_bottom,total_force_vector, height)
     # segment_2.optimize_bottom_overlap()
     segment_2.compute_internal_loads(plot)
     segment_1_top_force_top, segment_1_top_force_bottom = segment_2.compute_reaction_loads()
@@ -443,7 +445,8 @@ def optimize_mast(Print=False,plot=False):
 
         segment_2_mass, segment_2_design = segment_2.size_it(aludenisy, max_tension, max_shear, v_slot_options)
         pbar.update(1) # Pbar option for once every section
-    segment_1 = Segment(sail_weight_4 + sail_weight_3 + 9.81*segment_4_mass + sail_weight_2 + 9.81*segment_3_mass + sail_weight_1 + 9.91*segment_2_mass, segment_1_length, overlap_01, overlap_12, segment_1_top_force_top, segment_1_top_force_bottom,total_force_vector, height)
+    added_weight = sail_weight_4 + sail_weight_3 + 9.81*segment_4_mass + sail_weight_2*2 + 9.81*segment_3_mass + sail_weight_1 + 9.91*segment_2_mass*2 # Check pulley effect
+    segment_1 = Segment(added_weight, segment_1_length, overlap_01, overlap_12, segment_1_top_force_top, segment_1_top_force_bottom,total_force_vector, height)
     # segment_1.optimize_bottom_overlap()
     segment_1.compute_internal_loads(plot)
     reaction_force_top, reaction_force_bottom = segment_1.compute_reaction_loads()
