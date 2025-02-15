@@ -1,6 +1,30 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+import pygame
+from fontTools.misc.symfont import green
+
+# Initialize Pygame
+pygame.init()
+
+# Screen dimensions
+WIDTH, HEIGHT = 1000, 700
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Erection Visualizer")
+
+
+# Font setup
+pygame.font.init()
+font = pygame.font.SysFont('Arial', 24)
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+GREEN = (0, 255, 0)
+YELLOW = (255, 255, 0)
+
 
 ####################################################################
 #Inputs: coordinate of P1, P2, P4, mass of mast M, height of mast H#
@@ -45,8 +69,16 @@ def circle_line_intersection(center, diameter, P1, P2):
 
     return intersection1, intersection2
 
+def draw_arrow(screen, origin, angle, length, color):
+    end_pos = (origin[0] + length * np.cos(angle), origin[1] - length * np.sin(angle))
+    pygame.draw.line(screen, color, origin, end_pos, 3)
+    pygame.draw.polygon(screen, color, [
+        (end_pos[0], end_pos[1]),
+        (end_pos[0] - 10 * np.cos(angle - np.pi / 6), end_pos[1] + 10 * np.sin(angle - np.pi / 6)),
+        (end_pos[0] - 10 * np.cos(angle + np.pi / 6), end_pos[1] + 10 * np.sin(angle + np.pi / 6))
+    ])
 
-def get_reactions(P1, P2, P3, P4, l, m, h):
+def get_reactions(P1, P2, P3, P4, l, m, h, draw=False):
     # Some useful dimensions
     L_Bot = np.linalg.norm(P4-P1)
     L_Top = np.linalg.norm(P3-P2)
@@ -73,14 +105,45 @@ def get_reactions(P1, P2, P3, P4, l, m, h):
     phi = np.atan2(C_vector[1], C_vector[0])
     # return phi # for testing
 
-    alpha = np.atan2((P4[1] - P1[1]), (P4[0] - P1[0]))
-    beta = np.atan2((P3[1] - P2[1]), (P3[0] - P2[0]))
+    beta = np.atan2((P4[1] - P1[1]), (P4[0] - P1[0]))
+    alpha = np.atan2((P3[1] - P2[1]), (P3[0] - P2[0]))
 
-    R2 = (m * 9.81 * h * np.sin(phi)) / d * np.cos(90 - phi + beta)
+    R2 = (m * 9.81 * (h/2) * np.cos(phi)) / (d * np.cos(np.pi/2 - phi + beta))
     T = (R2 * (np.cos(beta) * np.tan(alpha) + np.sin(beta)) - m * 9.81 * np.tan(alpha)) / (
                 np.tan(alpha) * np.sin(alpha) + np.cos(alpha))
     R1 = (m * 9.81 + T * np.sin(alpha) - R2 * np.cos(beta)) / np.cos(alpha)
 
+    sum_x = R1 * np.sin(alpha) - R2 * np.sin(beta) + T * np.cos(alpha)
+    sum_y = R1 * np.cos(alpha) + R2 * np.cos(beta) - T * np.sin(alpha) - m*9.81
+    mom_a = (m * 9.81 * (h/2) * np.cos(phi)) - (R2 * d * np.cos(np.pi/2 - phi + beta))
+
+    if abs(sum_x)>0.1 or abs(sum_y)>0.1 or abs(mom_a)>0.1:
+        print("ERROR ENCOUNTERED: not in equilibrium")
+    #
+    # print("Sum x is {}".format(sum_x))
+    # print("Sum y is {}".format(sum_y))
+    # print("Mom a is {}".format(mom_a))
+    # print()
+    scale = np.array([50,-50])
+    offset = np.array([(WIDTH/2) - scale[0]*P3[0], 3*HEIGHT/4])
+    if draw:
+        pygame.draw.circle(screen, YELLOW, P1 * scale + offset, 4)
+        pygame.draw.circle(screen, YELLOW, P2 * scale + offset, 4)
+        pygame.draw.circle(screen, YELLOW, P3 * scale + offset, 4)
+        pygame.draw.circle(screen, YELLOW, P4 * scale + offset, 4)
+        pygame.draw.line(screen, WHITE, P1 * scale + offset, P4 * scale + offset, 1)
+        pygame.draw.line(screen, WHITE, P2 * scale + offset, P3 * scale + offset, 1)
+
+        pygame.draw.line(screen, WHITE, A*scale + offset, (A+((h/d)*(C_vector)))*scale + offset, 2)
+        pygame.draw.circle(screen, YELLOW, A*scale + offset, 4)
+        pygame.draw.circle(screen, YELLOW, B * scale + offset, 4)
+
+        vector_scale = 1/1000
+        draw_arrow(screen, A*scale + offset, (np.pi/2-alpha), vector_scale*R1, RED)
+        draw_arrow(screen, B * scale + offset, (np.pi / 2 - beta), vector_scale * R2, GREEN)
+        draw_arrow(screen, A * scale + offset, (-alpha), vector_scale * T, BLUE)
+
+        draw_arrow(screen, (A+((h/(2*d))*(C_vector)))*scale + offset, (-np.pi / 2), m * 9.81 *vector_scale , YELLOW)
     return R1, R2, T
 
 
@@ -88,22 +151,35 @@ def get_reactions(P1, P2, P3, P4, l, m, h):
 L_Bot = np.linalg.norm(P4 - P1)
 
 # Generate values of l from 0 to L_Bot
-l_values = np.linspace(0, L_Bot, 100)
+l_values = np.linspace(0, L_Bot, 1000)
 
 # Define mass and height parameters
 m = 2000  # Example mass in kg
-h = 30   # Example height in meters
+h = 10   # Example height in meters
 
 # Compute reactions for each l
 R1_values = []
 R2_values = []
 T_values = []
 
+delta_t = 0
+
+draw = True
+
 for l in l_values:
-    R1, R2, T = get_reactions(P1, P2, P3, P4, l, m, h)
+    screen.fill(BLACK)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    R1, R2, T = get_reactions(P1, P2, P3, P4, l, m, h, draw=draw)
     R1_values.append(R1)
     R2_values.append(R2)
     T_values.append(T)
+    if draw:
+        # Update the display
+        pygame.display.flip()
+        pygame.time.delay(delta_t)
+
 
 # Plot reaction forces as a function of l
 plt.figure(figsize=(8, 5))
@@ -117,6 +193,23 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
+
+# Main loop
+running = True
+while running:
+    screen.fill(BLACK)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    mx, my = pygame.mouse.get_pos()
+    l = (mx) * (L_Bot/WIDTH)
+    R1, R2, T = get_reactions(P1, P2, P3, P4, l, m, h, draw=True)
+    pygame.display.flip()
+
+
+# Quit Pygame
+pygame.quit()
 
 # Phi testing shenanigans:
 # # Compute bottom rail length
