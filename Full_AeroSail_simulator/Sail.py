@@ -12,6 +12,7 @@ import XFLR5_interpolarion_creator as XFLR5_interp
 
 class Sail_Class():
     def __init__(self, plainfoil, chord, chordratio, height=None, oswalde = 1, panels=160):
+        '''Intializes the class'''
         self.chord = chord
         self.chordratio = chordratio
         self.height = height
@@ -332,6 +333,7 @@ class Sail_Class():
         plt.tight_layout()
         plt.show()
     def get_max_ct(self):
+        '''Returns the maximum thrust coefficient possible'''
         max_ct = 0
         for AWA in range(180):
             ct = self.get_cts(AWA).max()
