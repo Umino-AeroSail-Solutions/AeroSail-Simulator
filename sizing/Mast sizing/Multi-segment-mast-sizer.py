@@ -470,8 +470,8 @@ def optimize_mast(Print=False,plot=False):
 
 # Seeding code
 
-overlap_34_range = [0.7, 1.2]
-overlap_23_range = [1.2, 1.7]
+overlap_34_range = [1, 1.15]
+overlap_23_range = [1.25, 1.4] # Refined from multiple unfinnished runs
 
 ol_34_iterations = 3
 ol_23_iterations = 3
@@ -504,13 +504,15 @@ for i in range(seed_deepness):
                 if mass < optimum_mass:
                     optimum_mass = mass
                     optimum_overlaps = [overlap_23, overlap_34]
-                seeding_locations.append((overlap_23, overlap_34))  # Store the seeding location
+                seeding_locations.append((overlap_23, overlap_34, mass))  # Store the seeding location
                 # Plotting the seeding locations
                 seeding_locations_array = np.array(seeding_locations)
                 plt.figure(figsize=(10, 6))
                 plt.scatter(seeding_locations_array[:, 0], seeding_locations_array[:, 1], c='blue', marker='o',
                             label='Seeding Locations')
                 plt.scatter(optimum_overlaps[0], optimum_overlaps[1], c='red', marker='x', s=50, label='Optimal Point')
+                for point in seeding_locations:
+                    plt.text(point[0], point[1], f'{point[2]}', fontsize=8, ha='right')
                 plt.xlabel('Overlap 23')
                 plt.ylabel('Overlap 34')
                 plt.title('Seeding Locations for Overlap Optimization')
@@ -521,4 +523,5 @@ for i in range(seed_deepness):
                         optimum_overlaps[1]+(seed_spacing_34*inseed_zoom)]
     overlap_23_range = [optimum_overlaps[0] - (seed_spacing_23 * inseed_zoom),
                         optimum_overlaps[0] + (seed_spacing_23 * inseed_zoom)]
+print("Optimum overlap is: ", optimum_overlaps)
 
