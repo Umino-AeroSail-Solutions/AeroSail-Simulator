@@ -524,4 +524,5 @@ for i in range(seed_deepness):
     overlap_23_range = [optimum_overlaps[0] - (seed_spacing_23 * inseed_zoom),
                         optimum_overlaps[0] + (seed_spacing_23 * inseed_zoom)]
 print("Optimum overlap is: ", optimum_overlaps)
+# Optimum overlap is:  [np.float64(1.325), np.float64(1.075)]
 
