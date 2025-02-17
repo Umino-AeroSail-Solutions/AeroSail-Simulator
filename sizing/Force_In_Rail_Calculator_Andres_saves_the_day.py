@@ -102,11 +102,11 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False):
 
     C_vector = B-A
 
-    phi = np.atan2(C_vector[1], C_vector[0])
+    phi = np.arctan2(C_vector[1], C_vector[0])
     # return phi # for testing
 
-    beta = np.atan2((P4[1] - P1[1]), (P4[0] - P1[0]))
-    alpha = np.atan2((P3[1] - P2[1]), (P3[0] - P2[0]))
+    beta = np.arctan2((P4[1] - P1[1]), (P4[0] - P1[0]))
+    alpha = np.arctan2((P3[1] - P2[1]), (P3[0] - P2[0]))
 
     R2 = (m * 9.81 * (h/2) * np.cos(phi)) / (d * np.cos(np.pi/2 - phi + beta))
     T = (R2 * (np.cos(beta) * np.tan(alpha) + np.sin(beta)) - m * 9.81 * np.tan(alpha)) / (
