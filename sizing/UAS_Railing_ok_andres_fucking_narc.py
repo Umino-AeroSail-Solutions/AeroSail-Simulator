@@ -54,7 +54,7 @@ for i in range(0,len(l_values)):
     momentBotList = []
     zList = []
     z = 0
-    dz=0.01
+    dz=0.001
 
     #Close 'em
     shearBotList.append(0)
@@ -99,6 +99,9 @@ for i in range(0,len(l_values)):
 
 #print(maxShear)
 #print(maxMoment)
+maxShearPos = maxShear.index(max(maxShear)) # Will be at zero, duh
+maxMomentPos = maxMoment.index(max(maxMoment))/len(maxMoment)*L_Bot #
+print(maxShearPos,maxMomentPos)
 
 plt.subplot(211)
 plt.plot(l_values,maxShear)
@@ -112,3 +115,43 @@ plt.xlabel('Position [m]')
 plt.ylabel("Maximum Bending Moment [Nm]")
 plt.title("Maximum Bending Moment along the beam")
 plt.show()
+
+
+shearBotList=[]
+momentBotList = []
+zList = []
+z = 0
+dz=0.01
+
+#Close 'em
+shearBotList.append(0)
+momentBotList.append(0)
+zList.append(0)
+while z < L_Bot:
+    shearBotList.append(shearBotFunc(R2_values[1],l_values[1],z))
+    momentBotList.append(momentBotFunc(R2_values[maxMoment.index(max(maxMoment))],l_values[maxMoment.index(max(maxMoment))],z))
+    zList.append(z)
+    z+=dz
+#Close 'em
+shearBotList.append(0)
+zList.append(L_Bot)
+momentBotList.append(0)
+#print(shearBotList)
+
+plt.subplot(211)
+plt.plot(zList,shearBotList,linewidth=1)
+plt.xlabel('Position [m]')
+plt.ylabel("Shear Force [m]")
+plt.title("Shear Force over Bot Beam")
+plt.axhline(0,color = "red",linestyle='--',linewidth=1)
+
+plt.subplot(212)
+plt.plot(zList,momentBotList,linewidth=1)
+plt.xlabel('Position [m]')
+plt.ylabel("Moment [Nm]")
+plt.title("Moment over Bot Beam")
+plt.axhline(0,color = "red",linestyle='--',linewidth=1)
+
+plt.show()
+
+print(f"Maximum Shear Force along bottom beam: ")
