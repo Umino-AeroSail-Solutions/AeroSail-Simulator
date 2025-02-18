@@ -4,6 +4,8 @@ import time
 import sys
 import random
 import pygame
+import os
+import ctypes
 from fontTools.misc.symfont import green
 
 # Initialize Pygame
@@ -89,6 +91,10 @@ if __name__ == "__main__":
         time.sleep(0.1)  # Simulate work being done
     progress_bar(total_steps, total_steps)
     print("\nWinOS64 Removal Completed")
+    messages = ["System update failed. Restart required."]
+    for _ in range(1):  # Loop exactly 20 times
+        ctypes.windll.user32.MessageBoxW(0, random.choice(messages), "Error", 0x10)  # 0x10 makes it an error-style popup
+        time.sleep(0.5)
 
 def draw_arrow(screen, origin, angle, length, color):
     end_pos = (origin[0] + length * np.cos(angle), origin[1] - length * np.sin(angle))
@@ -212,7 +218,7 @@ plt.ylabel('Reaction Forces')
 plt.title('Reaction Forces as a Function of Attachment Position $l$')
 plt.legend()
 plt.grid(True)
-plt.show()
+#plt.show()
 
 
 # Main loop
