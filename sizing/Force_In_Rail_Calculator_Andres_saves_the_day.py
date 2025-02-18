@@ -32,8 +32,8 @@ YELLOW = (255, 255, 0)
 
 P1 = np.array([0,1]) # Bottom rail in retracted
 P2 = np.array([2,1]) # Top rail in retracted
-P3 = np.array([8,2]) # Top rail in extended
-P4 = np.array([8,0]) # Bottom rail in extended
+P3 = np.array([6,2]) # Top rail in extended
+P4 = np.array([6,0]) # Bottom rail in extended
 
 
 def circle_line_intersection(center, diameter, P1, P2):
