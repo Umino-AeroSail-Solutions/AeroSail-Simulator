@@ -2,6 +2,7 @@ import math
 from sympy.solvers import solve
 from sympy import Symbol
 import sympy
+from sympy import symbols, Eq, solve, sqrt
 x2 = Symbol('x2')
 M = 2000000
 H = 8
@@ -25,16 +26,38 @@ def y1(l):
 
     return y1
 
+
 def solve_for_x2(l):
+    x2_value = 0
+
+
+    return x2_value
+
+"""def solve_for_x2(l):
     x2_Value = 0
+<<<<<<< HEAD
+    equation = P2[0] - P1[0] - (sympy.sqrt(pow((x2 - l), 2) + pow((((P3[1] - P2[1])/(P3[0] - P2[0]) * x2 + P2[1]) - ((P4[1] - P1[1])/(P4[0] - P1[0]) * l * math.cos(alpha) + P1[1])), 2)))
+    print(f"Equation to solve at l={l}: {equation}")
+
+    solutions = solve(P2[0] - P1[0] - (sympy.sqrt(pow((x2 - l),2) + pow((((P3[1] - P2[1])/(P3[0] - P2[0]) * x2 + P2[1]) - ((P4[1] - P1[1])/(P4[0] - P1[0]) * l * math.cos(alpha) + P1[1])), 2))), x2)
+    print(solutions)
+=======
     solutions = solve(abs(P2[0] - P1[0]) - (sympy.sqrt(pow((x2 - l),2) + pow((((P3[1] - P2[1])/(P3[0] - P2[0]) * x2 + P2[1]) - ((P4[1] - P1[1])/(P4[0] - P1[0]) * l * math.cos(alpha) + P1[1])), 2))), x2)
     #print(solutions)
+>>>>>>> e0722411609d3fc323aec2840c485a474736189d
     for solution in solutions:
         if x2_Value < solution:
             x2_Value = solution
     print("Larger value:")
     print(x2_Value)
-    return x2_Value
+    return x2_Value"""
+
+def solve_for_x2(l):
+    """Solve for x2 ensuring real solutions."""
+    eq = Eq(2 - l * sqrt((0.2083 * x2 - 1)**2 + 0.0270 * (0.3335 * x2 + 1)**2), 0)
+    solutions = solve(eq, x2)
+    real_solutions = [sol.evalf() for sol in solutions if sol.is_real]
+    return max(real_solutions) if real_solutions else None
 
 def y2(x2):
 
@@ -58,7 +81,7 @@ while l < L_Bot:
     phi = math.atan((y2(solve_for_x2(l)) - y1(l))/(solve_for_x2(l) - x1))
     print(phi)
 
-    R2 = (M * 9.81 * H * math.sin(phi)) / D * math.cos(90 - phi + beta)
+    R2 = (M * 9.81 * H * math.cos(phi)) / D * math.cos(90 - phi + beta)
     T = (R2 * (math.cos(beta) * math.tan(alpha) + math.sin(beta)) - M * 9.81 * math.tan(alpha)) / (math.tan(alpha) * math.sin(alpha) + math.cos(alpha))
     R1 = (M * 9.81 + T * math.sin(alpha) - R2 * math.cos(beta)) / math.cos(alpha)
 

@@ -2,15 +2,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import pygame
+
 from fontTools.misc.symfont import green
 
 # Initialize Pygame
-pygame.init()
+#pygame.init()
 
 # Screen dimensions
 WIDTH, HEIGHT = 1000, 700
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Erection Visualizer")
+"""screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Erection Visualizer")"""
 
 
 # Font setup
@@ -36,6 +37,7 @@ P1 = np.array([0, 1.5]) # Bottom rail in retracted
 P2 = np.array([3, 1.5]) # Top rail in retracted
 P3 = np.array([6, 3]) # Top rail in extended
 P4 = np.array([6, 0]) # Bottom rail in extended
+
 
 
 def circle_line_intersection(center, diameter, P1, P2):
@@ -70,6 +72,7 @@ def circle_line_intersection(center, diameter, P1, P2):
     intersection2 = np.array([x1 + t2 * dx, y1 + t2 * dy])
 
     return intersection1, intersection2
+
 
 def draw_arrow(screen, origin, angle, length, color):
     end_pos = (origin[0] + length * np.cos(angle), origin[1] - length * np.sin(angle))
@@ -131,7 +134,7 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False):
     # print()
     scale = np.array([50,-50])
     offset = np.array([(WIDTH/2) - scale[0]*P3[0], 3*HEIGHT/4])
-    if draw:
+    """if draw:
         pygame.draw.circle(screen, YELLOW, P1 * scale + offset, 4)
         pygame.draw.circle(screen, YELLOW, P2 * scale + offset, 4)
         pygame.draw.circle(screen, YELLOW, P3 * scale + offset, 4)
@@ -156,7 +159,7 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False):
         draw_arrow(screen, B * scale + offset, (np.pi / 2 - beta), vector_scale * R2, GREEN)
         draw_arrow(screen, A * scale + offset, (-alpha), vector_scale * T, BLUE)
 
-        draw_arrow(screen, (A+((h/(2*d))*(C_vector)))*scale + offset, (-np.pi / 2), m * 9.81 *vector_scale , YELLOW)
+        draw_arrow(screen, (A+((h/(2*d))*(C_vector)))*scale + offset, (-np.pi / 2), m * 9.81 *vector_scale , YELLOW)"""
     return R1, R2, T
 
 
@@ -181,18 +184,18 @@ delta_t = 0
 draw = True
 
 for l in l_values:
-    screen.fill(BLACK)
+    """screen.fill(BLACK)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            running = False"""
     R1, R2, T = get_reactions(P1, P2, P3, P4, l, m, h, draw=draw)
     R1_values.append(R1)
     R2_values.append(R2)
     T_values.append(T)
-    if draw:
+    """if draw:
         # Update the display
         pygame.display.flip()
-        pygame.time.delay(delta_t)
+        pygame.time.delay(delta_t)"""
 
 
 # Plot reaction forces as a function of l
@@ -205,12 +208,12 @@ plt.ylabel('Reaction Forces')
 plt.title('Reaction Forces as a Function of Attachment Position $l$')
 plt.legend()
 plt.grid(True)
-plt.show()
+#plt.show()
 
 
 # Main loop
 running = True
-while running:
+"""while running:
     screen.fill(BLACK)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -223,7 +226,7 @@ while running:
 
 
 # Quit Pygame
-pygame.quit()
+pygame.quit()"""
 
 # Phi testing shenanigans:
 # # Compute bottom rail length
