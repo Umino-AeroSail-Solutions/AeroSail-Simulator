@@ -1,11 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import time
-import sys
-import random
+
 import pygame
-import os
-import ctypes
+
 from fontTools.misc.symfont import green
 
 # Initialize Pygame
@@ -74,27 +71,6 @@ def circle_line_intersection(center, diameter, P1, P2):
 
     return intersection1, intersection2
 
-def progress_bar(completion, total, length=50):
-    percent = completion / total
-    bar_length = int(percent * length)
-    bar = "=" * bar_length + "-" * (length - bar_length)
-    sys.stdout.write(f"\r[{bar}] {percent * 100:.2f}%")
-    sys.stdout.flush()
-
-if __name__ == "__main__":
-    total_steps = 100  # Total units of work
-    progress = 0
-    print("Removing WinOS64")
-    while progress < total_steps:
-        progress_bar(progress, total_steps)
-        progress += random.randint(1, 5)  # Random increment
-        time.sleep(0.1)  # Simulate work being done
-    progress_bar(total_steps, total_steps)
-    print("\nWinOS64 Removal Completed")
-    messages = ["System update failed. Restart required."]
-    for _ in range(1):  # Loop exactly 20 times
-        ctypes.windll.user32.MessageBoxW(0, random.choice(messages), "Error", 0x10)  # 0x10 makes it an error-style popup
-        time.sleep(0.5)
 
 def draw_arrow(screen, origin, angle, length, color):
     end_pos = (origin[0] + length * np.cos(angle), origin[1] - length * np.sin(angle))
