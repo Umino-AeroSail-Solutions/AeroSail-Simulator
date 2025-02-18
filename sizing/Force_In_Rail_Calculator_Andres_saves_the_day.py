@@ -25,16 +25,18 @@ RED = (255, 0, 0)
 BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
 YELLOW = (255, 255, 0)
+BoruiBlue = (0,122,200)
+MateRed = (200,50,50)
 
 
 ####################################################################
 #Inputs: coordinate of P1, P2, P4, mass of mast M, height of mast H#
 ####################################################################
 
-P1 = np.array([0,1]) # Bottom rail in retracted
-P2 = np.array([2,1]) # Top rail in retracted
-P3 = np.array([8,2]) # Top rail in extended
-P4 = np.array([8,0]) # Bottom rail in extended
+P1 = np.array([0, 1.5]) # Bottom rail in retracted
+P2 = np.array([3, 1.5]) # Top rail in retracted
+P3 = np.array([6, 3]) # Top rail in extended
+P4 = np.array([6, 0]) # Bottom rail in extended
 
 
 
@@ -104,7 +106,10 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False):
         B = B2
 
     C_vector = B-A
+    D_vector = [C_vector[1],-1*C_vector[0]]
 
+    # print(C_vector)
+    # print(D_vector)
     phi = np.arctan2(C_vector[1], C_vector[0])
     # return phi # for testing
 
@@ -137,9 +142,17 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False):
         pygame.draw.line(screen, WHITE, P1 * scale + offset, P4 * scale + offset, 1)
         pygame.draw.line(screen, WHITE, P2 * scale + offset, P3 * scale + offset, 1)
 
-        pygame.draw.line(screen, WHITE, A*scale + offset, (A+((h/d)*(C_vector)))*scale + offset, 2)
+        pygame.draw.line(screen, WHITE, A*scale + offset, (A+((h/d)*(C_vector)))*scale + offset, 1)
         pygame.draw.circle(screen, YELLOW, A*scale + offset, 4)
         pygame.draw.circle(screen, YELLOW, B * scale + offset, 4)
+        
+        #Container Outlines
+        pygame.draw.line(screen, BoruiBlue, [0,0] * scale + offset, [0,3]*scale+offset, 2)
+        pygame.draw.line(screen, BoruiBlue, [0,0] * scale + offset, [12,0]*scale+offset, 2)
+        pygame.draw.line(screen, BoruiBlue, [12,0] * scale + offset, [12,3]*scale+offset, 2)
+
+        #Bottom right corner sail
+        pygame.draw.line(screen,MateRed,(A+((h/d)*(C_vector)))*scale + offset, ((A+((h/d)*(C_vector)))+[(w/d)*(D_vector[0]), (w/d)*(D_vector[1])])*scale+offset ,1)
 
         vector_scale = 1/1000
         draw_arrow(screen, A*scale + offset, (np.pi/2-alpha), vector_scale*R1, RED)
@@ -159,6 +172,7 @@ l_values = np.linspace(0, L_Bot, 1000)
 # Define mass and height parameters
 m = 2000  # Example mass in kg
 h = 10   # Example height in meters
+w = 1.5 # Example width of the sail typa ribs thingy idk man
 
 # Compute reactions for each l
 R1_values = []

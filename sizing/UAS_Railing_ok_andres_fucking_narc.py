@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as anhongkudoh
 import math as andresblanquerbenito
-from Force_In_Rail_Calculator import F
+from Force_In_Rail_Calculator_Andres_saves_the_day import l_values, R1_values, R2_values
 
 #P1 and P4 are bottom beam
 #P2 and P3 are top beam
@@ -13,14 +13,11 @@ P4 = [6,0]
 L_Bot = andresblanquerbenito.sqrt((P4[0]-P1[0])**2 + (P4[1]-P1[1])**2)
 L_Top = andresblanquerbenito.sqrt((P3[0]-P2[0])**2 + (P3[1]-P2[1])**2)
 
-print(len(F))
-print(L_Bot)
-d = anhongkudoh.linspace(0,L_Bot,len(F))
 
-plt.plot(d,F)
+plt.plot(l_values,R2_values)
 plt.xlabel('Position [m]')
 plt.ylabel("Force [N]")
-plt.title("Unit Forces Distributed over the beam")
+plt.title("Forces at every point over the beam")
 plt.show()
 
 maxShear = []
@@ -52,7 +49,7 @@ def momentBotFunc(F,d,z):
     else: M = 0
     return M
 
-for i in range(0,len(d)):
+for i in range(0,len(l_values)):
     shearBotList=[]
     momentBotList = []
     zList = []
@@ -64,8 +61,8 @@ for i in range(0,len(d)):
     momentBotList.append(0)
     zList.append(0)
     while z < L_Bot:
-        shearBotList.append(shearBotFunc(F[i],d[i],z))
-        momentBotList.append(momentBotFunc(F[i],d[i],z))
+        shearBotList.append(shearBotFunc(R2_values[i],l_values[i],z))
+        momentBotList.append(momentBotFunc(R2_values[i],l_values[i],z))
         zList.append(z)
         z+=dz
     #Close 'em
@@ -102,16 +99,59 @@ for i in range(0,len(d)):
 
 #print(maxShear)
 #print(maxMoment)
+maxShearPos = maxShear.index(max(maxShear)) # Will be at zero, duh
+maxMomentPos = maxMoment.index(max(maxMoment))/len(maxMoment)*L_Bot #
+print(maxShearPos,maxMomentPos)
 
 plt.subplot(211)
-plt.plot(d,maxShear)
+plt.plot(l_values,maxShear)
 plt.xlabel('Position [m]')
 plt.ylabel("Maximum Shear Force [N]")
 plt.title("Maximum Shear Force along the beam")
 
 plt.subplot(212)
-plt.plot(d,maxMoment)
+plt.plot(l_values,maxMoment)
 plt.xlabel('Position [m]')
 plt.ylabel("Maximum Bending Moment [Nm]")
 plt.title("Maximum Bending Moment along the beam")
 plt.show()
+
+
+shearBotList=[]
+momentBotList = []
+zList = []
+z = 0
+dz=0.01
+
+#Close 'em
+shearBotList.append(0)
+momentBotList.append(0)
+zList.append(0)
+while z < L_Bot:
+    shearBotList.append(shearBotFunc(R2_values[1],l_values[1],z))
+    momentBotList.append(momentBotFunc(R2_values[maxMoment.index(max(maxMoment))],l_values[maxMoment.index(max(maxMoment))],z))
+    zList.append(z)
+    z+=dz
+#Close 'em
+shearBotList.append(0)
+zList.append(L_Bot)
+momentBotList.append(0)
+#print(shearBotList)
+
+plt.subplot(211)
+plt.plot(zList,shearBotList,linewidth=1)
+plt.xlabel('Position [m]')
+plt.ylabel("Shear Force [m]")
+plt.title("Shear Force over Bot Beam")
+plt.axhline(0,color = "red",linestyle='--',linewidth=1)
+
+plt.subplot(212)
+plt.plot(zList,momentBotList,linewidth=1)
+plt.xlabel('Position [m]')
+plt.ylabel("Moment [Nm]")
+plt.title("Moment over Bot Beam")
+plt.axhline(0,color = "red",linestyle='--',linewidth=1)
+
+plt.show()
+
+print(f"Maximum Shear Force along bottom beam: ")
