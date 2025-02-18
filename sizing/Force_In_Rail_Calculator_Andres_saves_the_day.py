@@ -175,7 +175,7 @@ for l in l_values:
         if event.type == pygame.QUIT:
             running = False"""
     R1, R2, T = get_reactions(P1, P2, P3, P4, l, m, h, draw=draw)
-    R1_values.append(R1)
+    R1_values.append(R1) 
     R2_values.append(R2)
     T_values.append(T)
     """if draw:
