@@ -118,7 +118,7 @@ class Segment():
         self.width = width
         self.height = height
 
-    def optimize_cross_section(self, Vx, Vy, Mx, My, material_density, L, added_weight, v_slots,subdivisions=100,
+    def optimize_cross_section(self, Vx, Vy, Mx, My, material_density, L, added_weight, v_slots,subdivisions=15,
                                skin_step_thickness=0.0005, min_skin_thickness=0.0005, max_thickness=0.01, Print=False):
         #To avoid dividing by zero
         if Mx == 0:
@@ -349,7 +349,7 @@ segment_3_length = segment_4_length - min_segment_length_difference
 segment_2_length = segment_3_length - min_segment_length_difference
 segment_1_length = segment_2_length - min_segment_length_difference
 
-overlap_01 = 2.8
+overlap_01 = 2.6
 total_overlap_possible = (segment_4_length +segment_3_length +segment_2_length +segment_1_length -overlap_01) - height
 print("total overlap possible: ", total_overlap_possible)
 
@@ -470,13 +470,13 @@ def optimize_mast(Print=False,plot=False):
 
 # Seeding code
 
-overlap_34_range = [1, 1.15]
-overlap_23_range = [1.25, 1.4] # Refined from multiple unfinnished runs
+overlap_34_range = [0.8, 1.45]
+overlap_23_range = [1, 1.6] # Refined from multiple unfinnished runs
 
-ol_34_iterations = 3
-ol_23_iterations = 3
+ol_34_iterations = 4
+ol_23_iterations = 4
 
-seed_deepness = 5
+seed_deepness = 3
 
 inseed_zoom = 0.75  # how much around the point does it go
 
