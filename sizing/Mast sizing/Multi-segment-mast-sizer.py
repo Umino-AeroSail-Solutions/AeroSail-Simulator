@@ -261,8 +261,8 @@ class Segment():
         final_cross_section[3] = min_safety_factors[2]
         final_cross_section[4] = min_safety_factors[1]
         final_cross_section[5] = min_safety_factors[0]
-
-        # print('\n Final design:')
+        if Print:
+            print('\n Final design:')
         labels = [
             "V-slot side size",
             "Top Thickness",
@@ -361,8 +361,8 @@ print("total overlap possible: ", total_overlap_possible)
 
 # Different overlaps overwrite:
 
-overlap_34 = 0.8
-overlap_23 = 1.1
+overlap_34 = 1.03
+overlap_23 = 1.40
 overlap_12 = total_overlap_possible - overlap_34 - overlap_23
 print()
 print("overlap_34: ", overlap_34)
@@ -410,7 +410,7 @@ def optimize_mast(Print=False,plot=False):
         segment_4.set_width_height(w4, h4)
 
         segment_4_mass, segment_4_design = segment_4.size_it(aludenisy, max_tension, max_shear, v_slot_options, Print=Print)
-        pbar.update(1) # Pbar option for once every section
+        # pbar.update(1) # Pbar option for once every section
     added_weight = sail_weight_4*2 + sail_weight_3 + 9.81*segment_4_mass*2 # Weight from segment 4 is doubled due to the pulley effects
     segment_3 = Segment(added_weight, segment_3_length, overlap_23, overlap_34, segment_3_top_force_top, segment_3_top_force_bottom,total_force_vector, height)
     # segment_3.optimize_bottom_overlap()
@@ -426,8 +426,8 @@ def optimize_mast(Print=False,plot=False):
 
         segment_3.set_width_height(w3, h3)
 
-        segment_3_mass, segment_3_design = segment_3.size_it(aludenisy, max_tension, max_shear, v_slot_options)
-        pbar.update(1) # Pbar option for once every section
+        segment_3_mass, segment_3_design = segment_3.size_it(aludenisy, max_tension, max_shear, v_slot_options, Print=Print)
+        # pbar.update(1) # Pbar option for once every section
     added_weight = sail_weight_4 + sail_weight_3*2 + 9.81*segment_4_mass + sail_weight_2 + 9.81*segment_3_mass*2 # Check pulley effect
     segment_2 = Segment(added_weight, segment_2_length, overlap_12, overlap_23, segment_2_top_force_top, segment_2_top_force_bottom,total_force_vector, height)
     # segment_2.optimize_bottom_overlap()
@@ -443,8 +443,8 @@ def optimize_mast(Print=False,plot=False):
 
         segment_2.set_width_height(w2, h2)
 
-        segment_2_mass, segment_2_design = segment_2.size_it(aludenisy, max_tension, max_shear, v_slot_options)
-        pbar.update(1) # Pbar option for once every section
+        segment_2_mass, segment_2_design = segment_2.size_it(aludenisy, max_tension, max_shear, v_slot_options, Print=Print)
+        # pbar.update(1) # Pbar option for once every section
     added_weight = sail_weight_4 + sail_weight_3 + 9.81*segment_4_mass + sail_weight_2*2 + 9.81*segment_3_mass + sail_weight_1 + 9.91*segment_2_mass*2 # Check pulley effect
     segment_1 = Segment(added_weight, segment_1_length, overlap_01, overlap_12, segment_1_top_force_top, segment_1_top_force_bottom,total_force_vector, height)
     # segment_1.optimize_bottom_overlap()
@@ -460,7 +460,7 @@ def optimize_mast(Print=False,plot=False):
 
         segment_1.set_width_height(w1, h1)
 
-        segment_1_mass, segment_1_design = segment_1.size_it(aludenisy, max_tension, max_shear, v_slot_options)
+        segment_1_mass, segment_1_design = segment_1.size_it(aludenisy, max_tension, max_shear, v_slot_options, Print=Print)
     if compute_cross_section and Print:
         print("\nTotal mast mass: ", (segment_1_mass + segment_2_mass + segment_3_mass + segment_4_mass))
         print("Total sail planform mass: ", ((sail_weight_1 + sail_weight_2 + sail_weight_3 + sail_weight_4))/9.81)
@@ -468,60 +468,79 @@ def optimize_mast(Print=False,plot=False):
         print("Total sail mass: ", ((segment_1_mass + segment_2_mass + segment_3_mass + segment_4_mass)+((sail_weight_1 + sail_weight_2 + sail_weight_3 + sail_weight_4))/9.81))
     return ((segment_1_mass + segment_2_mass + segment_3_mass + segment_4_mass)+((sail_weight_1 + sail_weight_2 + sail_weight_3 + sail_weight_4))/9.81)
 
-# Seeding code
+# Single mast size
 
-overlap_34_range = [0.9, 1.5]
-overlap_23_range = [1.2, 1.6] # Refined from multiple unfinished runs
+optimize_mast(Print=True, plot=True)
 
-ol_34_iterations = 4
-ol_23_iterations = 4
-
-seed_deepness = 3
-
-inseed_zoom = 0.75  # how much around the point does it go
-
-optimum_overlaps = []
-optimum_mass = 4000
-
-# Collect seeding locations for plotting
-seeding_locations = []
-
-for i in range(seed_deepness):
-    overlaps_34 = np.linspace(overlap_34_range[0], overlap_34_range[1], ol_34_iterations)
-    overlaps_23 = np.linspace(overlap_23_range[0], overlap_23_range[1], ol_23_iterations)
-    seed_spacing_34 = (overlap_34_range[1] - overlap_34_range[0])/ol_34_iterations
-    seed_spacing_23 = (overlap_23_range[1] - overlap_23_range[0])/ol_23_iterations
-    # total_iterations = len(overlaps_34) * len(overlaps_23) # Once for every mast
-    total_iterations = len(overlaps_34) * len(overlaps_23) * 4 # Once for every segment
-    # total_iterations = len(overlaps_34) * len(overlaps_23) * 4 * 8 # Once for every cross section
-    with tqdm(total=total_iterations, desc=f'Seed Iteration {i + 1}/{seed_deepness}') as pbar:
-        for overlap_34 in overlaps_34:
-            for overlap_23 in overlaps_23:
-                overlap_12 = total_overlap_possible - overlap_34 - overlap_23
-                mass = optimize_mast(Print=True)
-                # pbar.update(1) # Pbar option for once every mast
-                print("Run completed. Mass:", mass)
-                if mass < optimum_mass:
-                    optimum_mass = mass
-                    optimum_overlaps = [overlap_23, overlap_34]
-                seeding_locations.append((overlap_23, overlap_34, mass))  # Store the seeding location
-                # Plotting the seeding locations
-                seeding_locations_array = np.array(seeding_locations)
-                plt.figure(figsize=(10, 6))
-                plt.scatter(seeding_locations_array[:, 0], seeding_locations_array[:, 1], c='blue', marker='o',
-                            label='Seeding Locations')
-                plt.scatter(optimum_overlaps[0], optimum_overlaps[1], c='red', marker='x', s=50, label='Optimal Point')
-                for point in seeding_locations:
-                    plt.text(point[0], point[1], f'{point[2]}', fontsize=8, ha='right')
-                plt.xlabel('Overlap 23')
-                plt.ylabel('Overlap 34')
-                plt.title('Seeding Locations for Overlap Optimization')
-                plt.legend()
-                plt.grid(True)
-                plt.show()
-    overlap_34_range = [optimum_overlaps[1]-(seed_spacing_34*inseed_zoom),
-                        optimum_overlaps[1]+(seed_spacing_34*inseed_zoom)]
-    overlap_23_range = [optimum_overlaps[0] - (seed_spacing_23 * inseed_zoom),
-                        optimum_overlaps[0] + (seed_spacing_23 * inseed_zoom)]
-print("Optimum overlap is: ", optimum_overlaps)
-
+# # Seeding code
+#
+# overlap_34_range = [0.9, 1.5]
+# overlap_23_range = [1.2, 1.6] # Refined from multiple unfinished runs
+#
+# ol_34_iterations = 4
+# ol_23_iterations = 4
+#
+# seed_deepness = 3
+#
+# inseed_zoom = 0.75  # how much around the point does it go
+#
+# optimum_overlaps = []
+# optimum_mass = 4000
+#
+# # Collect seeding locations for plotting
+# seeding_locations = []
+#
+# for i in range(seed_deepness):
+#     overlaps_34 = np.linspace(overlap_34_range[0], overlap_34_range[1], ol_34_iterations)
+#     overlaps_23 = np.linspace(overlap_23_range[0], overlap_23_range[1], ol_23_iterations)
+#     seed_spacing_34 = (overlap_34_range[1] - overlap_34_range[0])/ol_34_iterations
+#     seed_spacing_23 = (overlap_23_range[1] - overlap_23_range[0])/ol_23_iterations
+#     # total_iterations = len(overlaps_34) * len(overlaps_23) # Once for every mast
+#     total_iterations = len(overlaps_34) * len(overlaps_23) * 4 # Once for every segment
+#     # total_iterations = len(overlaps_34) * len(overlaps_23) * 4 * 8 # Once for every cross section
+#     with tqdm(total=total_iterations, desc=f'Seed Iteration {i + 1}/{seed_deepness}') as pbar:
+#         for overlap_34 in overlaps_34:
+#             for overlap_23 in overlaps_23:
+#                 overlap_12 = total_overlap_possible - overlap_34 - overlap_23
+#                 mass = optimize_mast(Print=True)
+#                 # pbar.update(1) # Pbar option for once every mast
+#                 print("Run completed. Mass:", mass)
+#                 if mass < optimum_mass:
+#                     optimum_mass = mass
+#                     optimum_overlaps = [overlap_23, overlap_34]
+#                 seeding_locations.append((overlap_23, overlap_34, mass))  # Store the seeding location
+#                 # Plotting the seeding locations
+#                 seeding_locations_array = np.array(seeding_locations)
+#
+#                 fig, ax = plt.subplots(figsize=(10, 6))
+#
+#                 # Create a scatter plot with color grading based on the third dimension (e.g., seeding_locations_array[:, 2])
+#                 scatter = ax.scatter(seeding_locations_array[:, 0], seeding_locations_array[:, 1],
+#                                      c=seeding_locations_array[:, 2], cmap='viridis', marker='o',
+#                                      label='Seeding Locations')
+#
+#                 # Add a colorbar to show the color grading
+#                 colorbar = plt.colorbar(scatter, ax=ax)
+#                 colorbar.set_label('Mass')
+#
+#                 # Plot the optimal point in red
+#                 ax.scatter(optimum_overlaps[0], optimum_overlaps[1], c='red', marker='x', s=50, label='Optimal Point')
+#
+#                 for point in seeding_locations:
+#                     ax.text(point[0], point[1], f'{str(int(point[2]))}', fontsize=8, ha='right')
+#
+#                 ax.set_xlabel('Overlap 23')
+#                 ax.set_ylabel('Overlap 34')
+#                 ax.set_title('Seeding Locations for Overlap Optimization')
+#                 ax.legend()
+#                 ax.grid(True)
+#
+#                 plt.show()
+#
+#     overlap_34_range = [optimum_overlaps[1]-(seed_spacing_34*inseed_zoom),
+#                         optimum_overlaps[1]+(seed_spacing_34*inseed_zoom)]
+#     overlap_23_range = [optimum_overlaps[0] - (seed_spacing_23 * inseed_zoom),
+#                         optimum_overlaps[0] + (seed_spacing_23 * inseed_zoom)]
+# print("Optimum overlap is: ", optimum_overlaps)
+#
+# # Optimum overlap is:  [np.float64(1.3989583333333333), np.float64(1.0296875)]
