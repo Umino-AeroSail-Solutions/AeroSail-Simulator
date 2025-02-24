@@ -381,10 +381,10 @@ def get_possible_overlap():
     return (segment_4_length +segment_3_length +segment_2_length +segment_1_length -overlap_01 -overlap_12 -overlap_23 -overlap_34) - height
 # print("possible overlap: ", get_possible_overlap())
 
-sail_weight_4 = 100*9.81 # MADE UP SHIT _______________________________________________________________________________
-sail_weight_3 = 100*9.81
-sail_weight_2 = 100*9.81
-sail_weight_1 = 100*9.81
+sail_weight_4 = (456/4)*9.81 # Mass numbers for the aero platform subsystem
+sail_weight_3 = (456/4)*9.81
+sail_weight_2 = (456/4)*9.81
+sail_weight_1 = (456/4)*9.81
 
 def get_bool(prompt):
     while True:
@@ -470,8 +470,8 @@ def optimize_mast(Print=False,plot=False):
 
 # Seeding code
 
-overlap_34_range = [0.8, 1.45]
-overlap_23_range = [1, 1.6] # Refined from multiple unfinnished runs
+overlap_34_range = [0.9, 1.5]
+overlap_23_range = [1.2, 1.6] # Refined from multiple unfinished runs
 
 ol_34_iterations = 4
 ol_23_iterations = 4
@@ -524,5 +524,4 @@ for i in range(seed_deepness):
     overlap_23_range = [optimum_overlaps[0] - (seed_spacing_23 * inseed_zoom),
                         optimum_overlaps[0] + (seed_spacing_23 * inseed_zoom)]
 print("Optimum overlap is: ", optimum_overlaps)
-# Optimum overlap is:  [np.float64(1.325), np.float64(1.075)]
 
