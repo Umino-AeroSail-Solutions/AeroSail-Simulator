@@ -159,6 +159,9 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False):
 
         #Bottom right corner sail
         pygame.draw.line(screen,MateRed,(A+((h/d)*(C_vector)))*scale + offset, ((A+((h/d)*(C_vector)))+[(w/d)*(D_vector[0]), (w/d)*(D_vector[1])])*scale+offset ,1)
+        #Top right corner sail
+        pygame.draw.line(screen,MateRed,(A+((h/d)*(C_vector)))*scale + offset, ((A+((h/d)*(C_vector)))-[(.398/.2*w/d)*(D_vector[0]), (.398/.2*w/d)*(D_vector[1])])*scale+offset ,1)
+
 
         vector_scale = 1/1000
         draw_arrow(screen, A*scale + offset, (np.pi/2-alpha), vector_scale*R1, RED)
