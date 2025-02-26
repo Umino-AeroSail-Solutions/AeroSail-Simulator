@@ -54,7 +54,7 @@ for i in range(0,len(l_values)):
     momentBotList = []
     zList = []
     z = 0
-    dz=0.001
+    dz=0.05
 
     #Close 'em
     shearBotList.append(0)
