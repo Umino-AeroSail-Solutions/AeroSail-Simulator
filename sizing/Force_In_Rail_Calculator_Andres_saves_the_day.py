@@ -45,6 +45,9 @@ P2 = np.array([2.6, 1]) # Top rail in retracted
 P3 = np.array([6, 2.65]) # Top rail in extended
 P4 = np.array([6, .05]) # Bottom rail in extended
 
+L_Bot = np.linalg.norm(P4-P1)
+L_Top = np.linalg.norm(P3-P2)
+
 
 
 def circle_line_intersection(center, diameter, P1, P2):
