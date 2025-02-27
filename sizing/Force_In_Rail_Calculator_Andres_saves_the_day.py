@@ -174,7 +174,7 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False, cogloc=h/2):
         draw_arrow(screen, B * scale + offset, (np.pi / 2 + beta), vector_scale * R2, GREEN)
         draw_arrow(screen, A * scale + offset, (-(alpha)), vector_scale * T, BLUE)
 
-        draw_arrow(screen, (A+((h/(2*d))*(C_vector)))*scale + offset, (-np.pi / 2), m * 9.81 *vector_scale , YELLOW)"""
+        draw_arrow(screen, (A+((h/(2*d))*(C_vector)))*scale + offset, (-np.pi / 2), m * 9.81 *vector_scale , YELLOW)
     return R1, R2, T
 
 
@@ -199,7 +199,7 @@ for l in l_values:
     screen.fill(BLACK)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False"""
+            running = False
     R1, R2, T = get_reactions(P1, P2, P3, P4, l, m, h, draw=draw)
     R1_values.append(R1) 
     R2_values.append(R2)
@@ -227,8 +227,8 @@ plt.show()
 
 
 # Main loop
-running = True
-"""while running:
+running = False
+while running:
     screen.fill(BLACK)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
