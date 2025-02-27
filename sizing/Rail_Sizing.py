@@ -16,6 +16,7 @@ R2_values = [i / 2 * safety_factor for i in R2_values ] # idem
 R1_max = R1_max / 2 * safety_factor
 R2_max = R2_max / 2 * safety_factor
 
+print(L_Bot, L_Top)
 
 # Getting max shear and max moment
 moment_list_bot = R1_values*(1-l_values/L_Bot) * l_values 
