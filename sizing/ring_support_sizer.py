@@ -18,7 +18,7 @@ def check_shear(array):
         W, h, t = dimension  # Unpacking for readability
         
         shear_stress = R * ((h ** 2 / 8) + (W * h / 4)) / (t * (h ** 2) * (W / 2 + (h / 6)))
-        normal_stress = R * 2.35 / (4 * t * h * (W/2 + h/6))    
+        normal_stress = R * 2.35 / (8 * t * h * (W/2 + h/6))    
 
         if shear_stress < tau_max and normal_stress < sigma_max:
             passed_array.append(dimension)
