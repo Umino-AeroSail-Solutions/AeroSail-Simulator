@@ -209,6 +209,9 @@ for l in l_values:
         pygame.display.flip()
         pygame.time.delay(delta_t)
 
+print("R1 max: ", np.max(np.abs(np.array(R1_values))))
+print("R2 max: ", np.max(np.abs(np.array(R2_values))))
+print("T max: ", np.max(np.abs(np.array(T_values))))
 
 # Plot reaction forces as a function of l
 plt.figure(figsize=(8, 5))
