@@ -4,9 +4,10 @@ import matplotlib.pyplot as plt
 import pygame
 
 from fontTools.misc.symfont import green
+from mpmath import degrees
 
 # Define mass and height parameters
-m = 1605  # Example mass in kg
+m = 2378  # Example mass in kg
 h = 10   # Example height in meters
 w = 1 # Example width of the sail typa ribs thingy idk man
 
@@ -89,7 +90,7 @@ def draw_arrow(screen, origin, angle, length, color):
         (end_pos[0] - 10 * np.cos(angle + np.pi / 6), end_pos[1] + 10 * np.sin(angle + np.pi / 6))
     ])
 
-def get_reactions(P1, P2, P3, P4, l, m, h, draw=False):
+def get_reactions(P1, P2, P3, P4, l, m, h, draw=False, cogloc=h/2):
     # Some useful dimensions
     L_Bot = np.linalg.norm(P4-P1)
     L_Top = np.linalg.norm(P3-P2)
@@ -119,17 +120,19 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False):
     phi = np.arctan2(C_vector[1], C_vector[0])
     # return phi # for testing
 
-    beta = np.arctan2((P4[1] - P1[1]), (P4[0] - P1[0]))
-    alpha = np.arctan2((P3[1] - P2[1]), (P3[0] - P2[0]))
+    alpha = -np.arctan2((P4[1] - P1[1]), (P4[0] - P1[0])) # Bottom rail angle from the horizontal CW
+    beta = (np.arctan2((P3[1] - P2[1]), (P3[0] - P2[0]))) # Top rail angle from the horizontal ccw
+    # print(np.degrees(alpha), np.degrees(beta))
 
-    R2 = (m * 9.81 * (h/2) * np.cos(phi)) / (d * np.cos(np.pi/2 - phi + beta))
+    # print(np.cos(phi - beta))
+    R2 = (m * 9.81 * (cogloc) * np.cos(phi)) / (d * np.cos(phi - beta))
     T = (R2 * (np.cos(beta) * np.tan(alpha) + np.sin(beta)) - m * 9.81 * np.tan(alpha)) / (
                 np.tan(alpha) * np.sin(alpha) + np.cos(alpha))
     R1 = (m * 9.81 + T * np.sin(alpha) - R2 * np.cos(beta)) / np.cos(alpha)
 
     sum_x = R1 * np.sin(alpha) - R2 * np.sin(beta) + T * np.cos(alpha)
     sum_y = R1 * np.cos(alpha) + R2 * np.cos(beta) - T * np.sin(alpha) - m*9.81
-    mom_a = (m * 9.81 * (h/2) * np.cos(phi)) - (R2 * d * np.cos(np.pi/2 - phi + beta))
+    mom_a = (m * 9.81 * (cogloc) * np.cos(phi)) - (R2 * d * np.cos(phi - beta))
 
     if abs(sum_x)>0.1 or abs(sum_y)>0.1 or abs(mom_a)>0.1:
         print("ERROR ENCOUNTERED: not in equilibrium")
@@ -163,12 +166,12 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False):
         pygame.draw.line(screen,MateRed,(A+((h/d)*(C_vector)))*scale + offset, ((A+((h/d)*(C_vector)))-[(.398/.2*w/d)*(D_vector[0]), (.398/.2*w/d)*(D_vector[1])])*scale+offset ,1)
 
 
-        vector_scale = 1/1000
+        vector_scale = 1/200
         draw_arrow(screen, A*scale + offset, (np.pi/2-alpha), vector_scale*R1, RED)
-        draw_arrow(screen, B * scale + offset, (np.pi / 2 - beta), vector_scale * R2, GREEN)
-        draw_arrow(screen, A * scale + offset, (-alpha), vector_scale * T, BLUE)
+        draw_arrow(screen, B * scale + offset, (np.pi / 2 + beta), vector_scale * R2, GREEN)
+        draw_arrow(screen, A * scale + offset, (-(alpha)), vector_scale * T, BLUE)
 
-        draw_arrow(screen, (A+((h/(2*d))*(C_vector)))*scale + offset, (-np.pi / 2), m * 9.81 *vector_scale , YELLOW)
+        draw_arrow(screen, (A+((cogloc/d))*(C_vector))*scale + offset, (-np.pi / 2), m * 9.81 *vector_scale , YELLOW)
     return R1, R2, T
 
 
@@ -187,12 +190,14 @@ delta_t = 0
 
 draw = True
 
+cogloc = 4.12
+
 for l in l_values:
     screen.fill(BLACK)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    R1, R2, T = get_reactions(P1, P2, P3, P4, l, m, h, draw=draw)
+    R1, R2, T = get_reactions(P1, P2, P3, P4, l, m, h, draw=draw, cogloc=cogloc)
     R1_values.append(R1) 
     R2_values.append(R2)
     T_values.append(T)
@@ -225,7 +230,7 @@ while running:
 
     mx, my = pygame.mouse.get_pos()
     l = (mx) * (L_Bot/WIDTH)
-    R1, R2, T = get_reactions(P1, P2, P3, P4, l, m, h, draw=True)
+    R1, R2, T = get_reactions(P1, P2, P3, P4, l, m, h, draw=True, cogloc=cogloc)
     pygame.display.flip()
 
 
@@ -242,7 +247,7 @@ pygame.quit()
 # m,h = 0,0
 # for l in l_values:
 #     print(l)
-#     phi = get_reactions(P1, P2, P3, P4, l, m, h)
+#     phi = get_reactions(P1, P2, P3, P4, l, m, h, cogloc=cogloc)
 #     print(phi)
 #     print()
 #     phi_values.append(phi)
