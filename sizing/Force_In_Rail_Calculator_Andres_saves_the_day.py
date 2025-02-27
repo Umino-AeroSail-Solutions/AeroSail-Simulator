@@ -104,7 +104,7 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False, cogloc=h/2):
 
     # Now we define point A, the point at which the attachment happens in the lower rail
 
-    A = P1 + (l * ((P4-P1)/L_Bot))
+    A = P1 + (l * ((P4-P1)/L_Bot))        
 
     # Now you find the intersections between a circle centered in point A with radius d and the line passing through P3 and P2
 
@@ -178,6 +178,7 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False, cogloc=h/2):
     return R1, R2, T, B
 
 
+
 # Compute bottom rail length
 L_Bot = np.linalg.norm(P4 - P1)
 
@@ -243,7 +244,6 @@ plt.show()
 
 
 # Main loop
-running = True
 running = False
 while running:
     screen.fill(BLACK)
