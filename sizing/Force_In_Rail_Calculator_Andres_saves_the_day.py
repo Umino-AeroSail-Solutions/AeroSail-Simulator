@@ -175,7 +175,7 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False, cogloc=h/2):
         draw_arrow(screen, A * scale + offset, (-(alpha)), vector_scale * T, BLUE)
 
         draw_arrow(screen, (A+((cogloc/d))*(C_vector))*scale + offset, (-np.pi / 2), m * 9.81 *vector_scale , YELLOW)
-    return R1, R2, T
+    return R1, R2, T, B
 
 
 # Compute bottom rail length
@@ -183,6 +183,7 @@ L_Bot = np.linalg.norm(P4 - P1)
 
 # Generate values of l from 0 to L_Bot
 l_values = np.linspace(0, L_Bot, 1000)
+l2_values = np.zeros(len(l_values))
 
 # Compute reactions for each l
 R1_values = []
@@ -200,7 +201,7 @@ for l in l_values:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    R1, R2, T = get_reactions(P1, P2, P3, P4, l, m, h, draw=draw, cogloc=cogloc)
+    R1, R2, T, B = get_reactions(P1, P2, P3, P4, l, m, h, draw=draw, cogloc=cogloc)
     R1_values.append(R1) 
     R2_values.append(R2)
     T_values.append(T)
@@ -208,10 +209,16 @@ for l in l_values:
         # Update the display
         pygame.display.flip()
         pygame.time.delay(delta_t)
+    i = np.where(l_values == l)
+    l2_values[i]=np.linalg.norm(P2-B)
 
-print("R1 max: ", np.max(np.abs(np.array(R1_values))))
-print("R2 max: ", np.max(np.abs(np.array(R2_values))))
-print("T max: ", np.max(np.abs(np.array(T_values))))
+L_Top = max(l2_values)
+L_Bot = max(l_values)
+R1_max = np.max(np.abs(np.array(R1_values)))
+R2_max = np.max(np.abs(np.array(R2_values)))
+# print("R1 max: ", np.max(np.abs(np.array(R1_values))))
+# print("R2 max: ", np.max(np.abs(np.array(R2_values))))
+# print("T max: ", np.max(np.abs(np.array(T_values))))
 
 # Plot reaction forces as a function of l
 plt.figure(figsize=(8, 5))
@@ -221,6 +228,15 @@ plt.plot(l_values, T_values, label='T', color='b')
 plt.xlabel('$l$ (Attachment Position on Bottom Rail)')
 plt.ylabel('Reaction Forces')
 plt.title('Reaction Forces as a Function of Attachment Position $l$')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+plt.figure(figsize=(8, 5))
+plt.plot(l2_values, R2_values, label='R2', color='g')
+plt.xlabel('$l2$ (Attachment Position on Top Rail)')
+plt.ylabel('Reaction Forces')
+plt.title('Reaction Forces as a Function of Attachment Position $l2$')
 plt.legend()
 plt.grid(True)
 plt.show()
@@ -239,7 +255,6 @@ while running:
     l = (mx) * (L_Bot/WIDTH)
     R1, R2, T = get_reactions(P1, P2, P3, P4, l, m, h, draw=True, cogloc=cogloc)
     pygame.display.flip()
-
 
 # Quit Pygame
 pygame.quit()

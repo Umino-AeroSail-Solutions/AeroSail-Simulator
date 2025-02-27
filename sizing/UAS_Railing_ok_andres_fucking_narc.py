@@ -14,7 +14,7 @@ L_Bot = andresblanquerbenito.sqrt((P4[0]-P1[0])**2 + (P4[1]-P1[1])**2)
 L_Top = andresblanquerbenito.sqrt((P3[0]-P2[0])**2 + (P3[1]-P2[1])**2)
 
 
-plt.plot(l_values,R2_values)
+plt.plot(l_values,R1_values)
 plt.xlabel('Position [m]')
 plt.ylabel("Force [N]")
 plt.title("Forces at every point over the beam")
@@ -61,8 +61,8 @@ for i in range(0,len(l_values)):
     momentBotList.append(0)
     zList.append(0)
     while z < L_Bot:
-        shearBotList.append(shearBotFunc(R2_values[i],l_values[i],z))
-        momentBotList.append(momentBotFunc(R2_values[i],l_values[i],z))
+        shearBotList.append(shearBotFunc(R1_values[i],l_values[i],z))
+        momentBotList.append(momentBotFunc(R1_values[i],l_values[i],z))
         zList.append(z)
         z+=dz
     #Close 'em
@@ -94,14 +94,14 @@ for i in range(0,len(l_values)):
     # Get maximum / minimum
     if max(shearBotList) > abs(min(shearBotList)): 
         maxShear.append(max(shearBotList))
+        maxShearPos = maxShear.index(max(maxShear))
     else: maxShear.append(min(shearBotList))
-    maxMoment.append(max(momentBotList))
+    if max(momentBotList) > abs(min(momentBotList)): 
+        maxMoment.append(max(momentBotList))
+        maxMomentPos = maxMoment.index(max(maxMoment))/len(maxMoment)*L_Bot
+    else: maxMoment.append(min(momentBotList))
 
-#print(maxShear)
-#print(maxMoment)
-maxShearPos = maxShear.index(max(maxShear)) # Will be at zero, duh
-maxMomentPos = maxMoment.index(max(maxMoment))/len(maxMoment)*L_Bot #
-print(maxShearPos,maxMomentPos)
+plt.show()
 
 plt.subplot(211)
 plt.plot(l_values,maxShear)
@@ -128,8 +128,8 @@ shearBotList.append(0)
 momentBotList.append(0)
 zList.append(0)
 while z < L_Bot:
-    shearBotList.append(shearBotFunc(R2_values[1],l_values[1],z))
-    momentBotList.append(momentBotFunc(R2_values[maxMoment.index(max(maxMoment))],l_values[maxMoment.index(max(maxMoment))],z))
+    shearBotList.append(shearBotFunc(R1_values[1],l_values[1],z))
+    momentBotList.append(momentBotFunc(R1_values[maxMoment.index(max(maxMoment))],l_values[maxMoment.index(max(maxMoment))],z))
     zList.append(z)
     z+=dz
 #Close 'em
@@ -154,5 +154,7 @@ plt.axhline(0,color = "red",linestyle='--',linewidth=1)
 
 plt.show()
 
-print(f"Maximum Shear Force along bottom beam: {max(shearBotList)}")
-print(f"Maximum Bending moment along bottom beam: {max(momentBotList)}")
+max_shear_bot = max(abs(shearBotList))
+max_moment_bot = max(abs(momentBotList))
+print(f"Maximum Shear Force along bottom beam: {max_shear_bot}")
+print(f"Maximum Bending moment along bottom beam: {max_moment_bot}")
