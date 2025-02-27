@@ -228,6 +228,7 @@ plt.show()
 
 # Main loop
 running = True
+running = False
 while running:
     screen.fill(BLACK)
     for event in pygame.event.get():
