@@ -4,6 +4,13 @@ import matplotlib.pyplot as plt
 import pygame
 
 from fontTools.misc.symfont import green
+from mpmath import degrees
+
+# Define mass and height parameters
+m = 2378  # Example mass in kg
+h = 10   # Example height in meters
+w = 1 # Example width of the sail typa ribs thingy idk man
+
 
 # Initialize Pygame
 #pygame.init()
@@ -33,10 +40,13 @@ MateRed = (200,50,50)
 #Inputs: coordinate of P1, P2, P4, mass of mast M, height of mast H#
 ####################################################################
 
-P1 = np.array([0, 1.5]) # Bottom rail in retracted
-P2 = np.array([3, 1.5]) # Top rail in retracted
-P3 = np.array([6, 3]) # Top rail in extended
-P4 = np.array([6, 0]) # Bottom rail in extended
+P1 = np.array([0, 1]) # Bottom rail in retracted
+P2 = np.array([2.6, 1]) # Top rail in retracted
+P3 = np.array([6, 2.65]) # Top rail in extended
+P4 = np.array([6, .05]) # Bottom rail in extended
+
+L_Bot = np.linalg.norm(P4-P1)
+L_Top = np.linalg.norm(P3-P2)
 
 
 
@@ -83,7 +93,7 @@ def draw_arrow(screen, origin, angle, length, color):
         (end_pos[0] - 10 * np.cos(angle + np.pi / 6), end_pos[1] + 10 * np.sin(angle + np.pi / 6))
     ])
 
-def get_reactions(P1, P2, P3, P4, l, m, h, draw=False):
+def get_reactions(P1, P2, P3, P4, l, m, h, draw=False, cogloc=h/2):
     # Some useful dimensions
     L_Bot = np.linalg.norm(P4-P1)
     L_Top = np.linalg.norm(P3-P2)
@@ -113,17 +123,19 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False):
     phi = np.arctan2(C_vector[1], C_vector[0])
     # return phi # for testing
 
-    beta = np.arctan2((P4[1] - P1[1]), (P4[0] - P1[0]))
-    alpha = np.arctan2((P3[1] - P2[1]), (P3[0] - P2[0]))
+    alpha = -np.arctan2((P4[1] - P1[1]), (P4[0] - P1[0])) # Bottom rail angle from the horizontal CW
+    beta = (np.arctan2((P3[1] - P2[1]), (P3[0] - P2[0]))) # Top rail angle from the horizontal ccw
+    # print(np.degrees(alpha), np.degrees(beta))
 
-    R2 = (m * 9.81 * (h/2) * np.cos(phi)) / (d * np.cos(np.pi/2 - phi + beta))
+    # print(np.cos(phi - beta))
+    R2 = (m * 9.81 * (cogloc) * np.cos(phi)) / (d * np.cos(phi - beta))
     T = (R2 * (np.cos(beta) * np.tan(alpha) + np.sin(beta)) - m * 9.81 * np.tan(alpha)) / (
                 np.tan(alpha) * np.sin(alpha) + np.cos(alpha))
     R1 = (m * 9.81 + T * np.sin(alpha) - R2 * np.cos(beta)) / np.cos(alpha)
 
     sum_x = R1 * np.sin(alpha) - R2 * np.sin(beta) + T * np.cos(alpha)
     sum_y = R1 * np.cos(alpha) + R2 * np.cos(beta) - T * np.sin(alpha) - m*9.81
-    mom_a = (m * 9.81 * (h/2) * np.cos(phi)) - (R2 * d * np.cos(np.pi/2 - phi + beta))
+    mom_a = (m * 9.81 * (cogloc) * np.cos(phi)) - (R2 * d * np.cos(phi - beta))
 
     if abs(sum_x)>0.1 or abs(sum_y)>0.1 or abs(mom_a)>0.1:
         print("ERROR ENCOUNTERED: not in equilibrium")
@@ -153,13 +165,16 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False):
 
         #Bottom right corner sail
         pygame.draw.line(screen,MateRed,(A+((h/d)*(C_vector)))*scale + offset, ((A+((h/d)*(C_vector)))+[(w/d)*(D_vector[0]), (w/d)*(D_vector[1])])*scale+offset ,1)
+        #Top right corner sail
+        pygame.draw.line(screen,MateRed,(A+((h/d)*(C_vector)))*scale + offset, ((A+((h/d)*(C_vector)))-[(.398/.2*w/d)*(D_vector[0]), (.398/.2*w/d)*(D_vector[1])])*scale+offset ,1)
 
-        vector_scale = 1/1000
+
+        vector_scale = 1/200
         draw_arrow(screen, A*scale + offset, (np.pi/2-alpha), vector_scale*R1, RED)
-        draw_arrow(screen, B * scale + offset, (np.pi / 2 - beta), vector_scale * R2, GREEN)
-        draw_arrow(screen, A * scale + offset, (-alpha), vector_scale * T, BLUE)
+        draw_arrow(screen, B * scale + offset, (np.pi / 2 + beta), vector_scale * R2, GREEN)
+        draw_arrow(screen, A * scale + offset, (-(alpha)), vector_scale * T, BLUE)
 
-        draw_arrow(screen, (A+((h/(2*d))*(C_vector)))*scale + offset, (-np.pi / 2), m * 9.81 *vector_scale , YELLOW)
+        draw_arrow(screen, (A+((h/(2*d))*(C_vector)))*scale + offset, (-np.pi / 2), m * 9.81 *vector_scale , YELLOW)"""
     return R1, R2, T
 
 
@@ -168,11 +183,6 @@ L_Bot = np.linalg.norm(P4 - P1)
 
 # Generate values of l from 0 to L_Bot
 l_values = np.linspace(0, L_Bot, 1000)
-
-# Define mass and height parameters
-m = 2000  # Example mass in kg
-h = 10   # Example height in meters
-w = 1.5 # Example width of the sail typa ribs thingy idk man
 
 # Compute reactions for each l
 R1_values = []
@@ -183,11 +193,13 @@ delta_t = 0
 
 draw = True
 
+cogloc = 4.12
+
 for l in l_values:
     screen.fill(BLACK)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            running = False"""
     R1, R2, T = get_reactions(P1, P2, P3, P4, l, m, h, draw=draw)
     R1_values.append(R1) 
     R2_values.append(R2)
@@ -197,6 +209,9 @@ for l in l_values:
         pygame.display.flip()
         pygame.time.delay(delta_t)
 
+print("R1 max: ", np.max(np.abs(np.array(R1_values))))
+print("R2 max: ", np.max(np.abs(np.array(R2_values))))
+print("T max: ", np.max(np.abs(np.array(T_values))))
 
 # Plot reaction forces as a function of l
 plt.figure(figsize=(8, 5))
@@ -213,7 +228,7 @@ plt.show()
 
 # Main loop
 running = True
-while running:
+"""while running:
     screen.fill(BLACK)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -221,7 +236,7 @@ while running:
 
     mx, my = pygame.mouse.get_pos()
     l = (mx) * (L_Bot/WIDTH)
-    R1, R2, T = get_reactions(P1, P2, P3, P4, l, m, h, draw=True)
+    R1, R2, T = get_reactions(P1, P2, P3, P4, l, m, h, draw=True, cogloc=cogloc)
     pygame.display.flip()
 
 
@@ -238,7 +253,7 @@ pygame.quit()
 # m,h = 0,0
 # for l in l_values:
 #     print(l)
-#     phi = get_reactions(P1, P2, P3, P4, l, m, h)
+#     phi = get_reactions(P1, P2, P3, P4, l, m, h, cogloc=cogloc)
 #     print(phi)
 #     print()
 #     phi_values.append(phi)
