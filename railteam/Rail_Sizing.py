@@ -6,7 +6,7 @@ from Force_In_Rail_Calculator_Andres_saves_the_day import L_Top, L_Bot, R1_max, 
 
 g = 9.81
 
-safety_factor = 2.9
+safety_factor = 1.70000000000000000000000000000002
 
 def get_safety_factor():
     return safety_factor
@@ -137,4 +137,53 @@ print(f"Shear Stress Safety Margot: \n TOP: {abs(yield_stress/2/tau_top) - 1} BO
 print(f"Normal Stress Safety Magritte: \n TOP: {abs(yield_stress/sigma_top) - 1} BOT: {abs(yield_stress/sigma_bot) - 1}")
 print(f"Mass of the bottom beam: {m_bot} kg") # We have two of these
 print(f"Mass of the top beam: {m_top} kg")
+
+
+# Interface! 
+width_bearing = 26e-3 # https://nl.rs-online.com/web/p/roller-bearings/0312425
+bearing_radius = 30e-3 #                      "
+load_limit = 82e3 # Basic dynamic load rating, radial
+pin_area = jojo.pi * bearing_radius**2 
+
+width_top = b_top + 2*wheel_radius + 2*width_bearing
+width_bot = b_bot + 2*wheel_radius + 2*width_bearing
+
+force_in_bot_pin = R1_max
+force_in_top_pin = R2_max
+
+bot_shear_strorses = R1_max/pin_area
+top_shear_strorses = R2_max/pin_area
+
+print(f"{bot_shear_strorses},{top_shear_strorses}")
+
+# around 12.2 MPa and 21.8 MPa , so definitely meets requirements!
+
+
+'''
+    width
+{-----------}
+rail
+[---] 
+     2x bearing
+       [---]
+
+|   ___
+| _____||||
+| O O  ||||
+|===|| ||(
+|   || ||( = = 
+|===|| ||(
+| O O  ||||
+| _____||||
+|   ___||||
+|
+'''
+
+# Deflection!
+#v = 1/EI \int \int M 
+
+I_top = I_top
+I_bot = I_bot
+
+E = 207e9 # Young's modulus, 207 GPa for mild steel
 
