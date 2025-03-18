@@ -6,15 +6,21 @@ from Force_In_Rail_Calculator_Andres_saves_the_day import L_Top, L_Bot, R1_max, 
 
 g = 9.81
 
-safety_factor = 3
+safety_factor = 2.9
+
+def get_safety_factor():
+    return safety_factor
 
 # THESE ARE ALL DIVIDED BY TWO BECAUSE THE LOAD IS DISTRIBUTED TO BOTH SIDES
 # They are also multiplied by a safety factor
 
 R1_values = [i / 2 * safety_factor for i in R1_values ] # because it's a list.
-R2_values = [i / 2 * safety_factor for i in R2_values ] # idem
+R2_values = [i / 2 * safety_factor for i in R2_values ] #          "
 R1_max = R1_max / 2 * safety_factor
 R2_max = R2_max / 2 * safety_factor
+
+def get_R_max():
+    return [R1_max, R2_max]
 
 print(L_Bot, L_Top)
 
@@ -41,43 +47,44 @@ M_top = max_moment_top  #idk yet
 print(f"Max Top Shear: {V_top}, Max Bot Shear: {V_bot}")
 print(f"Max Top Moment: {M_top}, Max Bot Moment: {M_bot}")
 
-plt.subplot(211)
-plt.plot(l2_values,R2_values,"g",label="Top Beam")
-plt.plot(l_values,R1_values,"r",label="Bottom Beam")
+# plt.subplot(211)
+# plt.plot(l2_values,R2_values,"g",label="Top Beam")
+# plt.plot(l_values,R1_values,"r",label="Bottom Beam")
 
-plt.xlabel('Position [m]')
-plt.ylabel("Force [N]")
-plt.title("Forces at each point in the beam")
-plt.legend()
-plt.grid()
+# plt.xlabel('Position [m]')
+# plt.ylabel("Force [N]")
+# plt.title("Forces at each point in the beam")
+# plt.legend()
+# plt.grid()
 
-plt.subplot(212)
-plt.plot(l2_values,moment_list_top,"g",label="Top Beam")
-plt.plot(l_values,moment_list_bot,"r",label="Bottom Beam")
+# plt.subplot(212)
+# plt.plot(l2_values,moment_list_top,"g",label="Top Beam")
+# plt.plot(l_values,moment_list_bot,"r",label="Bottom Beam")
 
 
-plt.xlabel('Position [m]')
-plt.ylabel("Moment [Nm]")
-plt.title("Moments at each point in the beam")
-plt.legend()
-plt.grid()
+# plt.xlabel('Position [m]')
+# plt.ylabel("Moment [Nm]")
+# plt.title("Moments at each point in the beam")
+# plt.legend()
+# plt.grid()
 
-plt.show()
+# plt.show()
 
 # Wheel dimensions (not fixed)
 # BASED ON https://www.norelem.com/ca/en/Products/Product-overview/Material-handling-and-transport/95000-Material-handling-and-transport/Wheels-and-rollers/95059-Rollers-heavy-load.html
+# other option 
 wheel_width = 100e-3 # like 30 mm
 wheel_radius = 85e-3 # 125 mm 
-wheel_carry_force = 750*g # 750 kg "max load"
-n_wheels_bot = V_bot / wheel_carry_force # approximately 4  4x1 lxw
-n_wheels_top = V_top / wheel_carry_force # approximately 6 (6x1) lxw
-# print(f"Number of wheels bottom: {n_wheels_bot}, Number of wheels top: {n_wheels_top}")
+wheel_carry_force = 680*g # 750 kg "max load"
+n_wheels_bot = V_bot / wheel_carry_force # approximately 4  4x1 lxw # 12 and 10 for 6 eur per wheel = 132 eur per 
+n_wheels_top = V_top / wheel_carry_force # approximately 6 (6x1) lxw #
+print(f"Number of wheels bottom: {n_wheels_bot}, Number of wheels top: {n_wheels_top}")
 
 # Dimensions of the beams
-b_bot = wheel_width+20e-3    # width of beam [m] (2 wheels)
+b_bot = 120e-3    # width of beam [m] (2 wheels)
 t_bot = 2e-3 # thickness [m]
 
-b_top = wheel_width+20e-3     # width of beam [m] (2 wheels)
+b_top = 120e-3     # width of beam [m] (2 wheels)
 t_top = 10e-3                # thickness [m]
 
 # Material properties mild STEEL i think
