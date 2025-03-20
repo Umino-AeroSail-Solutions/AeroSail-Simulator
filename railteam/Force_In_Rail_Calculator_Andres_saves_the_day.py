@@ -168,6 +168,43 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False, cogloc=h/2):
         #Top right corner sail
         pygame.draw.line(screen,MateRed,(A+((h/d)*(C_vector)))*scale + offset, ((A+((h/d)*(C_vector)))-[(.398/.2*w/d)*(D_vector[0]), (.398/.2*w/d)*(D_vector[1])])*scale+offset ,1)
 
+        #Bottom ring support
+        ring_support_width = 1.34
+        half_width = ring_support_width/2
+        center_coordinate = A
+        angle = np.atan2(C_vector[1], C_vector[0]) + (np.pi/2)
+        pygame.draw.line(
+            screen,
+            BoruiBlue,
+            tuple((A + np.array([np.cos(angle), np.sin(angle)]) * half_width) * scale + offset),
+            tuple((A - np.array([np.cos(angle), np.sin(angle)]) * half_width) * scale + offset),
+            3
+        )
+
+        #Bottom ring support small
+        ring_support_width = 1.14
+        half_width = ring_support_width/2
+        center_coordinate = A
+        angle = np.atan2(C_vector[1], C_vector[0]) + (np.pi/2)
+        pygame.draw.line(
+            screen,
+            MateRed,
+            tuple((A + np.array([np.cos(angle), np.sin(angle)]) * half_width) * scale + offset),
+            tuple((A - np.array([np.cos(angle), np.sin(angle)]) * half_width) * scale + offset),
+            3
+        )
+        # Top ring support
+        ring_support_width = 2
+        half_width = ring_support_width / 2
+        center_coordinate = A
+        angle = np.atan2(C_vector[1], C_vector[0]) + (np.pi / 2)
+        pygame.draw.line(
+            screen,
+            BoruiBlue,
+            tuple((B + np.array([np.cos(angle), np.sin(angle)]) * half_width) * scale + offset),
+            tuple((B - np.array([np.cos(angle), np.sin(angle)]) * half_width) * scale + offset),
+            3
+        )
 
         vector_scale = 1/200
         draw_arrow(screen, A*scale + offset, (np.pi/2-alpha), vector_scale*R1, RED)
@@ -244,7 +281,7 @@ plt.show()
 
 
 # Main loop
-running = False
+running = True
 while running:
     screen.fill(BLACK)
     for event in pygame.event.get():
@@ -253,7 +290,7 @@ while running:
 
     mx, my = pygame.mouse.get_pos()
     l = (mx) * (L_Bot/WIDTH)
-    R1, R2, T = get_reactions(P1, P2, P3, P4, l, m, h, draw=True, cogloc=cogloc)
+    R1, R2, T, B = get_reactions(P1, P2, P3, P4, l, m, h, draw=True, cogloc=cogloc)
     pygame.display.flip()
 
 # Quit Pygame
