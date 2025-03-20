@@ -83,7 +83,7 @@ print(f"Number of wheels bottom: {n_wheels_bot}, Number of wheels top: {n_wheels
 # Dimensions of the beams
 b_bot = 80e-3    # width of beam [m] 
 a_bot = 100e-3 # height [m]
-t_bot = 2e-3 # thickness [m]
+t_bot = 3e-3 # thickness [m]
 
 b_top = 80e-3     # width of beam [m]
 a_top = 120e-3    # height [m]
@@ -187,24 +187,52 @@ rail
 # Deflection!
 #v = 1/EI \int \int M 
 
-I_top = I_top
-I_bot = I_bot
-
 E = 207e9 # Young's modulus, 207 GPa for mild steel
 
 # Buckling!
 kc = 4 # Buckling coefficient, assume simply supported (conservative)
-ks = 5.5
+ks = 5.5 # Buckling coefficient for shear :D
 v = .33 #poisson ratio
 
-# skin buckling!!
-crit_skin_buckling_top = jojo.pi**2 * kc * E / 12/(1-v**2) * (t_top/a_top)**2
-crit_skin_buckling_bot = jojo.pi**2 * kc * E / 12/(1-v**2) * (t_bot/a_bot)**2
-print(f"Skin Buckling Safety Mango:\n TOP: {abs(crit_skin_buckling_top/sigma_top) - 1} BOT: {abs(crit_skin_buckling_bot/sigma_bot) - 1}")
 
-# shear buckling !!
-crit_shear_buckling_top = jojo.pi**2 * ks * E / 12/(1-v**2) * (t_top/a_top)**2
-crit_shear_buckling_bot = jojo.pi**2 * ks * E / 12/(1-v**2) * (t_bot/a_bot)**2
-print(f"Shear Buckling Safety Mangosteen:\n TOP: {abs(crit_shear_buckling_top/tau_top) - 1} BOT: {abs(crit_shear_buckling_bot/tau_bot) - 1}")
 
+def check_buckling(skinsidetop,shearsidetop,skinsidebot,shearsidebot,sigma_top,sigma_bot,tau_top,tau_bot):
+    # skin buckling!!
+    crit_skin_buckling_top = jojo.pi**2 * kc * E / 12/(1-v**2) * (t_top/skinsidetop)**2
+    crit_skin_buckling_bot = jojo.pi**2 * kc * E / 12/(1-v**2) * (t_bot/skinsidebot)**2
+    print(f"Skin Buckling Safety Mango:\n TOP: {abs(crit_skin_buckling_top/sigma_top) - 1} BOT: {abs(crit_skin_buckling_bot/sigma_bot) - 1}")
+
+    # shear buckling !!
+    crit_shear_buckling_top = jojo.pi**2 * ks * E / 12/(1-v**2) * (t_top/shearsidetop)**2
+    crit_shear_buckling_bot = jojo.pi**2 * ks * E / 12/(1-v**2) * (t_bot/shearsidebot)**2
+    print(f"Shear Buckling Safety Mangosteen:\n TOP: {abs(crit_shear_buckling_top/tau_top) - 1} BOT: {abs(crit_shear_buckling_bot/tau_bot) - 1}")
+
+
+check_buckling(b_top, a_top, b_bot, a_bot,sigma_top,sigma_bot,tau_top,tau_bot)
+
+# Side force calculations
+# WE GET THESE FROM ANDRÈS next week
+V_bot_side = 22000 * safety_factor #TBD
+V_top_side = 2.2e4 *safety_factor #TBD
+
+M_bot_side = M_bot/2 * safety_factor #TBD
+M_top_side = M_top/2 *safety_factor #TBD
+
+Qy_bot = (b_bot/2 * a_bot)*(b_bot/4) - (b_bot/2-t_bot)*(a_bot-2*t_bot)*(b_bot/4-t_bot/2) # First moment of area [m³]
+Iyy_bot = 1/12 * (b_bot**3 * a_bot - (b_bot-2*t_bot)**3 * (a_bot-2*t_bot)) # Second moment of area / moment of inertia [m^4]
+
+
+Qy_top = (b_top/2 * a_top)*(b_top/4) - (b_top/2-t_top)*(a_top-2*t_top)*(b_top/4-t_top/2) # First moment of area [m³]
+Iyy_top = 1/12 * (b_top**3 * a_top - (b_top-2*t_top)**3 * (a_top-2*t_top)) # Second moment of area / moment of inertia [m^4]
+
+
+tau_bot_side = V_bot_side * Qy_bot / Iyy_bot / t_bot
+sigma_bot_side = M_bot * b_bot / 2 / Iyy_bot
+
+tau_top_side = V_top_side * Qy_top / Iyy_top / t_top
+sigma_top_side = M_top * b_top / 2 / Iyy_top
+
+
+print("\n\nSide forcesssssss")
+check_buckling(a_top, b_top, a_bot, b_bot,sigma_top_side,sigma_bot_side,tau_top_side,tau_bot_side)
 
