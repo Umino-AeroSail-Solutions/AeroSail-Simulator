@@ -172,7 +172,7 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False, cogloc=h/2):
         ring_support_width = 1.34
         half_width = ring_support_width/2
         center_coordinate = A
-        angle = np.atan2(C_vector[1], C_vector[0]) + (np.pi/2)
+        angle = np.arctan2(C_vector[1], C_vector[0]) + (np.pi/2)
         pygame.draw.line(
             screen,
             BoruiBlue,
@@ -185,7 +185,7 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False, cogloc=h/2):
         ring_support_width = 1.14
         half_width = ring_support_width/2
         center_coordinate = A
-        angle = np.atan2(C_vector[1], C_vector[0]) + (np.pi/2)
+        angle = np.arctan2(C_vector[1], C_vector[0]) + (np.pi/2)
         pygame.draw.line(
             screen,
             MateRed,
@@ -199,7 +199,7 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False, cogloc=h/2):
         ring_support_width = 2
         half_width = ring_support_width / 2
         center_coordinate = A
-        angle = np.atan2(C_vector[1], C_vector[0]) + (np.pi / 2)
+        angle = np.arctan2(C_vector[1], C_vector[0]) + (np.pi / 2)
         pygame.draw.line(
             screen,
             BoruiBlue,
