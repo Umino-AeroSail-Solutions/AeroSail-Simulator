@@ -42,8 +42,8 @@ MateRed = (200,50,50)
 
 P1 = np.array([0, 1]) # Bottom rail in retracted
 P2 = np.array([2.6, 1]) # Top rail in retracted
-P3 = np.array([6, 2.65]) # Top rail in extended
-P4 = np.array([6, .05]) # Bottom rail in extended
+P3 = np.array([6, 2.67]) # Top rail in extended
+P4 = np.array([6, .07]) # Bottom rail in extended
 
 L_Bot = np.linalg.norm(P4-P1)
 L_Top = np.linalg.norm(P3-P2)
@@ -193,6 +193,8 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False, cogloc=h/2):
             tuple((A - np.array([np.cos(angle), np.sin(angle)]) * half_width) * scale + offset),
             3
         )
+        bottom_connection = (A - np.array([np.cos(angle), np.sin(angle)]) * half_width)
+        print("Bottom connection coordinate: ", bottom_connection[1])
         # Top ring support
         ring_support_width = 2
         half_width = ring_support_width / 2
