@@ -81,11 +81,13 @@ n_wheels_top = V_top / wheel_carry_force # approximately 6 (6x1) lxw #
 print(f"Number of wheels bottom: {n_wheels_bot}, Number of wheels top: {n_wheels_top}")
 
 # Dimensions of the beams
-b_bot = 120e-3    # width of beam [m] (2 wheels)
+b_bot = 80e-3    # width of beam [m] 
+a_bot = 100e-3 # height [m]
 t_bot = 2e-3 # thickness [m]
 
-b_top = 120e-3     # width of beam [m] (2 wheels)
-t_top = 10e-3                # thickness [m]
+b_top = 80e-3     # width of beam [m]
+a_top = 120e-3    # height [m]
+t_top = 5e-3     # thickness [m]
 
 # Material properties mild STEEL i think
 rho = 7850 # Density in kg/m³
@@ -94,29 +96,33 @@ yield_stress = 344e6 # N/m²
 
 
 '''
-Assuming square O-Beam
+Assuming rectangular O-Beam
         b
 |----------------|
-
-==================  
-||              ||
-||            ->||<- t
-||              ||
-||              ||
-||              ||
-==================
+                        ________
+==================         ^
+||              ||         |
+||            ->||<- t     | 
+||              ||         | 
+||              ||         | a
+||              ||         | 
+||              ||         | 
+||              ||         | 
+||              ||         | 
+||              ||         v 
+==================      ________
 
 '''
 
 # Calculated values
-Q_bot = b_bot**2/4 * t_bot + (b_bot-2*t_bot)*t_bot*(b_bot-t_bot)/2 # First moment of area [m³]
-I_bot = (b_bot**4 -(b_bot-2*t_bot)**4)/12 # Second moment of area / moment of inertia [m^4]
-A_bot = b_bot**2 - (b_bot-2*t_bot)**2 # Area [m²]
+Q_bot = (a_bot/2 * b_bot)*(a_bot/4) - (a_bot/2-t_bot)*(b_bot-2*t_bot)*(a_bot/4-t_bot/2) # First moment of area [m³]
+I_bot = 1/12 * (a_bot**3 * b_bot - (a_bot-2*t_bot)**3 * (b_bot-2*t_bot)) # Second moment of area / moment of inertia [m^4]
+A_bot = b_bot*a_bot - (b_bot-2*t_bot)*(a_bot-2*t_bot) # Area [m²]
 m_bot = A_bot * L_Bot * rho # Mass [kg]
 
-Q_top = b_top**2/4 * t_top + (b_top-2*t_top)*t_top*(b_top-t_top)/2 # First moment of area [m³]
-I_top = (b_top**4 -(b_top-2*t_top)**4)/12 # Second moment of area / moment of inertia [m^4]
-A_top = b_top**2 - (b_top-2*t_top)**2 # Area [m²]
+Q_top = (a_top/2 * b_top)*(a_top/4) - (a_top/2-t_top)*(b_top-2*t_top)*(a_top/4-t_top/2) # First moment of area [m³]
+I_top = 1/12 * (a_top**3 * b_top - (a_top-2*t_top)**3 * (b_top-2*t_top)) # Second moment of area / moment of inertia [m^4]
+A_top = b_top*a_top - (b_top-2*t_top)*(a_top-2*t_top) # Area [m²]
 m_top = A_top * L_Top * rho # Mass [kg]
 
 # Stresses
@@ -125,7 +131,6 @@ sigma_bot = M_bot * b_bot / 2 / I_bot
 
 tau_top = V_top * Q_top / I_top / t_top
 sigma_top = M_top * b_top / 2 / I_top
-
 
 print(f"Maximum shear stress along the bottom beam {tau_bot*10**-6} MPa")
 print(f"Maximum tensile stress along the bottom beam {sigma_bot*10**-6} MPa")
@@ -186,4 +191,20 @@ I_top = I_top
 I_bot = I_bot
 
 E = 207e9 # Young's modulus, 207 GPa for mild steel
+
+# Buckling!
+kc = 4 # Buckling coefficient, assume simply supported (conservative)
+ks = 5.5
+v = .33 #poisson ratio
+
+# skin buckling!!
+crit_skin_buckling_top = jojo.pi**2 * kc * E / 12/(1-v**2) * (t_top/a_top)**2
+crit_skin_buckling_bot = jojo.pi**2 * kc * E / 12/(1-v**2) * (t_bot/a_bot)**2
+print(f"Skin Buckling Safety Mango:\n TOP: {abs(crit_skin_buckling_top/sigma_top) - 1} BOT: {abs(crit_skin_buckling_bot/sigma_bot) - 1}")
+
+# shear buckling !!
+crit_shear_buckling_top = jojo.pi**2 * ks * E / 12/(1-v**2) * (t_top/a_top)**2
+crit_shear_buckling_bot = jojo.pi**2 * ks * E / 12/(1-v**2) * (t_bot/a_bot)**2
+print(f"Shear Buckling Safety Mangosteen:\n TOP: {abs(crit_shear_buckling_top/tau_top) - 1} BOT: {abs(crit_shear_buckling_bot/tau_bot) - 1}")
+
 
