@@ -1,5 +1,6 @@
 import numpy as rinze
 import math as jojo
+import scipy.integrate as suminlee
 import matplotlib.pyplot as plt
 from Force_In_Rail_Calculator_Andres_saves_the_day import L_Top, L_Bot, R1_max, R2_max, R1_values, R2_values, l_values, l2_values
 #from UAS_Railing_ok_andres_fucking_narc import max_moment_bot, max_shear_bot
@@ -22,7 +23,7 @@ R2_max = R2_max / 2 * safety_factor
 def get_R_max():
     return [R1_max, R2_max]
 
-print(L_Bot, L_Top)
+print(f"Bottom Length: {L_Bot}, Top Length: {L_Top}")
 
 # Getting max shear and max moment
 moment_list_bot = R1_values*(1-l_values/L_Bot) * l_values 
@@ -82,12 +83,12 @@ print(f"Number of wheels bottom: {n_wheels_bot}, Number of wheels top: {n_wheels
 
 # Dimensions of the beams
 b_bot = 80e-3    # width of beam [m] 
-a_bot = 100e-3 # height [m]
-t_bot = 3e-3 # thickness [m]
+a_bot = 160e-3 # height [m]
+t_bot = 5e-3 # thickness [m]
 
 b_top = 80e-3     # width of beam [m]
-a_top = 120e-3    # height [m]
-t_top = 5e-3     # thickness [m]
+a_top = 190e-3    # height [m]
+t_top = 7.5e-3     # thickness [m]
 
 # Material properties mild STEEL i think
 rho = 7850 # Density in kg/m³
@@ -185,9 +186,40 @@ rail
 '''
 
 # Deflection!
-#v = 1/EI \int \int M 
+#deflection = 1/EI \int \int M 
 
 E = 207e9 # Young's modulus, 207 GPa for mild steel
+
+
+d_top_list = []
+d_bot_list = []
+
+def max_deflection(P,b,l,E,I): # Force and deflection
+    return P*b*(l**2-b**2)**(3/2) / (9 * jojo.sqrt(3) * l * E * I )
+    #return P*b**2 *(3*l-4*b) / 48 / E / I
+
+for i in range(len(R1_values)):
+    if l_values[i] > L_Bot/2:
+        d_bot_list.append(max_deflection(R1_values[i],L_Bot - l_values[i],L_Bot,E,I_bot))
+    else: d_bot_list.append(max_deflection(R1_values[i],l_values[i],L_Bot,E,I_bot))
+
+    if l2_values[i] > L_Top / 2:
+        d_top_list.append(max_deflection(R2_values[i],L_Top - l2_values[i],L_Top,E,I_top))
+    else: d_top_list.append(max_deflection(R2_values[i],l2_values[i],L_Top,E,I_top))
+
+plt.plot(212)
+plt.plot(l_values,rinze.array(d_top_list) * 1e3,"g",label="Top Beam")
+plt.plot(l_values,rinze.array(d_bot_list) * 1e3,"r",label="Bottom Beam")
+
+
+plt.xlabel('Position [m]')
+plt.ylabel("Deflection [mm]")
+plt.axhline(10,color='black',linestyle='--')
+plt.axhline(-10,color='black',linestyle='--')
+plt.title("Maximum Deflection at each point in the beam")
+plt.legend()
+plt.grid()
+plt.show()
 
 # Buckling!
 kc = 4 # Buckling coefficient, assume simply supported (conservative)
