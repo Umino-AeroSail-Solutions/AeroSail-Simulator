@@ -1,5 +1,6 @@
 from re import match
 from unittest import case
+import seaborn as sns
 
 from scipy.interpolate import RegularGridInterpolator, griddata
 import numpy as np
@@ -448,5 +449,32 @@ Sail.load_interpolation('Data/interpolationCR4sail_XFLR5.npz')
 # Sail.plot_optimal_values(np.arange(np.radians(5), np.radians(180), np.radians(0.01)))
 # Sail.plot_optimal_values_polar(np.arange(np.radians(-180), np.radians(180), np.radians(0.01)))
 
-# Lol
-Sail.plot_optimal_values_polar_with_thrust(np.arange(np.radians(-180), np.radians(180), np.radians(0.01)), 5000, 15000, 23, [30,150], shipspeed=22)
+# Code to plot average thrust as a function of boat speed and wind speed
+# Define the range of boat speeds and wind speeds
+boat_speeds = np.linspace(0, 25, 20)  # Boat speeds from 0 to 25 knots
+wind_speeds = np.linspace(5, 30, 20)  # Wind speeds from 5 to 30 knots
+
+# Create a matrix to store thrust values
+thrust_values = np.zeros((len(boat_speeds), len(wind_speeds)))
+
+ship_power = 15000000
+# Compute thrust for each (boat_speed, wind_speed) pair
+for i, boat_speed in enumerate(boat_speeds):
+    for j, wind_speed in enumerate(wind_speeds):
+        ship_thrust = ship_power/(boat_speed/1.944)
+        thrust_values[i, j] = (Sail.plot_optimal_values_polar_with_thrust(
+            np.arange(np.radians(-180), np.radians(180), np.radians(0.01)),
+            5000, 15000, wind_speed, [30, 150], shipspeed=boat_speed
+        )/ship_thrust)*100
+
+# Create a heatmap
+
+thrust_values = np.array(thrust_values)
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(thrust_values, xticklabels=np.round(wind_speeds, 1),
+            yticklabels=np.round(boat_speeds, 1), cmap="coolwarm", annot=True, fmt=".2f", annot_kws={"size": 6})
+plt.xlabel("Wind Speed (knots)")
+plt.ylabel("Boat Speed (knots)")
+plt.title("Average Thrust Heatmap")
+plt.show()
