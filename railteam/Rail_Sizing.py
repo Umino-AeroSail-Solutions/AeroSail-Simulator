@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from Force_In_Rail_Calculator_Andres_saves_the_day import L_Top, L_Bot, R1_max, R2_max, R1_values, R2_values, l_values, l2_values
 #from UAS_Railing_ok_andres_fucking_narc import max_moment_bot, max_shear_bot
 
-g = 9.81
+g = 9.80665
 
 safety_factor = 1.70000000000000000000000000000002
 
@@ -74,19 +74,20 @@ print(f"Max Top Moment: {M_top}, Max Bot Moment: {M_bot}")
 # Wheel dimensions (not fixed)
 # BASED ON https://www.norelem.com/ca/en/Products/Product-overview/Material-handling-and-transport/95000-Material-handling-and-transport/Wheels-and-rollers/95059-Rollers-heavy-load.html
 # other option 
-wheel_width = 100e-3 # like 30 mm
-wheel_radius = 85e-3 # 125 mm 
-wheel_carry_force = 680*g # 750 kg "max load"
-n_wheels_bot = V_bot / wheel_carry_force # approximately 4  4x1 lxw # 12 and 10 for 6 eur per wheel = 132 eur per 
-n_wheels_top = V_top / wheel_carry_force # approximately 6 (6x1) lxw #
+# maybe the real wheels were the friends we made along the way https://www.amazon.com/dp/B07DB45V1L?ref_=ast_sto_dp&language=en_US&th=1
+wheel_width = 50.8e-3 # MOOGIE TOOLS
+wheel_radius = 38.1e-3 # 3 inch diameter
+wheel_carry_force = 680*g # 1500 lbs "max load"
+n_wheels_bot = V_bot / wheel_carry_force # approximately 3  2x1+1 lxw # 12 and 10 for 6 eur per wheel = 132 eur per 
+n_wheels_top = V_top / wheel_carry_force # approximately 6 (2x3) lxw 
 print(f"Number of wheels bottom: {n_wheels_bot}, Number of wheels top: {n_wheels_top}")
 
 # Dimensions of the beams
-b_bot = 80e-3    # width of beam [m] 
+b_bot = 110e-3    # width of beam [m] 
 a_bot = 160e-3 # height [m]
 t_bot = 5e-3 # thickness [m]
 
-b_top = 80e-3     # width of beam [m]
+b_top = 110e-3     # width of beam [m]
 a_top = 190e-3    # height [m]
 t_top = 7.5e-3     # thickness [m]
 
@@ -151,8 +152,6 @@ bearing_radius = 30e-3 #                      "
 load_limit = 82e3 # Basic dynamic load rating, radial
 pin_area = jojo.pi * bearing_radius**2 
 
-width_top = b_top + 2*wheel_radius + 2*width_bearing
-width_bot = b_bot + 2*wheel_radius + 2*width_bearing
 
 force_in_bot_pin = R1_max
 force_in_top_pin = R2_max
@@ -268,3 +267,52 @@ sigma_top_side = M_top * b_top / 2 / Iyy_top
 print("\n\nSide forcesssssss")
 check_buckling(a_top, b_top, a_bot, b_bot,sigma_top_side,sigma_bot_side,tau_top_side,tau_bot_side)
 
+## CARRIAGE SIZING
+#variables
+t_carr_top = 21e-3
+t_carr_bot = 20e-3
+fillet_radius = 2e-3
+
+t_carr_web_top = max(2 * width_bearing, 10e-3)
+t_carr_web_bot = max(2 * width_bearing, 10e-3)
+
+
+carr_top_width_flange = b_top + t_carr_web_top + (wheel_width - t_carr_web_top/2 )
+carr_bot_width_flange = b_bot + t_carr_web_bot + (wheel_width - t_carr_web_bot/2)
+
+carr_top_length = 3 * wheel_radius * 2 * 1.1 # 3  rows wheels (with margin)
+carr_bot_length = 2 * wheel_radius * 2 * 1.1 # 2  wheels ( w/ margin)
+
+M_carr_top = R2_max * carr_top_width_flange / 2
+M_carr_bot = R1_max * carr_bot_width_flange / 2
+
+I_carr_top = t_carr_top**3 * carr_top_length / 12
+I_carr_bot = t_carr_bot**3 * carr_bot_length / 12
+
+I_carr_web_top = t_carr_web_top**3 * carr_top_length /12
+I_carr_web_bot = t_carr_web_bot**3 * carr_bot_length/12
+
+Q_carr_top = t_carr_top/4 * (t_carr_top/2 * carr_top_length)
+Q_carr_bot = t_carr_bot/4 * (t_carr_bot/2 * carr_bot_length)
+
+K_t_carr_top = 1 + 0.5 * I_carr_top / carr_top_length / ((t_carr_top**2) /4) * ( 1/ ( rinze.sqrt(2)* (t_carr_top/2) + fillet_radius - (t_carr_top/2) ) + 1/ (t_carr_top/2) )
+K_t_carr_bot = 1+ 0.5 * I_carr_bot / carr_bot_length / ((t_carr_bot**2) /4) * ( 1/ ( rinze.sqrt(2)* (t_carr_bot/2) + fillet_radius - (t_carr_bot/2) ) + 1/ (t_carr_bot/2) )
+
+sigma_carr_top = M_carr_top * t_carr_top/2 / I_carr_top * K_t_carr_top
+sigma_carr_bot = M_carr_bot * t_carr_bot/2 / I_carr_bot * K_t_carr_bot
+
+stress_tension_carr_top = V_top / (carr_top_width_flange * t_carr_web_top)
+stress_tension_carr_bot = V_bot / (carr_bot_width_flange * t_carr_web_bot)
+
+sigma_carr_web_top = M_carr_top * t_carr_web_top/2 / I_carr_web_top + stress_tension_carr_top
+sigma_carr_web_bot = M_carr_bot * t_carr_web_bot/2 / I_carr_web_bot + stress_tension_carr_bot
+
+tau_carr_top = V_top * Q_carr_top / I_carr_top / carr_top_length
+tau_carr_bot = V_bot * Q_carr_bot / I_carr_bot / carr_bot_length
+
+sbr = "steel ball run"
+
+print(f"Normal Stress Safety Margerine: {yield_stress/sigma_carr_top-1},{yield_stress/sigma_carr_bot-1}")
+print(f"Shear Stress Safety Mandarin: {yield_stress/2/tau_carr_top-1},{yield_stress/2/tau_carr_bot -1}")
+print(f"hahahahahahahhaah {sbr}")
+print(f"Normal Stress Safety Margerine: {yield_stress/sigma_carr_web_top-1},{yield_stress/sigma_carr_web_bot-1}")
