@@ -1,5 +1,6 @@
 from re import match
 from unittest import case
+import seaborn as sns
 
 from scipy.interpolate import RegularGridInterpolator, griddata
 import numpy as np
@@ -376,35 +377,51 @@ class Sail_Class():
         cf = np.sqrt(cl ** 2 + cd ** 2)
         return cf
 
-    def plot_optimal_values_polar_with_thrust(self, AWA_range, thrust_min, thrust_max, windspeedkt, radial_angles):
+    def plot_optimal_values_polar_with_thrust(self, TWA_range, thrust_min, thrust_max, windspeedkt, radial_angles, shipspeed=0):
         '''Plots the optimal thrust for an Apparent Wind Angle (AWA) range in a high-resolution polar graph'''
         optimal_thrusts = []
+        aws = []
+        shipspeed = shipspeed / 1.944
         windspeed = windspeedkt / 1.944
-        for AWA in AWA_range:
+        for TWA in TWA_range:
+            wind_back = -abs(windspeed * np.cos(TWA) + shipspeed)
+            wind_side = abs(windspeed * np.sin(TWA))
+            AWA = np.arctan(wind_side/wind_back)
+            AWS = np.sqrt(wind_side ** 2 + wind_back ** 2)
             opt_alpha, opt_flap = self.get_opt_pos(AWA)
-            optimal_thrusts.append(self.cts.max() * 0.5 * 1.225 * (windspeed ** 2) * self.height * self.chord)
-
+            optimal_thrusts.append(self.cts.max() * 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord)
+            aws.append(AWA)
+        # print(aws)
         optimal_thrusts = np.array(optimal_thrusts)
-        thrust_min_array = np.array([thrust_min] * len(AWA_range))  # Array for thrust_min
-        thrust_max_array = np.array([thrust_max] * len(AWA_range))  # Array for thrust_max
+        thrust_min_array = np.array([thrust_min] * len(TWA_range))  # Array for thrust_min
+        thrust_max_array = np.array([thrust_max] * len(TWA_range))  # Array for thrust_max
 
+        print("Average thrust is: ", str(np.average(optimal_thrusts)))
         # Polar plot for optimal thrust with thrust_min and thrust_max
+        # a = plt.subplot(111, polar=True)
+        # a.plot(TWA_range, aws, 'g-', label='AWS')
         ax = plt.subplot(111, polar=True)
-        ax.plot(AWA_range, optimal_thrusts, 'g-', label='Optimal thrust')
-        ax.plot(AWA_range, thrust_min_array, 'm--', label='Requirement ASV2-STK-02b')
-        ax.plot(AWA_range, thrust_max_array, 'c--', label='Requirement ASV2-STK-02')
+        ax.plot(TWA_range, optimal_thrusts, 'g-', label='Optimal thrust')
+        ax.plot(TWA_range, thrust_min_array, 'm--', label='Requirement ASV2-STK-02b')
+        ax.plot(TWA_range, thrust_max_array, 'c--', label='Requirement ASV2-STK-02')
         ax.set_theta_zero_location('N')
         ax.set_theta_direction(-1)
         ax.set_rlabel_position(-22.5)  # Move radial labels to prevent overlap
-        ax.set_title('Optimal thrust vs AWA at ' + str(windspeedkt) + ' kt', va='bottom')
+        ax.set_title('Optimal thrust vs TWA at ' + str(windspeedkt) + ' kt' + ', shipspeed = '+ str(shipspeed*1.944) + 'kt', va='bottom')
+        # a.set_theta_zero_location('N')
+        # a.set_theta_direction(-1)
+        # a.set_rlabel_position(-22.5)  # Move radial labels to prevent overlap
+        # a.set_title("AWS vs TWA", va='bottom')
         for angle in radial_angles:
             ax.axvline(np.radians(angle), color='k', linestyle='--')  # Adding radial lines
 
         # Move the legend below the graph
         ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2)
+        # a.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2)
 
         plt.tight_layout()
         plt.show()
+        return np.average(optimal_thrusts)
 
 
 # TESTING CODE -------------------------------------------------
@@ -431,4 +448,36 @@ Sail.load_interpolation('Data/interpolationCR4sail_XFLR5.npz')
 # Sail.load_interpolation('Data/interpolationCR4sail_XFLR5.npz')
 # Sail.plot_optimal_values(np.arange(np.radians(5), np.radians(180), np.radians(0.01)))
 # Sail.plot_optimal_values_polar(np.arange(np.radians(-180), np.radians(180), np.radians(0.01)))
-Sail.plot_optimal_values_polar_with_thrust(np.arange(np.radians(-180), np.radians(180), np.radians(0.01)), 5000, 15000, 20, [30,150])
+Sail.plot_optimal_values_polar_with_thrust(
+            np.arange(np.radians(-180), np.radians(180), np.radians(0.01)),
+            5000, 15000, 20, [30, 150], shipspeed=22
+        )
+# Code to plot average thrust as a function of boat speed and wind speed
+# Define the range of boat speeds and wind speeds
+boat_speeds = np.linspace(0, 22, 5)  # Boat speeds from 0 to 25 knots
+wind_speeds = np.linspace(5, 25, 11)  # Wind speeds from 5 to 30 knots
+
+# Create a matrix to store thrust values
+thrust_values = np.zeros((len(boat_speeds), len(wind_speeds)))
+
+ship_power = 15000000
+# Compute thrust for each (boat_speed, wind_speed) pair
+for j, wind_speed in enumerate(wind_speeds):
+    for i, boat_speed in enumerate(boat_speeds):
+        ship_thrust = ship_power/(boat_speed/1.944)
+        thrust_values[i, j] = (Sail.plot_optimal_values_polar_with_thrust(
+            np.arange(np.radians(-180), np.radians(180), np.radians(0.01)),
+            5000, 15000, wind_speed, [30, 150], shipspeed=boat_speed
+        )/ship_thrust)*100
+
+# Create a heatmap
+
+thrust_values = np.array(thrust_values)
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(thrust_values, xticklabels=np.round(wind_speeds, 1),
+            yticklabels=np.round(boat_speeds, 1), cmap="coolwarm", annot=True, fmt=".2f", annot_kws={"size": 6})
+plt.xlabel("Wind Speed (knots)")
+plt.ylabel("Boat Speed (knots)")
+plt.title("Average Thrust Heatmap")
+plt.show()

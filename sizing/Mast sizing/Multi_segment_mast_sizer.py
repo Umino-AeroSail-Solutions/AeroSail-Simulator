@@ -377,6 +377,21 @@ w2, h2, d2 = bottom_w-2*d1, bottom_h-2*d1, 0.08
 w3, h3, d3 = w2-2*d2, h2-2*d2, 0.04
 w4, h4, d4 = w3-2*d3, h3-2*d3, 0.02
 
+print("w1: ", w1)
+print("w2: ", w2)
+print("w3: ", w3)
+print("w4: ", w4)
+
+print("h1: ", h1)
+print("h2: ", h2)
+print("h3: ", h3)
+print("h4: ", h4)
+
+print("d1: ", d1)
+print("d2: ", d2)
+print("d3: ", d3)
+print("d4: ", d4)
+
 def get_possible_overlap():
     return (segment_4_length +segment_3_length +segment_2_length +segment_1_length -overlap_01 -overlap_12 -overlap_23 -overlap_34) - height
 # print("possible overlap: ", get_possible_overlap())
