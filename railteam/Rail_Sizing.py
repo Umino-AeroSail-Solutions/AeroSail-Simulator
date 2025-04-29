@@ -30,7 +30,7 @@ R2_max = rinze.max(rinze.abs(rinze.array(R2_values)))
 
 
 R1_values = [i / 2 * safety_factor for i in R1_values ] # because it's a list.
-R2_values = [i / 2 * safety_factor for i in R2_values ] #          "
+R2_values = [i / 2 * safety_factor for i in R2_values ] #         
 R1_max = R1_max / 2 * safety_factor
 R2_max = R2_max / 2 * safety_factor
 
