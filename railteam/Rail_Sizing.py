@@ -8,8 +8,7 @@ import matplotlib.pyplot as plt
 
 g = 9.80665
 
-safety_factor = 1.70000000000000000000000000000002
-
+safety_factor = 1.6
 def get_safety_factor():
     return safety_factor
 
@@ -80,9 +79,9 @@ def forces(x, y):
     # BASED ON https://www.norelem.com/ca/en/Products/Product-overview/Material-handling-and-transport/95000-Material-handling-and-transport/Wheels-and-rollers/95059-Rollers-heavy-load.html
     # other option 
     # maybe the real wheels were the friends we made along the way https://www.amazon.com/dp/B07DB45V1L?ref_=ast_sto_dp&language=en_US&th=1
-    wheel_width = 50.8e-3 # MOOGIE TOOLS
-    wheel_radius = 38.1e-3 # 3 inch diameter
-    wheel_carry_force = 680*g # 1500 lbs "max load"
+    wheel_width = 100e-3 # MOOGIE TOOLS will burn in hell
+    wheel_radius = 42.5e-3 # 3 inch diameter
+    wheel_carry_force = 720*g # REAL "max load"
     n_wheels_bot = V_bot / wheel_carry_force # approximately 3  2x1+1 lxw # 12 and 10 for 6 eur per wheel = 132 eur per 
     n_wheels_top = V_top / wheel_carry_force # approximately 6 (2x3) lxw 
     print(f"Number of wheels bottom: {n_wheels_bot}, Number of wheels top: {n_wheels_top}")
@@ -93,11 +92,11 @@ def forces(x, y):
     load_limit = 82e3 # Basic dynamic load rating, radial
 
     # Dimensions of the beams
-    b_bot = 80e-3    # width of beam [m] 
+    b_bot = 100e-3    # width of beam [m] 
     a_bot = 160e-3 # height [m]
     t_bot = 5e-3 # thickness [m]
 
-    b_top = 80e-3     # width of beam [m]
+    b_top = 100e-3     # width of beam [m]
     a_top = 190e-3    # height [m]
     t_top = 7.5e-3     # thickness [m]
 
@@ -291,11 +290,14 @@ def forces(x, y):
             t_carr_web_top = max(2 * width_bearing, 10e-3)
             t_carr_web_bot = max(2 * width_bearing, 10e-3)
 
+            carr_top_height = a_top + 2 * wheel_radius * 2 + t_carr_top * 2 + 1e-3
+            carr_bot_height = a_bot + 2 * wheel_radius * 2 + t_carr_bot * 2 + 1e-3
+
 
             carr_top_width_flange = b_top + t_carr_web_top + (wheel_width - t_carr_web_top/2 )
             carr_bot_width_flange = b_bot + t_carr_web_bot + (wheel_width - t_carr_web_bot/2)
 
-            carr_top_length = 6 * wheel_radius * 2 * 1.1 # 3  rows wheels (with margin)
+            carr_top_length = 5 * wheel_radius * 2 * 1.1 # 3  rows wheels (with margin)
             print(f"Carriage Top Length: {carr_top_length}")
             carr_bot_length = 3 * wheel_radius * 2 * 1.1 # 2  wheels ( w/ margin)
 
@@ -326,6 +328,26 @@ def forces(x, y):
             tau_carr_top = V_top * Q_carr_top / I_carr_top / carr_top_length
             tau_carr_bot = V_bot * Q_carr_bot / I_carr_bot / carr_bot_length
 
+            wheel_axle_rad = 25e-3 / 2
+            wheel_axle_length_top = carr_top_width_flange - t_carr_web_top
+            wheel_axle_length_bot = carr_bot_width_flange - t_carr_web_bot
+            axle_area = rinze.pi * wheel_axle_rad**2
+
+            I_xx_circ = jojo.pi * wheel_axle_rad ** 4 / 4
+            Q_circ = 4 * wheel_axle_rad / 3 / rinze.pi * (axle_area/2)
+
+            M_axle_top = R2_max * wheel_axle_length_top/2
+            M_axle_bot = R1_max * wheel_axle_length_bot/2
+
+            sigma_axle_top = M_axle_top/5 * wheel_axle_rad / I_xx_circ
+            sigma_axle_bot = M_axle_bot/3 * wheel_axle_rad / I_xx_circ
+
+            tau_axle_top = V_top/5 / jojo.ceil(n_wheels_top) * Q_circ / I_xx_circ / (wheel_axle_rad*2)
+            tau_axle_bot = V_bot/3 / jojo.ceil(n_wheels_bot) * Q_circ / I_xx_circ / (wheel_axle_rad*2)
+
+            print(f"WHEEL Bending Stress SM Top {yield_stress/sigma_axle_top-1} / Bot {yield_stress/sigma_axle_bot-1}")
+            print(f"WHEEL Shear Stress SM Top {yield_stress/2/tau_axle_top-1} / Bot {yield_stress/2/tau_axle_bot-1}")
+
             sbr = "steel ball run"
 
             print(f"Normal Stress (Flange) Safety Margerine: {yield_stress/sigma_carr_top-1},{yield_stress/sigma_carr_bot-1}")
@@ -334,4 +356,4 @@ def forces(x, y):
             print(f"Normal Stress (Web) Safety Margerine: {yield_stress/sigma_carr_web_top-1},{yield_stress/sigma_carr_web_bot-1}")
 
 
-forces("interface", "")
+forces("rail", "deflection")

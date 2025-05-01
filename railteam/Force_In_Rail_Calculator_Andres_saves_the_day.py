@@ -9,7 +9,7 @@ from mpmath import degrees
 import os
 
 # Define mass and height parameters
-m = 2378  # Example mass in kg
+m = 2878  # Example mass in kg
 h = 10   # Example height in meters
 w = 1 # Example width of the sail typa ribs thingy idk man
 
@@ -42,8 +42,8 @@ MateRed = (200,50,50)
 #Inputs: coordinate of P1, P2, P4, mass of mast M, height of mast H#
 ####################################################################
 
-P1 = np.array([0.254, 1]) # Bottom rail in retracted
-P2 = np.array([2.6+0.254, 1]) # Top rail in retracted
+P1 = np.array([0.23375, 1]) # Bottom rail in retracted
+P2 = np.array([2.6+0.23375, 1]) # Top rail in retracted
 P3 = np.array([6, 2.67]) # Top rail in extended
 P4 = np.array([6, .07]) # Bottom rail in extended
 
