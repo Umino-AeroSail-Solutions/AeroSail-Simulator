@@ -294,8 +294,9 @@ def forces(x, y):
             carr_bot_height = a_bot + 2 * wheel_radius * 2 + t_carr_bot * 2 + 1e-3
 
 
-            carr_top_width_flange = b_top + t_carr_web_top + (wheel_width - t_carr_web_top/2 )
-            carr_bot_width_flange = b_bot + t_carr_web_bot + (wheel_width - t_carr_web_bot/2)
+            carr_top_width_flange = b_top + (wheel_radius + t_carr_web_top/2)
+            print(f"Carriage Top Length: {carr_top_width_flange}")
+            carr_bot_width_flange = b_bot + (wheel_radius + t_carr_web_bot/2)
 
             carr_top_length = 5 * wheel_radius * 2 * 1.1 # 3  rows wheels (with margin)
             print(f"Carriage Top Length: {carr_top_length}")
@@ -336,14 +337,27 @@ def forces(x, y):
             I_xx_circ = jojo.pi * wheel_axle_rad ** 4 / 4
             Q_circ = 4 * wheel_axle_rad / 3 / rinze.pi * (axle_area/2)
 
-            M_axle_top = R2_max * wheel_axle_length_top/2
-            M_axle_bot = R1_max * wheel_axle_length_bot/2
+            # K_t_axle_top = 1 + 0.5 * I_xx_circ / wheel_axle_rad / ((wheel_axle_rad**2) /4) * ( 1/ ( rinze.sqrt(2)* wheel_axle_rad + fillet_radius - (wheel_axle_rad) ) + 1/ (wheel_axle_rad) )
+            # K_t_axle_bot = 1+ 0.5 * I_xx_circ / wheel_axle_rad / ((wheel_axle_rad**2) /4) * ( 1/ ( rinze.sqrt(2)* wheel_axle_rad + fillet_radius - (wheel_axle_rad) ) + 1/ (wheel_axle_rad) )
 
-            sigma_axle_top = M_axle_top/5 * wheel_axle_rad / I_xx_circ
-            sigma_axle_bot = M_axle_bot/3 * wheel_axle_rad / I_xx_circ
+            M_axle_top = R2_max / jojo.ceil(n_wheels_top) * (wheel_axle_length_top - wheel_width/2)
+            M_axle_bot = R1_max / jojo.ceil(n_wheels_bot) * (wheel_axle_length_bot - wheel_width/2)
+            print(f"Axle Force Top: {R2_max / jojo.ceil(n_wheels_top)}")
+            print(f"Axle Moment Bot: {M_axle_bot}")
+            
+            axle_defl_top = -1/(E*I_xx_circ)*(M_axle_top*wheel_axle_length_top**2 / 2 - R2_max/jojo.ceil(n_wheels_top)*wheel_axle_length_top**3/6 + R2_max/jojo.ceil(n_wheels_top)*(wheel_width/2)**3/6)
+            axle_defl_bot = -1/(E*I_xx_circ)*(M_axle_bot*wheel_axle_length_bot**2 / 2 - R1_max/jojo.ceil(n_wheels_bot)*wheel_axle_length_bot**3/6 + R2_max/jojo.ceil(n_wheels_bot)*(wheel_width/2)**3/6)
+            print(f"Axle Deformation Top: {axle_defl_top}")
+            print(f"Axle Deformation Bot: {axle_defl_bot}")
 
-            tau_axle_top = V_top/5 / jojo.ceil(n_wheels_top) * Q_circ / I_xx_circ / (wheel_axle_rad*2)
-            tau_axle_bot = V_bot/3 / jojo.ceil(n_wheels_bot) * Q_circ / I_xx_circ / (wheel_axle_rad*2)
+            sigma_axle_top = M_axle_top * wheel_axle_rad / I_xx_circ
+            sigma_axle_bot = M_axle_bot * wheel_axle_rad / I_xx_circ
+
+            tau_axle_top = V_top / jojo.ceil(n_wheels_top) * Q_circ / I_xx_circ / (wheel_axle_rad*2)
+            tau_axle_bot = V_bot / jojo.ceil(n_wheels_bot) * Q_circ / I_xx_circ / (wheel_axle_rad*2)
+
+
+
 
             print(f"WHEEL Bending Stress SM Top {yield_stress/sigma_axle_top-1} / Bot {yield_stress/sigma_axle_bot-1}")
             print(f"WHEEL Shear Stress SM Top {yield_stress/2/tau_axle_top-1} / Bot {yield_stress/2/tau_axle_bot-1}")
@@ -356,4 +370,4 @@ def forces(x, y):
             print(f"Normal Stress (Web) Safety Margerine: {yield_stress/sigma_carr_web_top-1},{yield_stress/sigma_carr_web_bot-1}")
 
 
-forces("rail", "deflection")
+forces("carriage", "deflection")
