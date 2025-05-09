@@ -162,17 +162,17 @@ Segment4 = Segment(segment_4_length, angle, 0, segment_3_length, segment_4_mass,
 S4R1, S4R2 = Segment4.compute_reaction_loads()
 Segment4.compute_internal_loads(plot=True)
 
-segment_3_added_weights = [[aeroplatform_extra_mass_per_segment*9.81,segment_3_length], [S4R1, 0], [S4R2, segment_3_length]]
+segment_3_added_weights = [[aeroplatform_extra_mass_per_segment*9.81,segment_3_length], [S4R1, 0.05], [S4R2, segment_3_length]]
 Segment3 = Segment(segment_3_length, angle, 0, segment_2_length, segment_3_mass, segment_3_added_weights)
 S3R1, S3R2 = Segment3.compute_reaction_loads()
 Segment3.compute_internal_loads(plot=True)
 
-segment_2_added_weights = [[aeroplatform_extra_mass_per_segment*9.81,segment_2_length], [S3R1, 0], [S3R2, segment_2_length]]
+segment_2_added_weights = [[aeroplatform_extra_mass_per_segment*9.81,segment_2_length], [S3R1, 0.05], [S3R2, segment_2_length]]
 Segment2 = Segment(segment_2_length, angle, 0, segment_1_length, segment_2_mass, segment_2_added_weights)
 S2R1, S2R2 = Segment2.compute_reaction_loads()
 Segment2.compute_internal_loads(plot=True)
 
-segment_1_added_weights = [[aeroplatform_extra_mass_per_segment*9.81,segment_1_length], [S2R1, 0], [S2R2, segment_1_length]]
+segment_1_added_weights = [[aeroplatform_extra_mass_per_segment*9.81,segment_1_length], [S2R1, 0.05], [S2R2, segment_1_length]]
 Segment1 = Segment(segment_1_length, angle, 0, OL_01, segment_1_mass, segment_1_added_weights)
 S1R1, S1R2 = Segment1.compute_reaction_loads()
 Segment1.compute_internal_loads(plot=True)
