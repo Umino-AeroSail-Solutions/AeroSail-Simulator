@@ -34,25 +34,31 @@ class Segment():
 
     def compute_reaction_loads(self):
         """
-        Compute vertical reaction forces at the two pin supports.
-
-        Returns
-        -------
-        R1, R2 : float
-            Vertical reaction forces at support 1 (hold_1_coord) and support 2 (hold_2_coord).
+        Compute vertical reactions R1 and R2 for a simply-supported beam
+        between hold_1_coord and hold_2_coord under vertical loads,
+        including overhangs beyond supports.
         """
-        # First we compute the moment around hold_1 and the total weight
+        # total downward load = sum of all vertical loads
+        w = self.vertical_loads[:,0]
+        x = self.vertical_loads[:,1]
+        self.total_weight = w.sum()
 
-        self.total_weight = np.sum(self.addedweights, axis=0)[0] + self.weight
-        M_hold_1 = 0
-        for load in self.vertical_loads:
-            M_hold_1 += load[0] * (load[1]-self.hold_1_coord)
+        # moment about hold_1: sum(w_i * (x_i - hold_1_coord))
+        distances = x - self.hold_1_coord
+        M1 = np.dot(w, distances)
 
-        # Now this is used to compute R2 and R1
-        self.R2 = M_hold_1 / (self.hold_2_coord-self.hold_1_coord)
+        # span between supports
+        span = self.hold_2_coord - self.hold_1_coord
+        if span <= 0:
+            raise ValueError("Support coordinates invalid: hold_2 must be > hold_1.")
+
+        self.R2 = M1 / span
         self.R1 = self.total_weight - self.R2
-        print("R1: ", self.R1)
-        print("R2: ", self.R2)
+
+        print(f"Total load     : {self.total_weight:.2f} N")
+        print(f"Moment about 1 : {M1:.2f} N·m (span = {span:.2f} m)")
+        print(f"Reaction R2    : {self.R2:.2f} N")
+        print(f"Reaction R1    : {self.R1:.2f} N")
         return self.R1, self.R2
 
     def compute_internal_loads(self, plot=False):
@@ -115,12 +121,12 @@ class Segment():
         shearsthreed = []
         momentsthreed = []
         for shear in self.shears:
-            shearx = shear*math.sin(math.radians(self.angle))
-            sheary = shear*math.cos(math.radians(self.angle))
+            sheary = shear*math.sin(math.radians(self.angle))
+            shearx = shear*math.cos(math.radians(self.angle))
             shearsthreed.append([shearx, sheary])
         for moment in self.moments:
-            momentsx = moment * math.sin(math.radians(self.angle))
-            momentsy = moment * math.cos(math.radians(self.angle))
+            momentsy = moment * math.sin(math.radians(self.angle))
+            momentsx = moment * math.cos(math.radians(self.angle))
             momentsthreed.append([momentsx, momentsy])
 
         self.threedmoments = np.array(momentsthreed)
@@ -129,7 +135,7 @@ class Segment():
 
 # BORUI CHECK THIS NUMBERS
 
-angle = /Look it up LOL Borui I am in Chimera Worksession/
+angle = 115.116-90
 
 min_segment_length_difference = 0.5 # Space to allow for ribs and storage
 segment_4_length = 10
@@ -151,4 +157,51 @@ OL_23 = segment_2_length
 OL_12 = segment_1_length
 OL_01 = 2.6
 
-Segment4 = Segment(segment_4_length,)
+segment_4_added_weights = [[aeroplatform_extra_mass_per_segment*9.81,segment_4_length]]
+Segment4 = Segment(segment_4_length, angle, 0, segment_3_length, segment_4_mass, segment_4_added_weights)
+S4R1, S4R2 = Segment4.compute_reaction_loads()
+Segment4.compute_internal_loads(plot=True)
+
+segment_3_added_weights = [[aeroplatform_extra_mass_per_segment*9.81,segment_3_length], [S4R1, 0], [S4R2, segment_3_length]]
+Segment3 = Segment(segment_3_length, angle, 0, segment_2_length, segment_3_mass, segment_3_added_weights)
+S3R1, S3R2 = Segment3.compute_reaction_loads()
+Segment3.compute_internal_loads(plot=True)
+
+segment_2_added_weights = [[aeroplatform_extra_mass_per_segment*9.81,segment_2_length], [S3R1, 0], [S3R2, segment_2_length]]
+Segment2 = Segment(segment_2_length, angle, 0, segment_1_length, segment_2_mass, segment_2_added_weights)
+S2R1, S2R2 = Segment2.compute_reaction_loads()
+Segment2.compute_internal_loads(plot=True)
+
+segment_1_added_weights = [[aeroplatform_extra_mass_per_segment*9.81,segment_1_length], [S2R1, 0], [S2R2, segment_1_length]]
+Segment1 = Segment(segment_1_length, angle, 0, OL_01, segment_1_mass, segment_1_added_weights)
+S1R1, S1R2 = Segment1.compute_reaction_loads()
+Segment1.compute_internal_loads(plot=True)
+
+output_folder = "Internal_Loads"
+export_internals = "stowed_load_arrays"
+
+if not os.path.exists(output_folder):
+    os.makedirs(output_folder)
+
+Segment1_shears = Segment1.threedshears
+Segment2_shears = Segment2.threedshears
+Segment3_shears = Segment3.threedshears
+Segment4_shears = Segment4.threedshears
+
+Segment1_moments = Segment1.threedmoments
+Segment2_moments = Segment2.threedmoments
+Segment3_moments = Segment3.threedmoments
+Segment4_moments = Segment4.threedmoments
+print("Segment 1 shears: ", Segment1_shears)
+print("Segment 1 moments: ", Segment1_moments)
+
+np.savez(os.path.join(output_folder, f"{export_internals}.npz"),
+         Segment1_shears=Segment1_shears,
+         Segment2_shears=Segment2_shears,
+         Segment3_shears=Segment3_shears,
+         Segment4_shears=Segment4_shears,
+         Segment1_moments=Segment1_moments,
+         Segment2_moments=Segment2_moments,
+         Segment3_moments=Segment3_moments,
+         Segment4_moments=Segment4_moments,
+         )

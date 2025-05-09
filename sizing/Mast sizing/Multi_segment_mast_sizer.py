@@ -497,8 +497,8 @@ def optimize_mast(Print=False,plot=False, export_internals=None):
         Segment3_moments = segment_3.moments
         Segment4_moments = segment_4.moments
 
-        # print("Segment 1 shears: ",Segment1_shears)
-        # print("Segment 1 moments: ", Segment1_moments)
+        print("Segment 1 shears: ",Segment1_shears)
+        print("Segment 1 moments: ", Segment1_moments)
 
         np.savez(os.path.join(output_folder, f"{export_internals}.npz"),
                  Segment1_shears=Segment1_shears,
