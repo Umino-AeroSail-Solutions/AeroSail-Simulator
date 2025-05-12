@@ -114,7 +114,7 @@ def calcNormStressShift(normStressArray, mast_segment_number, deployed=True):
         elif mast_segment_number == 4:
             total_mass = mass_segment_4    
     
-        shiftedNormStressArray = np.add(normStressArray, total_mass/area)
+        shiftedNormStressArray = np.add(normStressArray, total_mass * 9.81/area)
     
     else:
         shiftedNormStressArray = normStressArray
