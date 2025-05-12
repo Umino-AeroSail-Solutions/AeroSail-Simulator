@@ -14,15 +14,24 @@ A_8080 = 1612.2 #mm^2
 #Define loads
 Vx = 100 #N
 Vy = 100 #N
-Mx = 2376234908000000 #Nm
-My = 0 #Nm
+Mx = 2000 #Nm
+My = 3870 #Nm
 
 #Define Idealizations
-n_booms_side = 40
-n_booms_top_bottom = 5
+n_booms_side = 400
+n_booms_top_bottom = 500
 
 #Define Situation
 deployed = True
+segment_number = 1
+
+#Define Constants
+mass_segment_1 = 10000 #kg
+mass_segment_2 = 10000 #kg
+mass_segment_3 = 10000 #kg
+mass_segment_4 = 10000 #kg
+
+
 
 
 
@@ -91,10 +100,26 @@ def calcNormStress(w, h, n_booms_side, n_booms_top_bottom):
 
     return np.array(normStressArray), np.array(coordsArray)
 
+def calcNormStressShift(normStressArray, mast_segment_number, deployed=True):
 
+    area = (w * t_tb + h * t_s) * 2 + A_8080 * 4
 
+    if deployed:
+        if mast_segment_number == 1:
+            total_mass = mass_segment_1 + mass_segment_2 + mass_segment_3 + mass_segment_4
+        elif mast_segment_number == 2:
+            total_mass = mass_segment_2 + mass_segment_3 + mass_segment_4
+        elif mast_segment_number == 3:
+            total_mass = mass_segment_3 + mass_segment_4
+        elif mast_segment_number == 4:
+            total_mass = mass_segment_4    
+    
+        shiftedNormStressArray = np.add(normStressArray, total_mass/area)
+    
+    else:
+        shiftedNormStressArray = normStressArray
 
-
+    return shiftedNormStressArray
 
 def calcBoomArea(normStressArray):
 
@@ -127,58 +152,14 @@ def calcBoomArea(normStressArray):
 
     return np.array(boomAreaArray)
 
-#def calcBoomArea(normStressArray):
-    boomAreaArray = []
-    b_side = h / (n_booms_side - 1)
-    b_top_bottom = w / (n_booms_top_bottom - 1)
-    totalBooms = (n_booms_side + n_booms_top_bottom) * 2 - 4
 
-    for i in range(totalBooms):
-        if i == 0:
-            # Bottom-right corner (Right & Bottom skin)
-            s1 = normStressArray[i]
-            s2 = normStressArray[i + 1]
-            s3 = normStressArray[-1]
-            B = (t_s * b_side / 6 * (2 + s2 / s1)) + (t_tb * b_top_bottom / 6 * (2 + s3 / s1))
 
-        elif i == totalBooms - 1:
-            # Top-right corner (Right & Top skin)
-            s1 = normStressArray[i]
-            s2 = normStressArray[0]
-            s3 = normStressArray[i - 1]
-            B = (t_tb * b_top_bottom / 6 * (2 + s2 / s1)) + (t_s * b_side / 6 * (2 + s3 / s1))
-
-        elif i == n_booms_side - 1:
-            # Bottom-left corner (Bottom & Left skin)
-            s1 = normStressArray[i]
-            s2 = normStressArray[i + 1]
-            s3 = normStressArray[i - 1]
-            B = (t_tb * b_top_bottom / 6 * (2 + s2 / s1)) + (t_s * b_side / 6 * (2 + s3 / s1))
-
-        elif i == n_booms_side + n_booms_top_bottom - 2:
-            # Top-left corner (Left & Top skin)
-            s1 = normStressArray[i]
-            s2 = normStressArray[i + 1]
-            s3 = normStressArray[i - 1]
-            B = (t_s * b_side / 6 * (2 + s2 / s1)) + (t_tb * b_top_bottom / 6 * (2 + s3 / s1))
-
-        elif 0 < i < n_booms_side - 1 or n_booms_side + n_booms_top_bottom - 2 < i < 2 * n_booms_side + n_booms_top_bottom - 3:
-            # Right or Left edge (vertical skin)
-            s1 = normStressArray[i]
-            s2 = normStressArray[i + 1]
-            s3 = normStressArray[i - 1]
-            B = (t_s * b_side / 6 * (2 + s2 / s1)) + (t_s * b_side / 6 * (2 + s3 / s1))
-
-        elif n_booms_side - 1 < i < n_booms_side + n_booms_top_bottom - 2 or 2 * n_booms_side + n_booms_top_bottom - 3 < i < totalBooms:
-            # Bottom or Top edge (horizontal skin)
-            s1 = normStressArray[i]
-            s2 = normStressArray[i + 1]
-            s3 = normStressArray[i - 1]
-            B = (t_tb * b_top_bottom / 6 * (2 + s2 / s1)) + (t_tb * b_top_bottom / 6 * (2 + s3 / s1))
-
-        boomAreaArray.append(B)
-
-    return np.array(boomAreaArray)
+def shiftTo0Y(stress_array, coords_array, boom_array):
+    shift_amount = n_booms_side // 2
+    shifted_stress_array = np.roll(stress_array, shift_amount)
+    shifted_coords_array = np.roll(coords_array, shift_amount, axis=0)
+    shifted_boom_array = np.roll(boom_array, shift_amount)
+    return shifted_stress_array, shifted_coords_array, shifted_boom_array
 
 
 
@@ -194,15 +175,17 @@ norm_stress, boom_coords = calcNormStress(w, h, n_booms_side, n_booms_top_bottom
 
 
 # Plotting
+stress_vals = norm_stress
+shifted_stress_vals = calcNormStressShift(stress_vals, 1, deployed = True)
+boom_areas = calcBoomArea(norm_stress)
+#shifted_stress_vals, boom_coords, boom_areas = shiftTo0Y(shifted_stress_vals, boom_coords, boom_areas)
 x_vals = boom_coords[:, 0]
 y_vals = boom_coords[:, 1]
-stress_vals = norm_stress
-boom_areas = calcBoomArea(norm_stress)
 #print(boom_areas)
 #print(stress_vals)
 
 plt.figure(figsize=(10, 5))
-sc = plt.scatter(x_vals, y_vals, c=stress_vals, cmap='viridis', s=10)
+sc = plt.scatter(x_vals, y_vals, c=shifted_stress_vals, cmap='Spectral', s=10)
 plt.colorbar(sc, label='Normal Stress (σ_z)')
 plt.title('Stress Distribution Around Rectangular Cross Section')
 plt.xlabel('x (mm)')
@@ -212,7 +195,7 @@ plt.grid(True)
 plt.show()
 
 plt.figure(figsize=(10, 5))
-sc = plt.scatter(x_vals, y_vals, c=boom_areas, cmap='viridis', s=10)
+sc = plt.scatter(x_vals, y_vals, c=boom_areas, cmap='Spectral', s=10)
 plt.colorbar(sc, label='Boom Area')
 plt.title('Boom Area Around Rectangular Cross Section')
 plt.xlabel('x (mm)')
