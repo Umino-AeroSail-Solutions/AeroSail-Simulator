@@ -161,11 +161,18 @@ def shiftTo0Y(stress_array, coords_array, boom_array):
     shifted_boom_array = np.roll(boom_array, shift_amount)
     return shifted_stress_array, shifted_coords_array, shifted_boom_array
 
-
+def shiftTo0X(stress_array, coords_array, boom_array):
+    shift_amount = n_booms_top_bottom // 2
+    shifted_stress_array = np.roll(stress_array, -shift_amount)
+    shifted_coords_array = np.roll(coords_array, -shift_amount, axis=0)
+    shifted_boom_array = np.roll(boom_array, -shift_amount)
+    return shifted_stress_array, shifted_coords_array, shifted_boom_array
 
 
 def calcSF_x():
 
+
+    
     return SF_arrayX
 
 
