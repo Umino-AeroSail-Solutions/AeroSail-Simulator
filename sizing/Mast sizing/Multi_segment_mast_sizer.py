@@ -1,6 +1,7 @@
 import numpy as np
 import Cross_section_analysis as cs
 import matplotlib.pyplot as plt
+import os
 from tqdm import tqdm
 
 class Segment():
@@ -377,6 +378,21 @@ w2, h2, d2 = bottom_w-2*d1, bottom_h-2*d1, 0.08
 w3, h3, d3 = w2-2*d2, h2-2*d2, 0.04
 w4, h4, d4 = w3-2*d3, h3-2*d3, 0.02
 
+print("w1: ", w1)
+print("w2: ", w2)
+print("w3: ", w3)
+print("w4: ", w4)
+
+print("h1: ", h1)
+print("h2: ", h2)
+print("h3: ", h3)
+print("h4: ", h4)
+
+print("d1: ", d1)
+print("d2: ", d2)
+print("d3: ", d3)
+print("d4: ", d4)
+
 def get_possible_overlap():
     return (segment_4_length +segment_3_length +segment_2_length +segment_1_length -overlap_01 -overlap_12 -overlap_23 -overlap_34) - height
 # print("possible overlap: ", get_possible_overlap())
@@ -395,7 +411,7 @@ def get_bool(prompt):
             return False
 
 compute_cross_section = get_bool("Compute cross section? [y/N]")
-def optimize_mast(Print=False,plot=False):
+def optimize_mast(Print=False,plot=False, export_internals=None):
     segment_4 = Segment(sail_weight_4, segment_4_length, overlap_34, 0, np.array([0,0]), np.array([0,0]), total_force_vector, height)
     segment_4.compute_internal_loads(plot)
     segment_3_top_force_top, segment_3_top_force_bottom = segment_4.compute_reaction_loads()
@@ -466,11 +482,39 @@ def optimize_mast(Print=False,plot=False):
         print("Total sail planform mass: ", ((sail_weight_1 + sail_weight_2 + sail_weight_3 + sail_weight_4))/9.81)
 
         print("Total sail mass: ", ((segment_1_mass + segment_2_mass + segment_3_mass + segment_4_mass)+((sail_weight_1 + sail_weight_2 + sail_weight_3 + sail_weight_4))/9.81))
+    output_folder = "Internal_Loads"
+    if export_internals is not None:
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+
+        Segment1_shears = segment_1.shears
+        Segment2_shears = segment_2.shears
+        Segment3_shears = segment_3.shears
+        Segment4_shears = segment_4.shears
+
+        Segment1_moments = segment_1.moments
+        Segment2_moments = segment_2.moments
+        Segment3_moments = segment_3.moments
+        Segment4_moments = segment_4.moments
+
+        print("Segment 1 shears: ",Segment1_shears)
+        print("Segment 1 moments: ", Segment1_moments)
+
+        np.savez(os.path.join(output_folder, f"{export_internals}.npz"),
+                 Segment1_shears=Segment1_shears,
+                 Segment2_shears=Segment2_shears,
+                 Segment3_shears=Segment3_shears,
+                 Segment4_shears=Segment4_shears,
+                 Segment1_moments=Segment1_moments,
+                 Segment2_moments=Segment2_moments,
+                 Segment3_moments=Segment3_moments,
+                 Segment4_moments=Segment4_moments,
+                 )
     return ((segment_1_mass + segment_2_mass + segment_3_mass + segment_4_mass)+((sail_weight_1 + sail_weight_2 + sail_weight_3 + sail_weight_4))/9.81)
 
 # Single mast size
 
-optimize_mast(Print=True, plot=True)
+optimize_mast(Print=True, plot=True, export_internals="extended_load_arrays")
 
 # # Seeding code
 #
