@@ -194,3 +194,22 @@ y_vals = boom_coords[:, 1]
 print(shifted_stress_vals)
 
 
+plt.figure(figsize=(10, 5))
+sc = plt.scatter(x_vals, y_vals, c=shifted_stress_vals, cmap='Spectral', s=10)
+plt.colorbar(sc, label='Normal Stress (σ_z)')
+plt.title('Stress Distribution Around Rectangular Cross Section')
+plt.xlabel('x (mm)')
+plt.ylabel('y (mm)')
+plt.axis('equal')
+plt.grid(True)
+plt.show()
+
+plt.figure(figsize=(10, 5))
+sc = plt.scatter(x_vals, y_vals, c=boom_areas, cmap='Spectral', s=10)
+plt.colorbar(sc, label='Boom Area')
+plt.title('Boom Area Around Rectangular Cross Section')
+plt.xlabel('x (mm)')
+plt.ylabel('y (mm)')
+plt.axis('equal')
+plt.grid(True)
+plt.show()
