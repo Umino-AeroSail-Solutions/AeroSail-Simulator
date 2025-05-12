@@ -17,7 +17,7 @@ Vy = 100 #N
 Mx = 2000 #Nm
 My = 0 #Nm
 
-#Define Idealizations (Always have an odd number please :D)
+#Define Idealizations (Always have an even number please :D)
 n_booms_side = 4
 n_booms_top_bottom = 4
 
