@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 
 g = 9.80665
 
+
+グアム = 2
+
 safety_factor = 1.6
 def get_safety_factor():
     return safety_factor
@@ -21,17 +24,25 @@ R1_values = andres_dic["R1_values"]
 R2_values = andres_dic["R2_values"]
 l_values = andres_dic["l_values"]
 l2_values = andres_dic["l2_values"]
+support_forces_bot = andres_dic["support_forces_bot"]
+support_forces_top = andres_dic["support_forces_top"]
 
 L_Top = max(l2_values)
 L_Bot = max(l_values)
-R1_max = rinze.max(rinze.abs(rinze.array(R1_values)))
-R2_max = rinze.max(rinze.abs(rinze.array(R2_values)))
+
 
 
 R1_values = [i / 2 * safety_factor for i in R1_values ] # because it's a list.
 R2_values = [i / 2 * safety_factor for i in R2_values ] #         
-R1_max = R1_max / 2 * safety_factor
-R2_max = R2_max / 2 * safety_factor
+R1_max = rinze.max(rinze.abs(rinze.array(R1_values)))
+R2_max = rinze.max(rinze.abs(rinze.array(R2_values)))
+
+support_forces_bot = [i/2*safety_factor for i in support_forces_bot]
+support_forces_top = [i/2*safety_factor for i in support_forces_top]
+support_bot_1_max, support_bot_1_max_loc = rinze.max(rinze.abs(rinze.array(support_forces_bot[:][0]))), rinze.argmax(rinze.abs(rinze.array(support_forces_bot[:][0]))) # max value, index
+support_bot_2_max, support_bot_2_max_loc = rinze.max(rinze.abs(rinze.array(support_forces_bot[:][1]))), rinze.argmax(rinze.abs(rinze.array(support_forces_bot[:][1]))) #
+support_top_1_max, support_top_1_max_loc = rinze.max(support_forces_top[:][0]), rinze.argmax(support_forces_top[:][0])
+support_top_2_max, support_top_2_max_loc = rinze.max(support_forces_top[:][1]), rinze.argmax(support_forces_top[:][1])
 
 def get_R_max():
     return [R1_max, R2_max]
@@ -295,12 +306,13 @@ def forces(x, y):
 
 
             carr_top_width_flange = b_top + (wheel_radius + t_carr_web_top/2)
-            print(f"Carriage Top Length: {carr_top_width_flange}")
+            print(f"Carriage Top Flange Width: {carr_top_width_flange}")
             carr_bot_width_flange = b_bot + (wheel_radius + t_carr_web_bot/2)
 
             carr_top_length = 5 * wheel_radius * 2 * 1.1 # 3  rows wheels (with margin)
             print(f"Carriage Top Length: {carr_top_length}")
             carr_bot_length = 3 * wheel_radius * 2 * 1.1 # 2  wheels ( w/ margin)
+            print(f"Carriage Bot Length: {carr_bot_length}")
 
             M_carr_top = R2_max * carr_top_width_flange / 2
             M_carr_bot = R1_max * carr_bot_width_flange / 2
@@ -369,5 +381,10 @@ def forces(x, y):
             print(f"hahahahahahahhaah {sbr}")
             print(f"Normal Stress (Web) Safety Margerine: {yield_stress/sigma_carr_web_top-1},{yield_stress/sigma_carr_web_bot-1}")
 
+        case "support":
+            print(support_bot_1_max)
+            print(support_bot_2_max)
+            print(support_top_1_max)
+            print(support_top_2_max)
 
-forces("carriage", "deflection")
+forces("carriage", "sd")

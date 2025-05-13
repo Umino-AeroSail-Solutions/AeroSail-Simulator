@@ -262,7 +262,18 @@ R2_max = np.max(np.abs(np.array(R2_values)))
 # print("R2 max: ", np.max(np.abs(np.array(R2_values))))
 # print("T max: ", np.max(np.abs(np.array(T_values))))
 
-np.savez(os.path.join(os.path.dirname(__file__),"forcevalues.npz"), R1_values=R1_values, R2_values=R2_values, l_values=l_values, l2_values=l2_values)
+support_forces_bot = []
+support_forces_top = []
+for i, leng in enumerate(l_values):
+    S2_bot = R1_values[i] * leng / L_Bot
+    S1_bot = R1_values[i] * (L_Bot-leng) / L_Bot
+    support_forces_bot.append([S1_bot, S2_bot])
+
+    S2_top = R2_values[i] * l2_values[i] / L_Top
+    S1_top = R2_values[i] * (L_Top -l2_values[i]) / L_Top
+    support_forces_top.append([S1_top, S2_top])
+
+np.savez(os.path.join(os.path.dirname(__file__),"forcevalues.npz"), R1_values=R1_values, R2_values=R2_values, l_values=l_values, l2_values=l2_values, support_forces_bot=support_forces_bot, support_forces_top=support_forces_top)
 
 # Plot reaction forces as a function of l
 plt.figure(figsize=(8, 5))
