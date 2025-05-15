@@ -42,10 +42,10 @@ MateRed = (200,50,50)
 #Inputs: coordinate of P1, P2, P4, mass of mast M, height of mast H#
 ####################################################################
 
-P1 = np.array([0.23375, 1]) # Bottom rail in retracted
-P2 = np.array([2.6+0.23375, 1]) # Top rail in retracted
+P1 = np.array([0.164, 1]) # Bottom rail in retracted
+P2 = np.array([2.6+0.203, 1]) # Top rail in retracted
 P3 = np.array([6, 2.67]) # Top rail in extended
-P4 = np.array([6, .07]) # Bottom rail in extended
+P4 = np.array([6, 0.203]) # Bottom rail in extended~
 
 L_Bot = np.linalg.norm(P4-P1)
 L_Top = np.linalg.norm(P3-P2)

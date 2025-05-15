@@ -303,7 +303,7 @@ def forces(x, y):
 
             carr_top_height = a_top + 2 * wheel_radius * 2 + t_carr_top * 2 + 1e-3
             carr_bot_height = a_bot + 2 * wheel_radius * 2 + t_carr_bot * 2 + 1e-3
-
+            print(f"Carriage top and bottom Height{carr_top_height,carr_bot_height}")
 
             carr_top_width_flange = b_top + (wheel_radius + t_carr_web_top/2)
             print(f"Carriage Top Flange Width: {carr_top_width_flange}")
@@ -387,4 +387,7 @@ def forces(x, y):
             print(support_top_1_max)
             print(support_top_2_max)
 
-forces("carriage", "sd")
+forces("rail", "forces")
+forces("rail", "deflection")
+forces("rail", "sideforce")
+forces("carriage", "たまごっち")
