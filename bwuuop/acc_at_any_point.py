@@ -11,8 +11,11 @@ B = 51.25 # breadth / beam [m]
 GM = 0.11 * B # metacentric height [m] (since B > 40)
 ## no ##
 
+k_r = 0.39 * B # roll radius of gyration [m]
+
 
 f_beta = 1  
+
 C_XG =
 C_XS =
 C_XP = 
