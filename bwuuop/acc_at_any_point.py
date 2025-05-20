@@ -17,13 +17,14 @@ m_min = 52_500_000 # deadweight of panamax [kg]
 
 k_r = 0.39 * B # roll radius of gyration [m]
 L_0 = np.max(110,L) 
+L_1 = np.min(250,L)
 
 ## f coeffs
 f_beta = 1  
 f_ps = 0.8 # From figure 3-1, assuming 35 kts
 f_p = f_ps # unless fatigue based
 f_BK = 1 # bilge keel factor 
-f_T = 1 
+f_T = 1 # ratio between draught at a loading condition and scantling draught
 
 T_theta = 2.3 * np.pi * k_r / np.sqrt(g * GM) # Roll period
 theta = 9000 * (1.4 - 0.035*T_theta)*f_p*f_BK/(1.15*B+55)/np.pi # Roll angle
@@ -45,8 +46,8 @@ a_roll = f_p * theta * np.pi/180 * (2*np.pi/T_theta)**2
 a_pitch = f_p * (1.75 - 22/np.sqrt(g*L)) * phi * np.pi/180 * (2*np.pi/T_phi)**2 # Only for L > 150
 
 
-C_XG =
-C_XS =
+C_XG =0
+C_XS =0
 C_XP = 
 
 C_YG = 
