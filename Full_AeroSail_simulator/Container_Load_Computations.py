@@ -3,9 +3,9 @@ import numpy as np
 Force = np.array(([1000, 300]))
 
 def get_acc(x,y,z):
-    ax = 0.1*9.81
-    ay = 0.1*9.81
-    az = 1.5*9.81
+    ax = 0.3
+    ay = 2.26
+    az = 9.81 + 2.055
     return np.array(([[ax,ay,az],[ax,ay,az],[ax,ay,az]]))
 
 def ComputeTWloads(Force, CCLHeight, StackHeight,

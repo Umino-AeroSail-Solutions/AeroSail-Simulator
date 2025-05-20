@@ -22,15 +22,16 @@ height = 30  # Example height
 chord = 5
 windspeed = 30 / 1.944  # Max windspeed in m/s
 
-Stackheight = 2
-SF = 1
+Stackheight = 3
+SF = 1.0
 full_container_weight = 24390.4
-container_load_ratio = 0.8
+container_load_ratio = 0.1
 real_container_weight = full_container_weight * container_load_ratio
 
 def drawenvelope(sail_instance, height, chord, windspeedknots, ax, real_container_weight=real_container_weight, SF=1.5, Stackheight=Stackheight):
     failure = False
-    windspeed = windspeedknots / 1.944
+    windspeed = (windspeedknots / 1.944)
+    windspeed = (windspeedknots / 1.944) * 1.25 # Added the standard value for DVN
     maxcf = 0
     maxcf_step = 0.001
     while not failure:
@@ -59,7 +60,7 @@ def drawenvelope(sail_instance, height, chord, windspeedknots, ax, real_containe
 
 
 # testing_windspeeds = np.arange(20, 50, 10)
-testing_windspeeds = [25, 30, 35]
+testing_windspeeds = [20, 25, 30]
 # Plot the allowed envelopes for different wind speeds on the same figure
 fig, ax = plt.subplots()
 colors = viridis(np.linspace(0, 1, len(testing_windspeeds)))
