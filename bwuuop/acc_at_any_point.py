@@ -2,19 +2,48 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # define variables
-g = 9.81
+g = 9.81 # you already know it [m/s^2]
+rho = 1025 # sea water density [kg/m^3]
 
 ## THE VARIABLES BELOW ARE TAKEN FROM NEWPANAMAX SHIP ##
 L = 366 # Length [m]
 T_SC = 15.2 # Draught "draft" [m]
 B = 51.25 # breadth / beam [m]
 GM = 0.11 * B # metacentric height [m] (since B > 40)
-## no ##
+D = 18.3 # Moulded Depth [m] depth of the locks? according to wikipedia
+m_max = 120_000_000 # deadweight of new panamax [kg]
+m_min = 52_500_000 # deadweight of panamax [kg]
+## -------------------------------------------------- ##
 
 k_r = 0.39 * B # roll radius of gyration [m]
+L_0 = np.max(110,L) 
 
-
+## f coeffs
 f_beta = 1  
+f_ps = 0.8 # From figure 3-1, assuming 35 kts
+f_p = f_ps # unless fatigue based
+f_BK = 1 # bilge keel factor 
+f_T = 1 
+
+T_theta = 2.3 * np.pi * k_r / np.sqrt(g * GM) # Roll period
+theta = 9000 * (1.4 - 0.035*T_theta)*f_p*f_BK/(1.15*B+55)/np.pi # Roll angle
+
+T_phi = np.sqrt(2*np.pi*(0.6*L*(1+f_T)) / g)  # Pitch period
+phi = 920 * f_p * L**-0.84 * (1+2.57/np.sqrt(g*L)**1.2)   # Pitch angle
+
+C_B = m_max/rho / (L * B * T_SC) # block coefficient = volume displacement / volume of block  BETWEEN 0.6-0.8 
+R = np.min(D/4 + T_SC/2,D/2)
+
+
+# accelerations
+a_0 = (1.58 - 0.47 * C_B) *( 2.4/np.sqrt(L) + 34/L + 600 / L**2)
+a_surge = 0.2 * (1.6 + 1.5/np.sqrt(g*L))*f_p*a_0*g # acc in x direction
+a_sway = 0.3 * (2.25 - 20/np.sqrt(g*L))*f_p*a_0*g # acc in y direction
+a_heave = (1.15 - 6.5/np.sqrt(g*L))*f_p*a_0*g # acc in z direction, ONLY FOR L > 150!!
+
+a_roll = f_p * theta * np.pi/180 * (2*np.pi/T_theta)**2
+a_pitch = f_p * (1.75 - 22/np.sqrt(g*L)) * phi * np.pi/180 * (2*np.pi/T_phi)**2 # Only for L > 150
+
 
 C_XG =
 C_XS =
@@ -28,11 +57,9 @@ C_ZH =
 C_ZR = 
 C_ZP = 
 
-L_0 = np.max(110,L)
 
 
-phi =  # Pitch angle
-theta =  # Roll angle 
+
 
 
 def get_acc(x,y,z):
