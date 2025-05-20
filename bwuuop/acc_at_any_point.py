@@ -47,6 +47,7 @@ a_roll = f_p * theta * np.pi/180 * (2*np.pi/T_theta)**2
 a_pitch = f_p * (1.75 - 22/np.sqrt(g*L)) * phi * np.pi/180 * (2*np.pi/T_phi)**2 # Only for L > 150
 
 
+loadcombi_index = [   "C_XS",        "C_XP",        "C_XG",       "C_YS",        "C_YR",       "C_YG",        "C_ZH",        "C_ZR",       "C_ZP"]
 loadcombifactors = {
     "HSM-1": [   0.6-0.2*f_T, -0.15-L_1/300,           0.6,            0,             0,            0,  0.5*f_T-0.15,             0,         -0.7],
     "HSM-2": [  -0.6+0.2*f_T,  0.15+L_1/300,          -0.6,            0,             0,            0, -0.5*f_T+0.15,             0,          0.7],
@@ -71,8 +72,6 @@ loadcombifactors = {
     "OSA-1S": [        -0.45,           0.5,          -0.8,  0.2+0.1*f_T, -0.3+0.2*f_T,  -0.1*f_T+0.2,      -0.2*f_T,  -0.3+0.2*f_T,          1.0],
     "OSA-2S": [         0.45,          -0.5,           0.8, -0.2-0.1*f_T,  0.3-0.2*f_T,   0.1*f_T-0.2,       0.2*f_T,   0.3-0.2*f_T,         -1.0]
 }
-
-loadcombi_index = [         "C_XS",        "C_XP",        "C_XG",       "C_YS",        "C_YR",       "C_YG",        "C_ZH",        "C_ZR",       "C_ZP"]
 
 loadcombidf = pd.DataFrame(loadcombifactors)
 loadcombidf.index = loadcombi_index
