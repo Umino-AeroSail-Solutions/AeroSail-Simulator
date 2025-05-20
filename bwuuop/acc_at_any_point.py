@@ -116,6 +116,8 @@ def get_acc_env(x,y,z):
     envelope.append([0.6 * a_x_env, 0.6 * a_y_env, -a_z_env])
 
     return envelope
-
+all_cases_acc = []
 for LC in loadcombidf.columns:
-    print(get_acc_dyn(0,0,R,LC))
+    all_cases_acc.append(get_acc_dyn(0,0,0,LC))
+
+print(all_cases_acc)
