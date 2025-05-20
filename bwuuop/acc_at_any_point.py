@@ -16,11 +16,9 @@ m_max = 120_000_000 # deadweight of new panamax [kg]
 m_min = 52_500_000 # deadweight of panamax [kg]
 ## -------------------------------------------------- ##
 
-L_0 = np.max(110,L)
-
 k_r = 0.39 * B # roll radius of gyration [m]
-L_0 = np.max(110,L) 
-L_1 = np.min(250,L)
+L_0 = max(110,L) 
+L_1 = min(250,L)
 
 ## f coeffs
 f_beta = 1  
@@ -36,7 +34,7 @@ T_phi = np.sqrt(2*np.pi*(0.6*L*(1+f_T)) / g)  # Pitch period
 phi = 920 * f_p * L**-0.84 * (1+2.57/np.sqrt(g*L)**1.2)   # Pitch angle
 
 C_B = m_max/rho / (L * B * T_SC) # block coefficient = volume displacement / volume of block  BETWEEN 0.6-0.8 
-R = np.min(D/4 + T_SC/2,D/2)
+R = min(D/4 + T_SC/2,D/2)
 
 
 # accelerations
@@ -50,7 +48,6 @@ a_pitch = f_p * (1.75 - 22/np.sqrt(g*L)) * phi * np.pi/180 * (2*np.pi/T_phi)**2 
 
 
 loadcombifactors = {
-    "LCF" : [         "C_XS",        "C_XP",        "C_XG",       "C_YS",        "C_YR",       "C_YG",        "C_ZH",        "C_ZR",       "C_ZP"],
     "HSM-1": [   0.6-0.2*f_T, -0.15-L_1/300,           0.6,            0,             0,            0,  0.5*f_T-0.15,             0,         -0.7],
     "HSM-2": [  -0.6+0.2*f_T,  0.15+L_1/300,          -0.6,            0,             0,            0, -0.5*f_T+0.15,             0,          0.7],
     "HSA-1": [           0.2,          -1.0,   0.4*f_T+0.1,            0,             0,            0,           0.4,             0,         -1.0],
@@ -75,8 +72,10 @@ loadcombifactors = {
     "OSA-2S": [         0.45,          -0.5,           0.8, -0.2-0.1*f_T,  0.3-0.2*f_T,   0.1*f_T-0.2,       0.2*f_T,   0.3-0.2*f_T,         -1.0]
 }
 
-loadcombidf = pd.DataFrame(loadcombifactors)
+loadcombi_index = [         "C_XS",        "C_XP",        "C_XG",       "C_YS",        "C_YR",       "C_YG",        "C_ZH",        "C_ZR",       "C_ZP"]
 
+loadcombidf = pd.DataFrame(loadcombifactors)
+loadcombidf.index = loadcombi_index
 
 
 
