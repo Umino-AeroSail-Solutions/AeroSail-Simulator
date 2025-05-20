@@ -2,75 +2,187 @@ import numpy as np
 
 Force = np.array(([1000, 300]))
 
-def ComputeTWloads(Force, CCLHeight, StackHeight,Containerweight=24390.4, Containerheight=2.59, Containerwidth=2.44, Containerlength=12.19):
-    '''Computes the corner loads and outputs [FWPT, FWSTB, BCKWPT, BCKSTB] array (Force[0] is long and Force[1] is lateral)'''
-    ApplicationHeight = CCLHeight+(Containerheight*StackHeight)
-    StackWeight = Containerweight*StackHeight*9.81
+def get_acc(x,y,z):
+    ax = 0.1*9.81
+    ay = 0.1*9.81
+    az = 1.5*9.81
+    return np.array(([[ax,ay,az],[ax,ay,az],[ax,ay,az]]))
 
-    Forward_moment = Force[0] * ApplicationHeight
-    Lateral_moment = Force[1] * ApplicationHeight
+def ComputeTWloads(Force, CCLHeight, StackHeight,
+                   Containerweight=24390.4,
+                   Containerheight=2.59,
+                   Containerwidth=2.44,
+                   Containerlength=12.19,
+                   aerosail_mass=10000,
+                   aerosail_cg=20,
+                   container_cg=1.2,
+                   base_x=0, base_y=0, base_z=0):
+    """
+    Computes the corner loads and outputs a 4xN array:
+    [FWPT, FWSTB, BCKWPT, BCKSTB] for each of N acceleration cases.
+    Force[0] is longitudinal, Force[1] is lateral.
+    """
+    # Height at which external forces are applied
+    ApplicationHeight = CCLHeight + Containerheight * StackHeight
 
-    Longitudinal_force_pair = Forward_moment/Containerlength
-    Lateral_force_pair = Lateral_moment/Containerwidth
+    # Get aerosail acceleration cases (3 vectors)
+    aerosail_accs = get_acc(base_x, base_y,
+                             base_z + Containerheight * StackHeight + aerosail_cg)
 
-    Forward_port_twlock_force = -Longitudinal_force_pair-Lateral_force_pair-(StackWeight/4) #Negative is compression
-    Forward_starboard_twlock_force = -Longitudinal_force_pair+Lateral_force_pair-(StackWeight/4)
-    Back_port_twlock_force = +Longitudinal_force_pair - Lateral_force_pair - (StackWeight / 4)  # Negative is compression
-    Back_starboard_twlock_force = +Longitudinal_force_pair + Lateral_force_pair - (StackWeight / 4)
+    # Flatten container acceleration blocks into list of (vector, z_position)
+    container_accs = []
+    for i in range(StackHeight):
+        block = get_acc(base_x, base_y,
+                        base_z + i * Containerheight + container_cg)
+        for acc_vec in block:
+            z_pos = base_z + i * Containerheight + container_cg
+            container_accs.append((acc_vec, z_pos))
 
-    CornerLoads = np.array(([Forward_port_twlock_force, Forward_starboard_twlock_force, Back_port_twlock_force, Back_starboard_twlock_force]))
+    # Prepare lists for each corner
+    FWPT = []
+    FWSTB = []
+    BCKWPT = []
+    BCKSTB = []
 
-    return CornerLoads
+    # Loop over each acceleration scenario
+    for acc_vec in aerosail_accs:
+        # Reset stack weight and moments for this scenario
+        StackWeight = 0.0
+        Forward_moment = Force[0] * ApplicationHeight
+        Lateral_moment = Force[1] * ApplicationHeight
 
-def CheckCornerloads(Force, CCLHeight, StackHeight,Containerweight=24390.4, Containerheight=2.59, Containerwidth=2.44, Containerlength=12.19, maxTension=250000, maxCompression=848000.000, SF=1.5):
+        # Build inertial forces list: [Fx, Fy, Fz, x, y, z]
+        inertial_forces = []
+        # Aerosail inertial force
+        Fx_a, Fy_a, Fz_a = acc_vec * aerosail_mass
+        inertial_forces.append([Fx_a, Fy_a, Fz_a,
+                                 base_x, base_y,
+                                 base_z + Containerheight * StackHeight + aerosail_cg])
+
+        # Container inertial forces
+        for vec, z_pos in container_accs:
+            Fx_c, Fy_c, Fz_c = vec * Containerweight
+            inertial_forces.append([Fx_c, Fy_c, Fz_c,
+                                     base_x, base_y, z_pos])
+
+        # Accumulate weight and moments
+        for Fx, Fy, Fz, x, y, z in inertial_forces:
+            StackWeight += Fz  # vertical inertial
+            Forward_moment += -Fx * (z - base_z)
+            Lateral_moment +=  Fy * (z - base_z)
+
+        # Compute force pairs applied to front/back and port/starboard
+        Long_pair = Forward_moment / Containerlength
+        Lat_pair  = Lateral_moment / Containerwidth
+
+        # Corner loads (negative = compression)
+        FWPT.append(-Long_pair - Lat_pair - (StackWeight / 4))
+        FWSTB.append(-Long_pair + Lat_pair - (StackWeight / 4))
+        BCKWPT.append( Long_pair - Lat_pair - (StackWeight / 4))
+        BCKSTB.append( Long_pair + Lat_pair - (StackWeight / 4))
+
+    # Return as 4xN NumPy array
+    return np.array([FWPT, FWSTB, BCKWPT, BCKSTB])
+
+def CheckCornerloads(Force, CCLHeight, StackHeight,Containerweight=24390.4, Containerheight=2.59, Containerwidth=2.44, Containerlength=12.19, maxTension=250000, maxCompression=848000.000, SF=1.5,   aerosail_mass=10000, aerosail_cg=6, container_cg=1.2, base_x=0, base_y=0, base_z=0):
     '''Returns True if there is no faliure and False otherwise (Force[0] is long and Force[1] is lateral)'''
-    CornerLoads = ComputeTWloads(Force, CCLHeight, StackHeight,Containerweight=Containerweight, Containerheight=Containerheight, Containerwidth=Containerwidth, Containerlength=Containerlength)
-    maxmeasuredtension = SF*max(CornerLoads)
-    maxmeasuredcompression = SF*abs(min(CornerLoads))
-    if maxmeasuredtension < maxTension and maxmeasuredcompression < maxCompression:
-        return True
-    else:
-        print()
-        print("Failure in corner loads")
-        if maxmeasuredtension > maxTension:
-            print("Maximum tension too high")
+    CornerLoads = ComputeTWloads(Force, CCLHeight, StackHeight,Containerweight=Containerweight, Containerheight=Containerheight, Containerwidth=Containerwidth, Containerlength=Containerlength, aerosail_mass=aerosail_mass, aerosail_cg=aerosail_cg, container_cg=container_cg, base_x=base_x, base_y=base_y, base_z=base_z)
+    for CornerLoad in CornerLoads:
+        maxmeasuredtension = SF*max(CornerLoad)
+        maxmeasuredcompression = SF*abs(min(CornerLoad))
+        if maxmeasuredtension < maxTension and maxmeasuredcompression < maxCompression:
+            continue
         else:
-            print("Maximum compression too high")
-        return False
+            print()
+            print("Failure in corner loads: ")
+            if maxmeasuredtension > maxTension:
+                print("Maximum tension too high")
+                print("Max tension: ", (maxmeasuredtension/maxTension*100), "%" )
+            else:
+                print("Maximum compression too high")
+                print("Max compression: ", (maxmeasuredcompression/maxCompression*100), "%" )
+            return False
+    return True
 
-def ComputeShears(Force, CCLHeight, StackHeight,Containerweight=24390.4, Containerheight=2.59, Containerwidth=2.44, Containerlength=12.19):
-    # CornerLoads = ComputeTWloads(Force, CCLHeight, StackHeight,Containerweight=Containerweight, Containerheight=Containerheight, Containerwidth=Containerwidth, Containerlength=Containerlength)
-    # longitudinal_shear = CornerLoads[2]-CornerLoads[0]+Force[0] # Adding differential tension which I think is wrong
-    # transverse_shear = CornerLoads[3]-CornerLoads[1]+Force[1] # Adding differential tension which I think is wrong
-    longitudinal_shear = Force[0]
-    transverse_shear = Force[1]
-    return longitudinal_shear, transverse_shear
+def ComputeShears(Force, CCLHeight, StackHeight, Containerweight=24390.4, Containerheight=2.59, Containerwidth=2.44, Containerlength=12.19,
+                  aerosail_mass=10000, aerosail_cg=20, container_cg=1.2, base_x=0, base_y=0, base_z=0):
+    # Get aerosail acceleration cases
+    aerosail_accelerations = get_acc(base_x, base_y, base_z + Containerheight * StackHeight + aerosail_cg)
 
-def CheckShear(Force, CCLHeight, StackHeight, maxtwitlockshear=263000,Containerweight=24390.4, Containerheight=2.59, Containerwidth=2.44, Containerlength=12.19, maxLongShear=150000, maxTransShear=200000, SF=1.5):
+    # Build a flat list of all container acceleration vectors across stack height
+    container_accs = []
+    for i in range(StackHeight):
+        acc_block = get_acc(base_x, base_y, base_z + i * Containerheight + container_cg)
+        for acc in acc_block:
+            container_accs.append((acc, base_z + i * Containerheight + container_cg))
+
+    # Shear results per aerosail acceleration case
+    longitudinal_shears = []
+    transverse_shears = []
+
+    for acceleration_case in aerosail_accelerations:
+        # Start with applied force
+        longitudinal_shear = Force[0]
+        transverse_shear = Force[1]
+
+        # Inertial force from aerosail
+        inertial_forces = [[
+            acceleration_case[0] * aerosail_mass,
+            acceleration_case[1] * aerosail_mass,
+            acceleration_case[2] * aerosail_mass,
+            base_x, base_y, base_z + Containerheight * StackHeight + aerosail_cg
+        ]]
+
+        # Inertial forces from each container
+        for acc_vec, z_pos in container_accs:
+            inertial_forces.append([
+                acc_vec[0] * Containerweight,
+                acc_vec[1] * Containerweight,
+                acc_vec[2] * Containerweight,
+                base_x, base_y, z_pos
+            ])
+
+        # Sum shears
+        longitudinal_shear += sum(force[1] for force in inertial_forces)  # Y-direction
+        transverse_shear += sum(force[0] for force in inertial_forces)    # X-direction
+
+        longitudinal_shears.append(longitudinal_shear)
+        transverse_shears.append(transverse_shear)
+
+    return longitudinal_shears, transverse_shears
+
+
+def CheckShear(Force, CCLHeight, StackHeight, maxtwitlockshear=263000,Containerweight=24390.4, Containerheight=2.59, Containerwidth=2.44, Containerlength=12.19, maxLongShear=150000, maxTransShear=200000, SF=1.5,   aerosail_mass=10000, aerosail_cg=6, container_cg=1.2, base_x=0, base_y=0, base_z=0):
     '''Returns True if there is no faliure and False otherwise (Force[0] is long and Force[1] is lateral)'''
-    longitudinal_shear, transverse_shear = ComputeShears(Force, CCLHeight, StackHeight,Containerweight=Containerweight, Containerheight=Containerheight, Containerwidth=Containerwidth, Containerlength=Containerlength)
+    longitudinal_shears, transverse_shears = ComputeShears(Force, CCLHeight, StackHeight,Containerweight=Containerweight, Containerheight=Containerheight, Containerwidth=Containerwidth, Containerlength=Containerlength, aerosail_mass=aerosail_mass, aerosail_cg=aerosail_cg, container_cg=container_cg, base_x=base_x, base_y=base_y, base_z=base_z)
+    i = 0
+    for longitudinal_shear in longitudinal_shears:
+        transverse_shear = transverse_shears[i]
+        if SF*np.sqrt((Force[0]**2)+(Force[1]**2))/2 > maxtwitlockshear:
+            print()
+            print("Failure in twistlock shear: ", maxtwitlockshear/(SF*np.sqrt((Force[0]**2)*(Force[1]**2))/2))
+            print(SF*np.sqrt((Force[0]**2)*(Force[1]**2))/2)
+            return False
 
-    if SF*np.sqrt((Force[0]**2)+(Force[1]**2))/2 > maxtwitlockshear:
-        print()
-        print("Failure in twistlock shear: ", maxtwitlockshear/(SF*np.sqrt((Force[0]**2)*(Force[1]**2))/2))
-        print(SF*np.sqrt((Force[0]**2)*(Force[1]**2))/2)
-        return False
-
-    if SF*abs(longitudinal_shear) < maxLongShear and SF*abs(transverse_shear) < maxTransShear:
-        return True
-    else:
-        print()
-        print("Failure in container shear")
-        if longitudinal_shear > maxLongShear:
-            print("Longitudinal shear too high")
+        if SF*abs(longitudinal_shear) < maxLongShear and SF*abs(transverse_shear) < maxTransShear:
+            i += 1
+            continue
         else:
-            print("Transverse shear too high")
-        return False
-def CheckContainer(Force, CCLHeight, StackHeight,Containerweight=24390.4, Containerheight=2.59, Containerwidth=2.44, Containerlength=12.19, maxLongShear=150000, maxTransShear=200000, maxTension=250000, maxCompression=848000, SF=1.5):
+            print()
+            print("Failure in container shear")
+            if SF*longitudinal_shear > maxLongShear:
+                print("Longitudinal shear too high")
+                print("Max longitudnal shear: ", ((SF*longitudinal_shear/maxLongShear) * 100), "%")
+            else:
+                print("Transverse shear too high")
+                print("Max transverse shear: ", ((SF*transverse_shear / maxTransShear) * 100), "%")
+            return False
+    return True
+def CheckContainer(Force, CCLHeight, StackHeight,Containerweight=24390.4, Containerheight=2.59, Containerwidth=2.44, Containerlength=12.19, maxLongShear=150000, maxTransShear=200000, maxTension=250000, maxCompression=848000, SF=1.5, aerosail_mass=10000, aerosail_cg=6, container_cg=1.2, base_x=0, base_y=0, base_z=0):
     '''Returns True if there is no faliure and False otherwise (Force[0] is long and Force[1] is lateral)'''
-    ShearOK = CheckShear(Force, CCLHeight, StackHeight,Containerweight=Containerweight, Containerheight=Containerheight, Containerwidth=Containerwidth, Containerlength=Containerlength, maxLongShear=maxLongShear, maxTransShear=maxTransShear, SF=SF)
+    ShearOK = CheckShear(Force, CCLHeight, StackHeight,Containerweight=Containerweight, Containerheight=Containerheight, Containerwidth=Containerwidth, Containerlength=Containerlength, maxLongShear=maxLongShear, maxTransShear=maxTransShear, SF=SF, aerosail_mass=aerosail_mass, aerosail_cg=aerosail_cg, container_cg=container_cg, base_x=base_x, base_y=base_y, base_z=base_z)
     # ShearOK = True
-    CornersOK = CheckCornerloads(Force, CCLHeight, StackHeight,Containerweight=Containerweight, Containerheight=Containerheight, Containerwidth=Containerwidth, Containerlength=Containerlength, maxTension=maxTension, maxCompression=maxCompression, SF=SF)
+    CornersOK = CheckCornerloads(Force, CCLHeight, StackHeight,Containerweight=Containerweight, Containerheight=Containerheight, Containerwidth=Containerwidth, Containerlength=Containerlength, maxTension=maxTension, maxCompression=maxCompression, SF=SF, aerosail_mass=aerosail_mass, aerosail_cg=aerosail_cg, container_cg=container_cg, base_x=base_x, base_y=base_y, base_z=base_z)
     # CornersOK = True
     if ShearOK and CornersOK:
         return True
