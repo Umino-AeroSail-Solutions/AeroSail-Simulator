@@ -1,12 +1,6 @@
 import numpy as np
-
+import acc_at_any_point as accs
 Force = np.array(([1000, 300]))
-
-def get_acc(x,y,z):
-    ax = 0.3
-    ay = 2.26
-    az = 9.81 + 2.055
-    return np.array(([[ax,ay,az],[ax,ay,az],[ax,ay,az]]))
 
 def ComputeTWloads(Force, CCLHeight, StackHeight,
                    Containerweight=24390.4,
@@ -26,13 +20,13 @@ def ComputeTWloads(Force, CCLHeight, StackHeight,
     ApplicationHeight = CCLHeight + Containerheight * StackHeight
 
     # Get aerosail acceleration cases (3 vectors)
-    aerosail_accs = get_acc(base_x, base_y,
+    aerosail_accs = accs.get_acc(base_x, base_y,
                              base_z + Containerheight * StackHeight + aerosail_cg)
 
     # Flatten container acceleration blocks into list of (vector, z_position)
     container_accs = []
     for i in range(StackHeight):
-        block = get_acc(base_x, base_y,
+        block = accs.get_acc(base_x, base_y,
                         base_z + i * Containerheight + container_cg)
         for acc_vec in block:
             z_pos = base_z + i * Containerheight + container_cg
@@ -84,7 +78,7 @@ def ComputeTWloads(Force, CCLHeight, StackHeight,
     # Return as 4xN NumPy array
     return np.array([FWPT, FWSTB, BCKWPT, BCKSTB])
 
-def CheckCornerloads(Force, CCLHeight, StackHeight,Containerweight=24390.4, Containerheight=2.59, Containerwidth=2.44, Containerlength=12.19, maxTension=250000, maxCompression=848000.000, SF=1.5,   aerosail_mass=10000, aerosail_cg=6, container_cg=1.2, base_x=0, base_y=0, base_z=0):
+def CheckCornerloads(Force, CCLHeight, StackHeight,Containerweight=24390.4, Containerheight=2.59, Containerwidth=2.44, Containerlength=12.19, maxTension=250000, maxCompression=848000.000, SF=1.5,   aerosail_mass=10000, aerosail_cg=4, container_cg=1.2, base_x=0, base_y=0, base_z=0):
     '''Returns True if there is no faliure and False otherwise (Force[0] is long and Force[1] is lateral)'''
     CornerLoads = ComputeTWloads(Force, CCLHeight, StackHeight,Containerweight=Containerweight, Containerheight=Containerheight, Containerwidth=Containerwidth, Containerlength=Containerlength, aerosail_mass=aerosail_mass, aerosail_cg=aerosail_cg, container_cg=container_cg, base_x=base_x, base_y=base_y, base_z=base_z)
     for CornerLoad in CornerLoads:
@@ -107,12 +101,12 @@ def CheckCornerloads(Force, CCLHeight, StackHeight,Containerweight=24390.4, Cont
 def ComputeShears(Force, CCLHeight, StackHeight, Containerweight=24390.4, Containerheight=2.59, Containerwidth=2.44, Containerlength=12.19,
                   aerosail_mass=10000, aerosail_cg=20, container_cg=1.2, base_x=0, base_y=0, base_z=0):
     # Get aerosail acceleration cases
-    aerosail_accelerations = get_acc(base_x, base_y, base_z + Containerheight * StackHeight + aerosail_cg)
+    aerosail_accelerations = accs.get_acc(base_x, base_y, base_z + Containerheight * StackHeight + aerosail_cg)
 
     # Build a flat list of all container acceleration vectors across stack height
     container_accs = []
     for i in range(StackHeight):
-        acc_block = get_acc(base_x, base_y, base_z + i * Containerheight + container_cg)
+        acc_block = accs.get_acc(base_x, base_y, base_z + i * Containerheight + container_cg)
         for acc in acc_block:
             container_accs.append((acc, base_z + i * Containerheight + container_cg))
 

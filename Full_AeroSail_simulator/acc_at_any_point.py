@@ -86,7 +86,7 @@ def get_acc_dyn(x,y,z,LCF):
 
     a_z = f_beta * (loadcombidf[LCF]["C_ZH"] * a_heave + loadcombidf[LCF]["C_ZR"]*a_roll * y - loadcombidf[LCF]["C_ZP"] * a_pitch * (x-0.45*L))
     
-    return [a_x,a_y,a_z]
+    return [a_x,a_y,a_z+g]
 
 
 def get_acc_env(x,y,z):
@@ -119,7 +119,7 @@ def get_acc_env(x,y,z):
 def get_acc(x,y,z):
     all_cases_acc = []
     for LC in loadcombidf.columns:
-        all_cases_acc.append(get_acc_dyn(0,0,0,LC))
+        all_cases_acc.append(get_acc_dyn(x,y,x,LC))
 
-    print(all_cases_acc)
+    # print(all_cases_acc)
     return np.array(all_cases_acc)
