@@ -22,22 +22,23 @@ height = 30  # Example height
 chord = 5
 windspeed = 30 / 1.944  # Max windspeed in m/s
 
-Stackheight = 4
-SF = 2
+Stackheight = 3
+SF = 1.0
 full_container_weight = 24390.4
-container_load_ratio = 0.8
+container_load_ratio = 0.1
 real_container_weight = full_container_weight * container_load_ratio
 
 def drawenvelope(sail_instance, height, chord, windspeedknots, ax, real_container_weight=real_container_weight, SF=1.5, Stackheight=Stackheight):
     failure = False
-    windspeed = windspeedknots / 1.944
+    windspeed = (windspeedknots / 1.944)
+    windspeed = (windspeedknots / 1.944) * 1.25 # Added the standard value for DVN
     maxcf = 0
     maxcf_step = 0.001
     while not failure:
         sail_instance.set_p('height', height)
         sail_instance.set_p('chord', chord)
         for direction in range(360):
-            print("Testing height: ", height, "     Testing direction: ", direction)
+            print("Testing height: ", height, "     Testing direction: ", direction, "     Testing speed: ", windspeedknots)
             forcemag = maxcf * 0.5 * 1.225 * (windspeed ** 2) * chord * height
             force = np.array([forcemag * np.sin(direction * np.pi / 180), forcemag * np.cos(direction * np.pi / 180)])
             ok = ContLoad.CheckContainer(force, height / 2, Stackheight, SF=SF, Containerweight=real_container_weight)
@@ -59,7 +60,7 @@ def drawenvelope(sail_instance, height, chord, windspeedknots, ax, real_containe
 
 
 # testing_windspeeds = np.arange(20, 50, 10)
-testing_windspeeds = [30, 40, 50, 70]
+testing_windspeeds = [20, 25, 30]
 # Plot the allowed envelopes for different wind speeds on the same figure
 fig, ax = plt.subplots()
 colors = viridis(np.linspace(0, 1, len(testing_windspeeds)))
@@ -68,7 +69,7 @@ colors = viridis(np.linspace(0, 1, len(testing_windspeeds)))
 contour_handles = {}
 
 for windspeed, color in zip(testing_windspeeds, colors):
-    contour = drawenvelope(sail_instance, height, chord, windspeed, ax)
+    contour = drawenvelope(sail_instance, height, chord, windspeed, ax, SF=SF)
     for c in contour.collections:
         c.set_label(f"{windspeed} knots")
 

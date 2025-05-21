@@ -327,18 +327,18 @@ def plot_shear_flows_with_arrows_and_tension(areas, shear_flows, Vx, Vy, Mx, My,
 
 
 # Example usage with your current setup
-# w, h, d = 1, 0.7, 0.04
-# top_thickness = 0.002
-# sides_thickness = 0.001
-# subdivisions = 14
+w, h, d = 1, 0.7, 0.04
+top_thickness = 0.002
+sides_thickness = 0.001
+subdivisions = 14
 #
-# a = find_areas(w, h, top_thickness, sides_thickness, d, 100, 100, 300, 200000)
-# Ixx, Iyy, Ixy = compute_Ixx_Iyy_Ixy(w, h, top_thickness, sides_thickness, d, a)
-# areas, thicknesses = create_areas_and_thicknesses(w, h, d, a, subdivisions, top_thickness, sides_thickness)
-# update_areas_bending(areas, thicknesses, 100, 100, Ixx, Iyy, Ixy)
-# plot_areas(areas, thicknesses)
-# qb, qbmax = compute_shear_flows(areas, 100000, -100000, subdivisions, thicknesses, h, d, w)
-# #print(qb)
+a = find_areas(w, h, top_thickness, sides_thickness, d, 100, 100, 300, 200000)
+Ixx, Iyy, Ixy = compute_Ixx_Iyy_Ixy(w, h, top_thickness, sides_thickness, d, a)
+areas, thicknesses = create_areas_and_thicknesses(w, h, d, a, subdivisions, top_thickness, sides_thickness)
+update_areas_bending(areas, thicknesses, 100, 100, Ixx, Iyy, Ixy)
+plot_areas(areas, thicknesses)
+qb, qbmax = compute_shear_flows(areas, 100000, -100000, subdivisions, thicknesses, h, d, w)
+print(qb)
 # #283000000 is the aluminium 2024 shear strength
-# check_shear_ok(qb, top_thickness, sides_thickness, 283000000, thicknesses)
-# plot_shear_flows_with_arrows_and_tension(areas, qb, 100000, -100000, 100, 100, Ixx, Iyy, Ixy)
+check_shear_ok(qb, top_thickness, sides_thickness, 283000000, thicknesses)
+plot_shear_flows_with_arrows_and_tension(areas, qb, 100000, -100000, 100, 100, Ixx, Iyy, Ixy)

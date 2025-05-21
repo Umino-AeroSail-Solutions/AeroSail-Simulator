@@ -462,22 +462,22 @@ thrust_values = np.zeros((len(boat_speeds), len(wind_speeds)))
 
 ship_power = 15000000
 # Compute thrust for each (boat_speed, wind_speed) pair
-for j, wind_speed in enumerate(wind_speeds):
-    for i, boat_speed in enumerate(boat_speeds):
-        ship_thrust = ship_power/(boat_speed/1.944)
-        thrust_values[i, j] = (Sail.plot_optimal_values_polar_with_thrust(
-            np.arange(np.radians(-180), np.radians(180), np.radians(0.01)),
-            5000, 15000, wind_speed, [30, 150], shipspeed=boat_speed
-        )/ship_thrust)*100
-
-# Create a heatmap
-
-thrust_values = np.array(thrust_values)
-
-plt.figure(figsize=(8, 6))
-sns.heatmap(thrust_values, xticklabels=np.round(wind_speeds, 1),
-            yticklabels=np.round(boat_speeds, 1), cmap="coolwarm", annot=True, fmt=".2f", annot_kws={"size": 6})
-plt.xlabel("Wind Speed (knots)")
-plt.ylabel("Boat Speed (knots)")
-plt.title("Average Thrust Heatmap")
-plt.show()
+# for j, wind_speed in enumerate(wind_speeds):
+#     for i, boat_speed in enumerate(boat_speeds):
+#         ship_thrust = ship_power/(boat_speed/1.944)
+#         thrust_values[i, j] = (Sail.plot_optimal_values_polar_with_thrust(
+#             np.arange(np.radians(-180), np.radians(180), np.radians(0.01)),
+#             5000, 15000, wind_speed, [30, 150], shipspeed=boat_speed
+#         )/ship_thrust)*100
+#
+# # Create a heatmap
+#
+# thrust_values = np.array(thrust_values)
+#
+# plt.figure(figsize=(8, 6))
+# sns.heatmap(thrust_values, xticklabels=np.round(wind_speeds, 1),
+#             yticklabels=np.round(boat_speeds, 1), cmap="coolwarm", annot=True, fmt=".2f", annot_kws={"size": 6})
+# plt.xlabel("Wind Speed (knots)")
+# plt.ylabel("Boat Speed (knots)")
+# plt.title("Average Thrust Heatmap")
+# plt.show()
