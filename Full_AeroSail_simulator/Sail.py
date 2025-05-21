@@ -427,7 +427,7 @@ class Sail_Class():
 # TESTING CODE -------------------------------------------------
 #
 Profile.initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
-Sail = Sail_Class('Data/E473coordinates.txt', 5, 0.4, 30, panels = 20)
+Sail = Sail_Class('Data/E473coordinates.txt', 5/2, 0.4, 30/2, panels = 20)
 # # # print(Sail.get_sail_coefficients(15, np.radians(10)))
 # # # print(Sail.get_l_d_m(10, np.radians(10), 10))
 # # # print(Sail.get_l_d_m(0, 0, 10))

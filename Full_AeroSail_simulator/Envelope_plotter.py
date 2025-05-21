@@ -18,11 +18,11 @@ interpolation = 'Data/interpolationCR4sail_XFLR5.npz'
 sail_instance.load_interpolation(interpolation)
 
 # Set up the parameters
-height = 30  # Example height
-chord = 5
+height = 30/2  # Example height
+chord = 5/2
 windspeed = 30 / 1.944  # Max windspeed in m/s
 
-Stackheight = 3
+Stackheight = 2
 SF = 1. # WARNING --> NO SAFETY MARGIN
 full_container_weight = 26730.4
 container_load_ratio = 3750/full_container_weight # Empty container
@@ -30,8 +30,8 @@ real_container_weight = full_container_weight * container_load_ratio
 
 deck_height_over_cog = 11 # Chat Gpt lmao, 11 meters seems reasonable
 
-# base_x, base_y, base_z = 190, 23.3, deck_height_over_cog # Front corner
-base_x, base_y, base_z = 0, 23.3, deck_height_over_cog # middle edge
+base_x, base_y, base_z = 190, 23.3, deck_height_over_cog # Front corner
+# base_x, base_y, base_z = 0, 23.3, deck_height_over_cog # middle edge
 
 def drawenvelope(sail_instance, height, chord, windspeedknots, ax, real_container_weight=real_container_weight, SF=1.5, Stackheight=Stackheight):
     failure = False
