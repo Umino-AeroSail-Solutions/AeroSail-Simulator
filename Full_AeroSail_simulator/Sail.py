@@ -448,19 +448,19 @@ Sail.load_interpolation('Data/interpolationCR4sail_XFLR5.npz')
 # Sail.load_interpolation('Data/interpolationCR4sail_XFLR5.npz')
 # Sail.plot_optimal_values(np.arange(np.radians(5), np.radians(180), np.radians(0.01)))
 # Sail.plot_optimal_values_polar(np.arange(np.radians(-180), np.radians(180), np.radians(0.01)))
-Sail.plot_optimal_values_polar_with_thrust(
-            np.arange(np.radians(-180), np.radians(180), np.radians(0.01)),
-            5000, 15000, 20, [30, 150], shipspeed=22
-        )
-# Code to plot average thrust as a function of boat speed and wind speed
-# Define the range of boat speeds and wind speeds
-boat_speeds = np.linspace(0, 22, 5)  # Boat speeds from 0 to 25 knots
-wind_speeds = np.linspace(5, 25, 11)  # Wind speeds from 5 to 30 knots
-
-# Create a matrix to store thrust values
-thrust_values = np.zeros((len(boat_speeds), len(wind_speeds)))
-
-ship_power = 15000000
+# Sail.plot_optimal_values_polar_with_thrust(
+#             np.arange(np.radians(-180), np.radians(180), np.radians(0.01)),
+#             5000, 15000, 20, [30, 150], shipspeed=22
+#         )
+# # Code to plot average thrust as a function of boat speed and wind speed
+# # Define the range of boat speeds and wind speeds
+# boat_speeds = np.linspace(0, 22, 5)  # Boat speeds from 0 to 25 knots
+# wind_speeds = np.linspace(5, 25, 11)  # Wind speeds from 5 to 30 knots
+#
+# # Create a matrix to store thrust values
+# thrust_values = np.zeros((len(boat_speeds), len(wind_speeds)))
+#
+# ship_power = 15000000
 # Compute thrust for each (boat_speed, wind_speed) pair
 # for j, wind_speed in enumerate(wind_speeds):
 #     for i, boat_speed in enumerate(boat_speeds):

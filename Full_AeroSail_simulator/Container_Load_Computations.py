@@ -25,7 +25,7 @@ def ComputeTWloads(Force, CCLHeight, StackHeight,
 
     # Flatten container acceleration blocks into list of (vector, z_position)
     container_accs = []
-    for i in range(StackHeight):
+    for i in range(StackHeight-1):
         block = accs.get_acc(base_x, base_y,
                         base_z + i * Containerheight + container_cg)
         for acc_vec in block:
@@ -105,7 +105,7 @@ def ComputeShears(Force, CCLHeight, StackHeight, Containerweight=24390.4, Contai
 
     # Build a flat list of all container acceleration vectors across stack height
     container_accs = []
-    for i in range(StackHeight):
+    for i in range(StackHeight-1):
         acc_block = accs.get_acc(base_x, base_y, base_z + i * Containerheight + container_cg)
         for acc in acc_block:
             container_accs.append((acc, base_z + i * Containerheight + container_cg))

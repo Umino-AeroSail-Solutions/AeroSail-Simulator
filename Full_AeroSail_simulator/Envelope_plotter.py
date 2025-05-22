@@ -22,7 +22,7 @@ height = 30  # Example height
 chord = 5
 windspeed = 30 / 1.944  # Max windspeed in m/s
 
-Stackheight = 2
+Stackheight = 4 # Height of container stack in number of containers INCLUDING AEROSAIL CONTAINER
 SF = 1. # WARNING --> NO SAFETY MARGIN
 full_container_weight = 26730.4
 container_load_ratio = 3750/full_container_weight # Empty container
@@ -39,18 +39,24 @@ def drawenvelope(sail_instance, height, chord, windspeedknots, ax, real_containe
     failure = False
     windspeed = (windspeedknots / 1.944)
     windspeed = (windspeedknots / 1.944) * 1.25 # Added the standard value for DVN
-    maxcf = 0.02
+    maxcf = 0.0
     maxcf_step = 0.02
     while not failure:
         sail_instance.set_p('height', height)
         sail_instance.set_p('chord', chord)
         for direction in np.linspace(0, 360, 100):
-            print("Testing height: ", round(height), "     Testing direction: ", round(direction), "     Testing speed: ", round(windspeedknots), "     Testing Cf: ", round(maxcf,2))
+            # print("Testing height: ", round(height), "     Testing direction: ", round(direction), "     Testing speed: ", round(windspeedknots), "     Testing Cf: ", round(maxcf,2))
             forcemag = maxcf * 0.5 * 1.225 * (windspeed ** 2) * chord * height
             force = np.array([forcemag * np.sin(direction * np.pi / 180), forcemag * np.cos(direction * np.pi / 180)])
             ok = ContLoad.CheckContainer(force, height / 2, Stackheight, SF=SF, Containerweight=real_container_weight, base_x=base_x, base_y=base_y, base_z=base_z)
             if not ok:
                 failure = True
+                print()
+                print("---------------------------------------------------------------")
+                print("Max cf: ", maxcf)
+                print("Max thrust", forcemag)
+                print("---------------------------------------------------------------")
+                print()
                 break
         maxcf += maxcf_step
 
@@ -67,7 +73,7 @@ def drawenvelope(sail_instance, height, chord, windspeedknots, ax, real_containe
 
 
 # testing_windspeeds = np.arange(20, 50, 10)
-testing_windspeeds = [15, 20, 25]
+testing_windspeeds = [15, 20, 30]
 # Plot the allowed envelopes for different wind speeds on the same figure
 fig, ax = plt.subplots()
 colors = viridis(np.linspace(0, 1, len(testing_windspeeds)))

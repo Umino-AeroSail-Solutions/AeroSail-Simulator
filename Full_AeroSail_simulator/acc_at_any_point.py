@@ -22,7 +22,9 @@ L_1 = min(250, L)
 
 ## f coeffs
 f_beta = 1
-f_ps = 0.8  # From figure 3-1, assuming 35 kts
+f_ps = 0.64  # From figure 3-1, assuming 35 kts, non ULS
+# f_ps = 1  # ULS
+
 f_p = f_ps  # unless fatigue based
 f_BK = 1  # bilge keel factor
 f_T = 1  # ratio between draught at a loading condition and scantling draught
@@ -93,8 +95,8 @@ def get_acc_dyn(x, y, z, LCF):
 
     a_z = f_beta * (loadcombidf[LCF]["C_ZH"] * a_heave + loadcombidf[LCF]["C_ZR"] * a_roll * y - loadcombidf[LCF][
         "C_ZP"] * a_pitch * (x - 0.45 * L))
-
-    return [a_x, a_y, a_z]
+    # print([a_x, a_y, a_z])
+    return [a_x, a_y, a_z + g]
 
 
 def get_acc_env(x, y, z):
@@ -119,21 +121,24 @@ def get_acc_env(x, y, z):
 
     envelope = []
     # load cases
-    envelope.append([a_x_env, 0, a_z_env_pitch])
-    envelope.append([a_x_env, 0, -a_z_env_pitch])
-    envelope.append([0, a_y_env, a_z_env_roll])
-    envelope.append([0, a_y_env, -a_z_env_roll])
-    envelope.append([0.6 * a_x_env, 0.6 * a_y_env, a_z_env])
-    envelope.append([0.6 * a_x_env, 0.6 * a_y_env, -a_z_env])
+    envelope.append([a_x_env, 0, a_z_env_pitch + g])
+    envelope.append([a_x_env, 0, -a_z_env_pitch + g])
+    envelope.append([0, a_y_env, a_z_env_roll + g])
+    envelope.append([0, a_y_env, -a_z_env_roll + g])
+    envelope.append([0.6 * a_x_env, 0.6 * a_y_env, a_z_env + g])
+    envelope.append([0.6 * a_x_env, 0.6 * a_y_env, -a_z_env + g])
+    # print(envelope)
 
     return envelope
 
 
 def get_acc(x, y, z):
     all_cases_acc = []
-    # for LC in loadcombidf.columns:
-        # all_cases_acc.append(get_acc_dyn(x,y,z,LC))
-    all_cases_acc = (get_acc_env(x, y, z))
+    # for LC in loadcombidf.columns:                  # Dynamic load mode
+        # all_cases_acc.append(get_acc_dyn(x,y,z,LC)) # Dynamic load mode
+    all_cases_acc = (get_acc_env(x, y, z))        # Envelope mode
 
     # print(all_cases_acc)
     return np.array(all_cases_acc)
+
+# print(get_acc(0,0,0))
