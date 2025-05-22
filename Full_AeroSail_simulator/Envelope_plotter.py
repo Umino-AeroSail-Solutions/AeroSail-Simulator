@@ -25,8 +25,8 @@ windspeed = 30 / 1.944  # Max windspeed in m/s
 Stackheight = 4 # Height of container stack in number of containers INCLUDING AEROSAIL CONTAINER
 SF = 1. # WARNING --> NO SAFETY MARGIN
 full_container_weight = 26730.4
-container_load_ratio = 3750/full_container_weight # Empty container
-# container_load_ratio = 5750/full_container_weight # Non Empty container
+# container_load_ratio = 3750/full_container_weight # Empty container
+container_load_ratio = 4950/full_container_weight # Non Empty container
 
 real_container_weight = full_container_weight * container_load_ratio
 

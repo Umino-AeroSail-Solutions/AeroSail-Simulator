@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import Profile
 import XFLR5_interpolarion_creator as XFLR5_interp
+import Container_Load_Computations as clc
 # This Sail_Class class computes atributes for a finite wing from profile parameters. It also works with flaps :)
 
 
@@ -102,7 +103,8 @@ class Sail_Class():
                 print("FAILURE")
                 return [0,0,0]
         else:
-            self.load_interpolation(s_interpolation)
+            if s_interpolation != 'yes':
+                self.load_interpolation(s_interpolation)
             Alphas, Flaps = np.meshgrid(self.InterpAlphas, self.InterpFlaps)
             # Check and transpose arrays if their shapes do not match
             if Alphas.shape != self.InterpCls.shape:
@@ -112,8 +114,10 @@ class Sail_Class():
             if Alphas.shape != self.InterpCloCds.shape:
                 self.InterpCloCds = self.InterpCloCds.T
             points = np.vstack((Alphas.flatten(), Flaps.flatten())).T
-            self.cl = griddata(points, self.InterpCls.flatten(), (alpha, flapdeflection), method='linear').item()
-            self.cd = griddata(points, self.InterpCds.flatten(), (alpha, flapdeflection), method='linear').item()
+            self.cl = griddata(points, self.InterpCls.flatten(), (alpha, flapdeflection), method='linear',
+                               fill_value=0).item()
+            self.cd = griddata(points, self.InterpCds.flatten(), (alpha, flapdeflection), method='linear',
+                               fill_value=0).item()
             # self.cm = griddata(points, self.InterpCms.flatten(), (alpha, flapdeflection), method='linear').item()
             self.cm = 0
             return [self.cl, self.cd, self.cm]
@@ -376,8 +380,20 @@ class Sail_Class():
         cd = coefficients[1]
         cf = np.sqrt(cl ** 2 + cd ** 2)
         return cf
-
-    def plot_optimal_values_polar_with_thrust(self, TWA_range, thrust_min, thrust_max, windspeedkt, radial_angles, shipspeed=0):
+    def get_force_c_vector(self,alpha, flap_deflection, interpolation):
+        self.add_flap(flap_deflection)  # Ensure the flap deflection is set
+        coefficients = self.get_sail_coefficients(alpha, flap_deflection, s_interpolation=interpolation)
+        cl = coefficients[0]
+        cd = coefficients[1]
+        return [cl,cd]
+    def get_specific_ct(self,alpha, flap_deflection, interpolation, AWA):
+        self.add_flap(flap_deflection)  # Ensure the flap deflection is set
+        coefficients = self.get_sail_coefficients(alpha, flap_deflection, s_interpolation=interpolation)
+        cl = coefficients[0]
+        cd = coefficients[1]
+        ct = cl*np.sin(AWA) - cd*np.cos(AWA)
+        return ct
+    def plot_optimal_values_polar_with_thrust(self, TWA_range, thrust_min, thrust_max, windspeedkt, radial_angles, shipspeed=23, StackHeight=4, ContainerWeight=4950, base_x=190, base_y=23.3, base_z=11):
         '''Plots the optimal thrust for an Apparent Wind Angle (AWA) range in a high-resolution polar graph'''
         optimal_thrusts = []
         aws = []
@@ -422,12 +438,86 @@ class Sail_Class():
         plt.tight_layout()
         plt.show()
         return np.average(optimal_thrusts)
+    def plot_optimal_values_polar_with_thrust_and_strct(self, TWA_range, thrust_min, thrust_max, windspeedkt, radial_angles, shipspeed=23, interpolation=None, StackHeight=4):
+        '''Plots the optimal thrust for an Apparent Wind Angle (AWA) range in a high-resolution polar graph, adding structural failure as a constraint'''
+        optimal_thrusts = []
+        aws = []
+        shipspeed = shipspeed / 1.944
+        windspeed = windspeedkt / 1.944
+        for TWA in TWA_range:
+            wind_back = -abs(windspeed * np.cos(TWA) + shipspeed)
+            wind_side = abs(windspeed * np.sin(TWA))
+            AWA = abs(np.arctan(wind_side/wind_back))
+            AWS = np.sqrt(wind_side ** 2 + wind_back ** 2)
+            opt_alpha, opt_flap = self.get_opt_pos(AWA)
+            coefficients = np.array(self.get_force_c_vector(opt_alpha, opt_flap, interpolation=interpolation))
+            print("AWA: ", round(np.degrees(AWA)), "Alpha: ", round(opt_alpha), "Flap: ", round(opt_flap), coefficients)
+            lift = 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord * coefficients[0]
+            drag = 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord * coefficients[1]
+            thrust = lift * np.sin(AWA) - drag * np.cos(AWA)
+            sideforce = lift * np.cos(AWA) + drag * np.sin(AWA)
+            force_vector = [thrust, sideforce]
+            struc_ok = clc.CheckContainer(force_vector, self.height, StackHeight, Containerweight=4950)
+            if struc_ok:
+                optimal_thrusts.append(self.cts.max() * 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord)
+            else:
+                while not struc_ok:
+                    if opt_alpha>0:
+                        opt_alpha = abs(opt_alpha - 0.05)
+                    else:
+                        opt_alpha = -abs(opt_alpha + 0.05)
+                    if opt_flap>0:
+                        opt_flap = abs(opt_flap - 0.05)
+                    else:
+                        opt_flap = -abs(opt_flap + 0.05)
+                    coefficients = np.array(self.get_force_c_vector(opt_alpha, opt_flap, interpolation=interpolation))
+                    print("AWA: ", round(np.degrees(AWA)), "Alpha: ", round(opt_alpha), "Flap: ", round(opt_flap), coefficients)
+                    lift = 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord * coefficients[0]
+                    drag = 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord * coefficients[1]
+                    thrust = lift * np.sin(AWA) - drag * np.cos(AWA)
+                    sideforce = lift*np.cos(AWA) + drag * np.sin(AWA)
+                    force_vector = [thrust, sideforce]
+                    # print(force_vector)
+                    struc_ok = clc.CheckContainer(force_vector, self.height, StackHeight, Containerweight=4950)
+                optimal_thrusts.append(self.get_specific_ct(opt_alpha, opt_flap, interpolation, AWA) * 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord)
+            aws.append(AWA)
+        # print(aws)
+        optimal_thrusts = np.array(optimal_thrusts)
+        thrust_min_array = np.array([thrust_min] * len(TWA_range))  # Array for thrust_min
+        thrust_max_array = np.array([thrust_max] * len(TWA_range))  # Array for thrust_max
+
+        print("Average thrust is: ", str(np.average(optimal_thrusts)))
+        # Polar plot for optimal thrust with thrust_min and thrust_max
+        # a = plt.subplot(111, polar=True)
+        # a.plot(TWA_range, aws, 'g-', label='AWS')
+        ax = plt.subplot(111, polar=True)
+        ax.plot(TWA_range, optimal_thrusts, 'g-', label='Optimal thrust')
+        ax.plot(TWA_range, thrust_min_array, 'm--', label='Requirement ASV2-STK-02b')
+        ax.plot(TWA_range, thrust_max_array, 'c--', label='Requirement ASV2-STK-02')
+        ax.set_theta_zero_location('N')
+        ax.set_theta_direction(-1)
+        ax.set_rlabel_position(-22.5)  # Move radial labels to prevent overlap
+        ax.set_title('Optimal thrust vs TWA at ' + str(windspeedkt) + ' kt' + ', shipspeed = '+ str(shipspeed*1.944) + 'kt', va='bottom')
+        # a.set_theta_zero_location('N')
+        # a.set_theta_direction(-1)
+        # a.set_rlabel_position(-22.5)  # Move radial labels to prevent overlap
+        # a.set_title("AWS vs TWA", va='bottom')
+        for angle in radial_angles:
+            ax.axvline(np.radians(angle), color='k', linestyle='--')  # Adding radial lines
+
+        # Move the legend below the graph
+        ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2)
+        # a.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2)
+
+        plt.tight_layout()
+        plt.show()
+        return np.average(optimal_thrusts)
 
 
 # TESTING CODE -------------------------------------------------
 #
 Profile.initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
-Sail = Sail_Class('Data/E473coordinates.txt', 5/2, 0.4, 30/2, panels = 20)
+Sail = Sail_Class('Data/E473coordinates.txt', 5, 0.4, 30, panels = 20)
 # # # print(Sail.get_sail_coefficients(15, np.radians(10)))
 # # # print(Sail.get_l_d_m(10, np.radians(10), 10))
 # # # print(Sail.get_l_d_m(0, 0, 10))
@@ -440,7 +530,8 @@ Sail.load_interpolation('Data/interpolationCR4sail_XFLR5.npz')
 # # # print(Sail.InterpAlphas, Sail.InterpFlaps, Sail.InterpCds, Sail.InterpCloCds)
 # Sail.plot_2d_polar_interp()
 # Sail.get_cf()
-# # Sail.plot_cts_for_AWA(np.radians(5))
+# for angle in range(0, 180, 5):
+#     Sail.plot_cts_for_AWA(np.radians(angle))
 # # # print(Sail.get_opt_pos(np.radians(10)))
 # # # print(Sail.get_opt_pos(np.radians(120)))
 # # # Sail.plot_optimal_values(np.arange(np.radians(5), np.radians(180), np.radians(0.5)))
@@ -452,26 +543,47 @@ Sail.load_interpolation('Data/interpolationCR4sail_XFLR5.npz')
 #             np.arange(np.radians(-180), np.radians(180), np.radians(0.01)),
 #             5000, 15000, 20, [30, 150], shipspeed=22
 #         )
+
+
+
+
+
+
+
+
+
+
+
 # # Code to plot average thrust as a function of boat speed and wind speed
+interpolation = 'yes'
+# interpolation = 'Data/interpolationCR4sail_XFLR5.npz'
+
 # # Define the range of boat speeds and wind speeds
-# boat_speeds = np.linspace(0, 22, 5)  # Boat speeds from 0 to 25 knots
-# wind_speeds = np.linspace(5, 25, 11)  # Wind speeds from 5 to 30 knots
+boat_speeds = np.linspace(10, 23, 4)  # Boat speeds
+wind_speeds = np.linspace(10, 30, 5)  # Wind speeds
 #
 # # Create a matrix to store thrust values
-# thrust_values = np.zeros((len(boat_speeds), len(wind_speeds)))
+thrust_values = np.zeros((len(boat_speeds), len(wind_speeds)))
 #
-# ship_power = 15000000
+ship_power = 15000000
+
+# Just 1 test value
+Sail.plot_optimal_values_polar_with_thrust_and_strct(
+            np.arange(np.radians(-180), np.radians(180), np.radians(1)),
+            5000, 15000, 25, [30, 150], shipspeed=23
+        , interpolation=interpolation)
+
 # Compute thrust for each (boat_speed, wind_speed) pair
 # for j, wind_speed in enumerate(wind_speeds):
 #     for i, boat_speed in enumerate(boat_speeds):
 #         ship_thrust = ship_power/(boat_speed/1.944)
-#         thrust_values[i, j] = (Sail.plot_optimal_values_polar_with_thrust(
-#             np.arange(np.radians(-180), np.radians(180), np.radians(0.01)),
+#         thrust_values[i, j] = (Sail.plot_optimal_values_polar_with_thrust_and_strct(
+#             np.arange(np.radians(-180), np.radians(180), np.radians(5)),
 #             5000, 15000, wind_speed, [30, 150], shipspeed=boat_speed
-#         )/ship_thrust)*100
+#         , interpolation=interpolation)/ship_thrust)*100
 #
-# # Create a heatmap
-#
+# # # Create a heatmap
+# #
 # thrust_values = np.array(thrust_values)
 #
 # plt.figure(figsize=(8, 6))
