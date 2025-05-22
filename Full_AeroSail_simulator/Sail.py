@@ -451,7 +451,7 @@ class Sail_Class():
             AWS = np.sqrt(wind_side ** 2 + wind_back ** 2)
             opt_alpha, opt_flap = self.get_opt_pos(AWA)
             coefficients = np.array(self.get_force_c_vector(opt_alpha, opt_flap, interpolation=interpolation))
-            print("AWA: ", round(np.degrees(AWA)), "Alpha: ", round(opt_alpha), "Flap: ", round(opt_flap), coefficients)
+            print("TWA: ", round(np.degrees(TWA),2), "Alpha: ", round(opt_alpha), "Flap: ", round(opt_flap), coefficients)
             lift = 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord * coefficients[0]
             drag = 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord * coefficients[1]
             thrust = lift * np.sin(AWA) - drag * np.cos(AWA)
@@ -471,7 +471,7 @@ class Sail_Class():
                     else:
                         opt_flap = -abs(opt_flap + 0.05)
                     coefficients = np.array(self.get_force_c_vector(opt_alpha, opt_flap, interpolation=interpolation))
-                    print("AWA: ", round(np.degrees(AWA)), "Alpha: ", round(opt_alpha), "Flap: ", round(opt_flap), coefficients)
+                    print("TWA: ", round(np.degrees(TWA),2), "Alpha: ", round(opt_alpha), "Flap: ", round(opt_flap), coefficients)
                     lift = 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord * coefficients[0]
                     drag = 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord * coefficients[1]
                     thrust = lift * np.sin(AWA) - drag * np.cos(AWA)
@@ -569,27 +569,27 @@ ship_power = 15000000
 
 # Just 1 test value
 Sail.plot_optimal_values_polar_with_thrust_and_strct(
-            np.arange(np.radians(-180), np.radians(180), np.radians(1)),
+            np.arange(np.radians(0), np.radians(180), np.radians(1)),
             5000, 15000, 25, [30, 150], shipspeed=23
         , interpolation=interpolation)
 
 # Compute thrust for each (boat_speed, wind_speed) pair
-# for j, wind_speed in enumerate(wind_speeds):
-#     for i, boat_speed in enumerate(boat_speeds):
-#         ship_thrust = ship_power/(boat_speed/1.944)
-#         thrust_values[i, j] = (Sail.plot_optimal_values_polar_with_thrust_and_strct(
-#             np.arange(np.radians(-180), np.radians(180), np.radians(5)),
-#             5000, 15000, wind_speed, [30, 150], shipspeed=boat_speed
-#         , interpolation=interpolation)/ship_thrust)*100
+for j, wind_speed in enumerate(wind_speeds):
+    for i, boat_speed in enumerate(boat_speeds):
+        ship_thrust = ship_power/(boat_speed/1.944)
+        thrust_values[i, j] = (Sail.plot_optimal_values_polar_with_thrust_and_strct(
+            np.arange(np.radians(0), np.radians(180), np.radians(5)),
+            5000, 15000, wind_speed, [30, 150], shipspeed=boat_speed
+        , interpolation=interpolation)/ship_thrust)*100
+
+# # Create a heatmap
 #
-# # # Create a heatmap
-# #
-# thrust_values = np.array(thrust_values)
-#
-# plt.figure(figsize=(8, 6))
-# sns.heatmap(thrust_values, xticklabels=np.round(wind_speeds, 1),
-#             yticklabels=np.round(boat_speeds, 1), cmap="coolwarm", annot=True, fmt=".2f", annot_kws={"size": 6})
-# plt.xlabel("Wind Speed (knots)")
-# plt.ylabel("Boat Speed (knots)")
-# plt.title("Average Thrust Heatmap")
-# plt.show()
+thrust_values = np.array(thrust_values)
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(thrust_values, xticklabels=np.round(wind_speeds, 1),
+            yticklabels=np.round(boat_speeds, 1), cmap="coolwarm", annot=True, fmt=".2f", annot_kws={"size": 6})
+plt.xlabel("Wind Speed (knots)")
+plt.ylabel("Boat Speed (knots)")
+plt.title("Average Thrust Heatmap")
+plt.show()
