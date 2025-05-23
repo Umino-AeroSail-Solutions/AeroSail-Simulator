@@ -172,7 +172,7 @@ def CheckShear(Force, CCLHeight, StackHeight, maxtwitlockshear=263000,Containerw
                 print("Max transverse shear: ", ((SF*transverse_shear / maxTransShear) * 100), "%")
             return False
     return True
-def CheckContainer(Force, CCLHeight, StackHeight,Containerweight=24390.4, Containerheight=2.59, Containerwidth=2.44, Containerlength=12.19, maxLongShear=150000, maxTransShear=200000, maxTension=250000, maxCompression=848000, SF=1., aerosail_mass=10000, aerosail_cg=6, container_cg=1.2, base_x=190, base_y=23.3, base_z=11):
+def CheckContainer(Force, CCLHeight, StackHeight,Containerweight=24390.4, Containerheight=2.59, Containerwidth=2.44, Containerlength=12.19, maxLongShear=150000, maxTransShear=200000, maxTension=250000, maxCompression=848000, SF=1., aerosail_mass=10000, aerosail_cg=6, container_cg=1.2, base_x=-190, base_y=23.3, base_z=11):
     '''Returns True if there is no faliure and False otherwise (Force[0] is long and Force[1] is lateral)'''
     ShearOK = CheckShear(Force, CCLHeight, StackHeight,Containerweight=Containerweight, Containerheight=Containerheight, Containerwidth=Containerwidth, Containerlength=Containerlength, maxLongShear=maxLongShear, maxTransShear=maxTransShear, SF=SF, aerosail_mass=aerosail_mass, aerosail_cg=aerosail_cg, container_cg=container_cg, base_x=base_x, base_y=base_y, base_z=base_z)
     # ShearOK = True
