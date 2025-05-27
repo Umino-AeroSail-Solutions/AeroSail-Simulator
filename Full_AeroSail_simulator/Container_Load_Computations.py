@@ -87,14 +87,14 @@ def CheckCornerloads(Force, CCLHeight, StackHeight,Containerweight=24390.4, Cont
         if maxmeasuredtension < maxTension and maxmeasuredcompression < maxCompression:
             continue
         else:
-            print()
-            print("Failure in corner loads: ")
-            if maxmeasuredtension > maxTension:
-                print("Maximum tension too high")
-                print("Max tension: ", (maxmeasuredtension/maxTension*100), "%" )
-            else:
-                print("Maximum compression too high")
-                print("Max compression: ", (maxmeasuredcompression/maxCompression*100), "%" )
+            # print()
+            # print("Failure in corner loads: ")
+            # if maxmeasuredtension > maxTension:
+            #     print("Maximum tension too high")
+            #     print("Max tension: ", (maxmeasuredtension/maxTension*100), "%" )
+            # else:
+            #     print("Maximum compression too high")
+            #     print("Max compression: ", (maxmeasuredcompression/maxCompression*100), "%" )
             return False
     return True
 
@@ -153,23 +153,23 @@ def CheckShear(Force, CCLHeight, StackHeight, maxtwitlockshear=263000,Containerw
     for longitudinal_shear in longitudinal_shears:
         transverse_shear = transverse_shears[i]
         if SF*np.sqrt((Force[0]**2)+(Force[1]**2))/2 > maxtwitlockshear:
-            print()
-            print("Failure in twistlock shear: ", maxtwitlockshear/(SF*np.sqrt((Force[0]**2)*(Force[1]**2))/2))
-            print(SF*np.sqrt((Force[0]**2)*(Force[1]**2))/2)
+            # print()
+            # print("Failure in twistlock shear: ", maxtwitlockshear/(SF*np.sqrt((Force[0]**2)*(Force[1]**2))/2))
+            # print(SF*np.sqrt((Force[0]**2)*(Force[1]**2))/2)
             return False
 
         if SF*abs(longitudinal_shear) < maxLongShear and SF*abs(transverse_shear) < maxTransShear:
             i += 1
             continue
         else:
-            print()
-            print("Failure in container shear")
-            if SF*longitudinal_shear > maxLongShear:
-                print("Longitudinal shear too high")
-                print("Max longitudnal shear: ", ((SF*longitudinal_shear/maxLongShear) * 100), "%")
-            else:
-                print("Transverse shear too high")
-                print("Max transverse shear: ", ((SF*transverse_shear / maxTransShear) * 100), "%")
+            # print()
+            # print("Failure in container shear")
+            # if SF*longitudinal_shear > maxLongShear:
+            #     print("Longitudinal shear too high")
+            #     print("Max longitudnal shear: ", ((SF*longitudinal_shear/maxLongShear) * 100), "%")
+            # else:
+            #     print("Transverse shear too high")
+            #     print("Max transverse shear: ", ((SF*transverse_shear / maxTransShear) * 100), "%")
             return False
     return True
 def CheckContainer(Force, CCLHeight, StackHeight,Containerweight=24390.4, Containerheight=2.59, Containerwidth=2.44, Containerlength=12.19, maxLongShear=150000, maxTransShear=200000, maxTension=250000, maxCompression=848000, SF=1., aerosail_mass=10000, aerosail_cg=6, container_cg=1.2, base_x=-190, base_y=23.3, base_z=11):

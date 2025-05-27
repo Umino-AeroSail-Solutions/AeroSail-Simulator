@@ -28,10 +28,10 @@ f_ps = 0.64  # From figure 3-1, assuming 35 kts, non ULS
 f_BK = 1  # bilge keel factor
 f_T = 1  # ratio between draught at a loading condition and scantling draught
 
-# f_p = f_ps  # unless fatigue based
+f_p = f_ps  # unless fatigue based
 
-f_R = 0.6 # From chapter 9
-f_p = f_R * (0.28 - (5 + 6 * f_T) * L * 1e-5) # Fatigue based
+# f_R = 0.6 # From chapter 9
+# f_p = f_R * (0.28 - (5 + 6 * f_T) * L * 1e-5) # Fatigue based
 
 T_theta = 2.3 * np.pi * k_r / np.sqrt(g * GM)  # Roll period
 theta = 9000 * (1.4 - 0.035 * T_theta) * f_p * f_BK / (1.15 * B + 55) / np.pi  # Roll angle

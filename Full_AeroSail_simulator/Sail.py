@@ -442,6 +442,7 @@ class Sail_Class():
     def plot_optimal_values_polar_with_thrust_and_strct(self, TWA_range, thrust_min, thrust_max, windspeedkt, radial_angles, shipspeed=23, interpolation=None, StackHeight=4):
         '''Plots the optimal thrust for an Apparent Wind Angle (AWA) range in a high-resolution polar graph, adding structural failure as a constraint'''
         optimal_thrusts = []
+        optimal_lame_thrusts = []
         aws = []
         shipspeed = shipspeed / 1.944
         windspeed = windspeedkt / 1.944
@@ -459,6 +460,7 @@ class Sail_Class():
             sideforce = lift * np.cos(AWA) + drag * np.sin(AWA)
             force_vector = [thrust, sideforce]
             struc_ok = clc.CheckContainer(force_vector, self.height, StackHeight, Containerweight=4950)
+            optimal_lame_thrusts.append(self.cts.max() * 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord)
             if struc_ok:
                 optimal_thrusts.append(self.cts.max() * 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord)
             else:
@@ -536,6 +538,7 @@ class Sail_Class():
             aws.append(AWA)
         # print(aws)
         optimal_thrusts = np.array(optimal_thrusts)
+        optimal_lame_thrusts = np.array(optimal_lame_thrusts)
         thrust_min_array = np.array([thrust_min] * len(TWA_range))  # Array for thrust_min
         thrust_max_array = np.array([thrust_max] * len(TWA_range))  # Array for thrust_max
 
@@ -544,6 +547,7 @@ class Sail_Class():
         # a = plt.subplot(111, polar=True)
         # a.plot(TWA_range, aws, 'g-', label='AWS')
         ax = plt.subplot(111, polar=True)
+        ax.plot(TWA_range, optimal_lame_thrusts, 'r--', label='Aero opt thrust')
         ax.plot(TWA_range, optimal_thrusts, 'g-', label='Optimal thrust')
         ax.plot(TWA_range, thrust_min_array, 'm--', label='Requirement ASV2-STK-02b')
         ax.plot(TWA_range, thrust_max_array, 'c--', label='Requirement ASV2-STK-02')
