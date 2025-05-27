@@ -462,27 +462,76 @@ class Sail_Class():
             if struc_ok:
                 optimal_thrusts.append(self.cts.max() * 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord)
             else:
-                while not struc_ok:
-                    struc_ok2questionmmark = []
-                    if opt_alpha>0:
-                        opt_alpha = abs(opt_alpha - 0.05)
-                    else:
-                        opt_alpha = -abs(opt_alpha + 0.05)
+                inistepsize = [5,2]
+                if opt_alpha>0:
+                        opt_alpha_intervals = [
+                            abs(opt_alpha - inistepsize[0]),
+                            opt_alpha,
+                            (abs(opt_alpha - inistepsize[0]) + opt_alpha )/2]
+                else:
+                    opt_alpha_intervals = [
+                        -abs(opt_alpha + inistepsize[0]),
+                        opt_alpha,
+                        (-abs(opt_alpha - inistepsize[0]) + opt_alpha )/2]
                     
-                    if opt_flap>0:
-                        opt_flap = abs(opt_flap - np.radians(0.0286))
+                if opt_flap>0:
+                    opt_flap_intervals = [
+                        abs(opt_flap - np.radians(inistepsize[1])),
+                        opt_flap,
+                        (abs(opt_flap - np.radians(inistepsize[1])) + opt_flap)/2
+                        ]
+                else:
+                    opt_flap_intervals = [
+                        -abs(opt_flap + np.radians(inistepsize[1])),
+                        opt_flap,
+                        (-abs(opt_flap + np.radians(inistepsize[1])) + opt_flap)/2
+                        ]
+                while abs(opt_alpha_intervals[1] - opt_alpha_intervals[2]) > 0.001:
+                    coefficients_s = []
+                    strc_ok2 = []
+                    for i, alph in enumerate(opt_alpha_intervals):
+                        coefficients_s.append(np.array(self.get_force_c_vector(alph, opt_flap_intervals[i], interpolation=interpolation)))
+                        print("TWA: ", round(np.degrees(TWA), 2), "Alpha: ", round(alph), "Flap: ",
+                          round(np.degrees(opt_flap_intervals[i])), coefficients_s[i])
+                        lift = 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord * coefficients_s[i][0]
+                        drag = 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord * coefficients_s[i][1]
+                        thrust = lift * np.sin(AWA) - drag * np.cos(AWA)
+                        sideforce = lift*np.cos(AWA) + drag * np.sin(AWA)
+                        force_vector = [thrust, sideforce]
+                        # print(force_vector)
+                        strc_ok2.append(clc.CheckContainer(force_vector, self.height, StackHeight, Containerweight=4950))
+                    if strc_ok2[0] ^ strc_ok2[2]:
+                        opt_alpha_intervals = [
+                            opt_alpha_intervals[0],
+                            opt_alpha_intervals[2],
+                            (opt_alpha_intervals[0] + opt_alpha_intervals[2])/2
+                        ]
+                        opt_flap_intervals = [
+                            opt_flap_intervals[0],
+                            opt_flap_intervals[2],
+                            (opt_flap_intervals[0] + opt_flap_intervals[2])/2
+                        ]
+                    elif strc_ok2[1] ^ strc_ok2[2]:
+                        opt_alpha_intervals = [
+                            opt_alpha_intervals[1],
+                            opt_alpha_intervals[2],
+                            (opt_alpha_intervals[1] + opt_alpha_intervals[2])/2
+                        ]
+                        opt_flap_intervals = [
+                            opt_flap_intervals[1],
+                            opt_flap_intervals[2],
+                            (opt_flap_intervals[1] + opt_flap_intervals[2])/2
+                        ]
                     else:
-                        opt_flap = -abs(opt_flap + np.radians(0.0286))
-                    coefficients = np.array(self.get_force_c_vector(opt_alpha, opt_flap, interpolation=interpolation))
-                    print("TWA: ", round(np.degrees(TWA), 2), "Alpha: ", round(opt_alpha), "Flap: ",
-                          round(np.degrees(opt_flap)), coefficients)
-                    lift = 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord * coefficients[0]
-                    drag = 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord * coefficients[1]
-                    thrust = lift * np.sin(AWA) - drag * np.cos(AWA)
-                    sideforce = lift*np.cos(AWA) + drag * np.sin(AWA)
-                    force_vector = [thrust, sideforce]
-                    # print(force_vector)
-                    struc_ok = clc.CheckContainer(force_vector, self.height, StackHeight, Containerweight=4950)
+                        raise Exception("DEATHACASCASCASC")
+                if strc_ok2[0]:
+                    opt_alpha = opt_alpha_intervals[0]
+                    opt_flap = opt_flap_intervals[0]
+                else:
+                    opt_alpha = opt_alpha_intervals[1]
+                    opt_flap = opt_flap_intervals[1]
+                if strc_ok2[0] or strc_ok2[1]:
+                    print("HEYHYEHYEHIHOIUHUDSDASK \n HSADASOIPDJOAPSD \n PASOIDJPOCJIA")
                 optimal_thrusts.append(self.get_specific_ct(opt_alpha, opt_flap, interpolation, AWA) * 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord)
             aws.append(AWA)
         # print(aws)
