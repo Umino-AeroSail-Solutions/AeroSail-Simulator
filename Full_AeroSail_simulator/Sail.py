@@ -463,13 +463,13 @@ class Sail_Class():
             else:
                 while not struc_ok:
                     if opt_alpha>0:
-                        opt_alpha = abs(opt_alpha - 0.05)
+                        opt_alpha = abs(opt_alpha - 10*0.05)
                     else:
-                        opt_alpha = -abs(opt_alpha + 0.05)
+                        opt_alpha = -abs(opt_alpha + 10*0.05)
                     if opt_flap>0:
-                        opt_flap = abs(opt_flap - np.radians(0.0286))
+                        opt_flap = abs(opt_flap - np.radians(10*0.0286))
                     else:
-                        opt_flap = -abs(opt_flap + np.radians(0.0286))
+                        opt_flap = -abs(opt_flap + np.radians(10*0.0286))
                     coefficients = np.array(self.get_force_c_vector(opt_alpha, opt_flap, interpolation=interpolation))
                     print("TWA: ", round(np.degrees(TWA), 2), "Alpha: ", round(opt_alpha), "Flap: ",
                           round(np.degrees(opt_flap)), coefficients)
