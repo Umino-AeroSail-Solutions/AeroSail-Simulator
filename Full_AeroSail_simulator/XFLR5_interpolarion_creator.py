@@ -6,7 +6,9 @@ from pathlib import Path
 
 # Filenames have to end in -flapdeflection as (_XX) followed by .txt: randomassfilename-04.txt
 # Alphas shall be equal arrays for all files
-dir = 'Data/XFLR5_5_30_0,5_10m_s_INTERPOLATION/'
+dir = os.path.join(
+        os.path.dirname(__file__), ".",
+    'Data', 'XFLR5_5_30_0,5_10m_s_INTERPOLATION')
 
 
 def crt_XFLR5_interpolation(dir):

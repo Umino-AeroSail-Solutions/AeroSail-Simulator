@@ -1,4 +1,5 @@
 import numpy as np
+import os
 
 
 def read_polar_data(file_path):
@@ -52,7 +53,10 @@ def read_polar_data(file_path):
 
 
 # Example usage:
-file_path = 'Data/T1-10_0_m_s-LLT-Flap-10.txt'
+
+file_path = os.path.join(
+        os.path.dirname(__file__), ".", "Data", "T1-10_0_m_s-LLT-Flap-10.txt"
+    )
 alphas = read_polar_data(file_path)[0]
 CL = read_polar_data(file_path)[1]
 
