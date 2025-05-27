@@ -1,6 +1,7 @@
 from re import match
 from unittest import case
 import seaborn as sns
+import os
 
 from scipy.interpolate import RegularGridInterpolator, griddata
 import numpy as np
@@ -462,10 +463,12 @@ class Sail_Class():
                 optimal_thrusts.append(self.cts.max() * 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord)
             else:
                 while not struc_ok:
+                    struc_ok2questionmmark = []
                     if opt_alpha>0:
                         opt_alpha = abs(opt_alpha - 0.05)
                     else:
                         opt_alpha = -abs(opt_alpha + 0.05)
+                    
                     if opt_flap>0:
                         opt_flap = abs(opt_flap - np.radians(0.0286))
                     else:
@@ -518,7 +521,9 @@ class Sail_Class():
 # TESTING CODE -------------------------------------------------
 #
 Profile.initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
-Sail = Sail_Class('Data/E473coordinates.txt', 5, 0.4, 30, panels = 20)
+Sail = Sail_Class(os.path.join(
+    os.path.dirname(__file__), ".", "Data", 'E473coordinates.txt')
+    , 5, 0.4, 30, panels = 20)
 # # # print(Sail.get_sail_coefficients(15, np.radians(10)))
 # # # print(Sail.get_l_d_m(10, np.radians(10), 10))
 # # # print(Sail.get_l_d_m(0, 0, 10))
@@ -526,7 +531,8 @@ Sail = Sail_Class('Data/E473coordinates.txt', 5, 0.4, 30, panels = 20)
 # # # Sail.create_interpolation(-10, 20, 1, np.radians(0), np.radians(20), np.radians(1), p_interpolation='Data/interp0.4profile.npz')
 # Sail.create_XFLR5_interpolation('Data/XFLR5_5_30_0,5_10m_s_INTERPOLATION')
 # Sail.save_interpolation('Data/interpolationCR4sail_XFLR5.npz')
-Sail.load_interpolation('Data/interpolationCR4sail_XFLR5.npz')
+Sail.load_interpolation(os.path.join(
+        os.path.dirname(__file__), ".", "Data", 'interpolationCR4sail_XFLR5.npz'))
 # #
 # # # print(Sail.InterpAlphas, Sail.InterpFlaps, Sail.InterpCds, Sail.InterpCloCds)
 # Sail.plot_2d_polar_interp()
