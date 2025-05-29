@@ -2,6 +2,17 @@ from re import match
 from unittest import case
 import seaborn as sns
 import os
+import time
+import logging
+
+user_logger = logging.getLogger("DavidLoggings")
+user_logger.setLevel(logging.DEBUG)
+
+user_handler_console = logging.StreamHandler()
+user_handler_console.setLevel(logging.INFO)
+user_handler_console.setFormatter(logging.Formatter('[%(levelname)s] %(message)s'))
+user_logger.addHandler(user_handler_console)
+
 
 from scipy.interpolate import RegularGridInterpolator, griddata
 import numpy as np
@@ -32,6 +43,7 @@ class Sail_Class():
         self.panels = panels
         self.airfoil.set_panels(panels)
         self.yaw = 0.0
+        self._force_c_vector_cache = {}
     def set_p(self, parameter, value):
         '''Sets a parameter (set in the string) to a value (set as an input)'''
         match parameter:
@@ -387,6 +399,14 @@ class Sail_Class():
         cl = coefficients[0]
         cd = coefficients[1]
         return [cl,cd]
+    def callcached_get_force_c_vector(self, alpha, flap_deflection, interpolation):
+        key = (round(alpha, 6), round(flap_deflection, 6), interpolation)
+        if key in self._force_c_vector_cache:
+            # user_logger.debug("Using Cache")
+            return self._force_c_vector_cache[key]
+        foundforcecvector = self.get_force_c_vector(alpha, flap_deflection, interpolation)
+        self._force_c_vector_cache[key] = foundforcecvector
+        return foundforcecvector
     def get_specific_ct(self,alpha, flap_deflection, interpolation, AWA):
         self.add_flap(flap_deflection)  # Ensure the flap deflection is set
         coefficients = self.get_sail_coefficients(alpha, flap_deflection, s_interpolation=interpolation)
@@ -442,6 +462,7 @@ class Sail_Class():
     def plot_optimal_values_polar_with_thrust_and_strct(self, TWA_range, thrust_min, thrust_max, windspeedkt, radial_angles, shipspeed=23, interpolation=None, StackHeight=4):
         '''Plots the optimal thrust for an Apparent Wind Angle (AWA) range in a high-resolution polar graph, adding structural failure as a constraint'''
         optimal_thrusts = []
+        optimal_lame_thrusts = []
         aws = []
         shipspeed = shipspeed / 1.944
         windspeed = windspeedkt / 1.944
@@ -450,43 +471,46 @@ class Sail_Class():
             wind_side = abs(windspeed * np.sin(TWA))
             AWA = abs(np.arctan(wind_side/wind_back))
             AWS = np.sqrt(wind_side ** 2 + wind_back ** 2)
+            qS = 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord
+            sinAWA = np.sin(AWA)
+            cosAWA = np.cos(AWA)
             opt_alpha, opt_flap = self.get_opt_pos(AWA)
-            coefficients = np.array(self.get_force_c_vector(opt_alpha, opt_flap, interpolation=interpolation))
+            coefficients = np.array(self.callcached_get_force_c_vector(opt_alpha, opt_flap, interpolation=interpolation))
             print("TWA: ", round(np.degrees(TWA),2), "Alpha: ", round(opt_alpha), "Flap: ", round(np.degrees(opt_flap)), coefficients)
-            lift = 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord * coefficients[0]
-            drag = 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord * coefficients[1]
-            thrust = lift * np.sin(AWA) - drag * np.cos(AWA)
-            sideforce = lift * np.cos(AWA) + drag * np.sin(AWA)
+            lift =  qS * coefficients[0]
+            drag = qS * coefficients[1]
+            thrust = lift * sinAWA - drag * cosAWA
+            sideforce = lift * cosAWA + drag * sinAWA
             force_vector = [thrust, sideforce]
             struc_ok = clc.CheckContainer(force_vector, self.height, StackHeight, Containerweight=4950)
+            optimal_lame_thrusts.append(self.cts.max() * qS)
             if struc_ok:
-                optimal_thrusts.append(self.cts.max() * 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord)
+                optimal_thrusts.append(self.cts.max() * qS)
             else:
                 while not struc_ok:
-                    struc_ok2questionmmark = []
                     if opt_alpha>0:
                         opt_alpha = abs(opt_alpha - 0.05)
                     else:
                         opt_alpha = -abs(opt_alpha + 0.05)
-                    
                     if opt_flap>0:
                         opt_flap = abs(opt_flap - np.radians(0.0286))
                     else:
                         opt_flap = -abs(opt_flap + np.radians(0.0286))
-                    coefficients = np.array(self.get_force_c_vector(opt_alpha, opt_flap, interpolation=interpolation))
+                    coefficients = np.array(self.callcached_get_force_c_vector(opt_alpha, opt_flap, interpolation=interpolation))
                     print("TWA: ", round(np.degrees(TWA), 2), "Alpha: ", round(opt_alpha), "Flap: ",
                           round(np.degrees(opt_flap)), coefficients)
-                    lift = 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord * coefficients[0]
-                    drag = 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord * coefficients[1]
-                    thrust = lift * np.sin(AWA) - drag * np.cos(AWA)
-                    sideforce = lift*np.cos(AWA) + drag * np.sin(AWA)
+                    lift = qS * coefficients[0]
+                    drag = qS * coefficients[1]
+                    thrust = lift * sinAWA - drag * cosAWA
+                    sideforce = lift*cosAWA + drag * sinAWA
                     force_vector = [thrust, sideforce]
                     # print(force_vector)
                     struc_ok = clc.CheckContainer(force_vector, self.height, StackHeight, Containerweight=4950)
-                optimal_thrusts.append(self.get_specific_ct(opt_alpha, opt_flap, interpolation, AWA) * 0.5 * 1.225 * (AWS ** 2) * self.height * self.chord)
+                optimal_thrusts.append(self.get_specific_ct(opt_alpha, opt_flap, interpolation, AWA) * qS)
             aws.append(AWA)
         # print(aws)
         optimal_thrusts = np.array(optimal_thrusts)
+        optimal_lame_thrusts = np.array(optimal_lame_thrusts)
         thrust_min_array = np.array([thrust_min] * len(TWA_range))  # Array for thrust_min
         thrust_max_array = np.array([thrust_max] * len(TWA_range))  # Array for thrust_max
 
@@ -495,6 +519,7 @@ class Sail_Class():
         # a = plt.subplot(111, polar=True)
         # a.plot(TWA_range, aws, 'g-', label='AWS')
         ax = plt.subplot(111, polar=True)
+        ax.plot(TWA_range, optimal_lame_thrusts, 'r--', label='Aero opt thrust')
         ax.plot(TWA_range, optimal_thrusts, 'g-', label='Optimal thrust')
         ax.plot(TWA_range, thrust_min_array, 'm--', label='Requirement ASV2-STK-02b')
         ax.plot(TWA_range, thrust_max_array, 'c--', label='Requirement ASV2-STK-02')
@@ -514,12 +539,15 @@ class Sail_Class():
         # a.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2)
 
         plt.tight_layout()
-        plt.show()
+        # plt.show()
         return np.average(optimal_thrusts)
 
 
 # TESTING CODE -------------------------------------------------
 #
+
+start = time.time()
+
 Profile.initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
 Sail = Sail_Class(os.path.join(
     os.path.dirname(__file__), ".", "Data", 'E473coordinates.txt')
@@ -599,4 +627,8 @@ sns.heatmap(thrust_values, xticklabels=np.round(wind_speeds, 1),
 plt.xlabel("Wind Speed (knots)")
 plt.ylabel("Boat Speed (knots)")
 plt.title("Average Thrust Heatmap")
-plt.show()
+# plt.show()
+
+end = time.time()
+
+print(end-start)
