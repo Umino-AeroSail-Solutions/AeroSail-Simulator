@@ -2,6 +2,7 @@ from re import match
 from unittest import case
 import seaborn as sns
 import os
+import time
 import logging
 
 user_logger = logging.getLogger("DavidLoggings")
@@ -525,7 +526,7 @@ class Sail_Class():
                         ]
                 # print(opt_alpha_intervals, opt_flap_intervals)
                 onlyonceyes = True
-                while abs(opt_alpha_intervals[1] - opt_alpha_intervals[2]) > 0.005 or abs(opt_flap_intervals[1] - opt_flap_intervals[2])> 0.001:
+                while abs(opt_alpha_intervals[1] - opt_alpha_intervals[2]) > 0.001 or abs(opt_flap_intervals[1] - opt_flap_intervals[2])> 0.001:
                     if onlyonceyes == True:
                         itercount = 0
                         user_logger.debug(f"Iterating: {itercount}")
@@ -654,6 +655,7 @@ class Sail_Class():
 
 # TESTING CODE -------------------------------------------------
 #
+start = time.time()
 Profile.initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
 Sail = Sail_Class(os.path.join(
     os.path.dirname(__file__), ".", "Data", 'E473coordinates.txt')
@@ -734,3 +736,6 @@ plt.xlabel("Wind Speed (knots)")
 plt.ylabel("Boat Speed (knots)")
 plt.title("Average Thrust Heatmap")
 plt.show()
+
+end = time.time()
+print(end - start)
