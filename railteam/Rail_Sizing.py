@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 
 g = 9.80665
 
-
 グアム = 2
+
+# https://www.desmos.com/calculator/0y6jafr8ox
 
 safety_factor = 1.6
 def get_safety_factor():
