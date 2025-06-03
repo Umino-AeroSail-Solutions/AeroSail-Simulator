@@ -19,6 +19,7 @@ w = 1 # Example width of the sail typa ribs thingy idk man
 
 # Screen dimensions
 WIDTH, HEIGHT = 1920, 1080
+WIDTH, HEIGHT = 1600, 900
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Erection Visualizer")
 
@@ -42,9 +43,9 @@ MateRed = (200,50,50)
 #Inputs: coordinate of P1, P2, P4, mass of mast M, height of mast H#
 ####################################################################
 
-P1 = np.array([0.164, 1]) # Bottom rail in retracted
-P2 = np.array([2.6+0.203, 1]) # Top rail in retracted
-P3 = np.array([6, 2.67]) # Top rail in extended
+P1 = np.array([0.174, 1.7]) # Bottom rail in retracted
+P2 = np.array([2.4, 1.7]) # Top rail in retracted
+P3 = np.array([6, 2.42]) # Top rail in extended
 P4 = np.array([6, 0.203]) # Bottom rail in extended~
 
 L_Bot = np.linalg.norm(P4-P1)
@@ -161,14 +162,14 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False, cogloc=h/2):
         pygame.draw.circle(screen, YELLOW, B * scale + offset, 4)
         
         #Container Outlines
-        pygame.draw.line(screen, BoruiBlue, [0,0] * scale + offset, [0,3]*scale+offset, 2)
+        pygame.draw.line(screen, BoruiBlue, [0,0] * scale + offset, [0,2.7]*scale+offset, 2)
         pygame.draw.line(screen, BoruiBlue, [0,0] * scale + offset, [12,0]*scale+offset, 2)
-        pygame.draw.line(screen, BoruiBlue, [12,0] * scale + offset, [12,3]*scale+offset, 2)
+        pygame.draw.line(screen, BoruiBlue, [12,0] * scale + offset, [12,2.7]*scale+offset, 2)
 
         #Bottom right corner sail
-        pygame.draw.line(screen,MateRed,(A+((h/d)*(C_vector)))*scale + offset, ((A+((h/d)*(C_vector)))+[(w/d)*(D_vector[0]), (w/d)*(D_vector[1])])*scale+offset ,1)
+        pygame.draw.line(screen,MateRed,(A+((h/d)*(C_vector)))*scale + offset, ((A+((h/d)*(C_vector)))-[(w/d)*(D_vector[0]), (w/d)*(D_vector[1])])*scale+offset ,1)
         #Top right corner sail
-        pygame.draw.line(screen,MateRed,(A+((h/d)*(C_vector)))*scale + offset, ((A+((h/d)*(C_vector)))-[(.398/.2*w/d)*(D_vector[0]), (.398/.2*w/d)*(D_vector[1])])*scale+offset ,1)
+        pygame.draw.line(screen,MateRed,(A+((h/d)*(C_vector)))*scale + offset, ((A+((h/d)*(C_vector)))+[(.398/.2*w/d)*(D_vector[0]), (.398/.2*w/d)*(D_vector[1])])*scale+offset ,1)
 
         #Bottom ring support
         ring_support_width = 1.34

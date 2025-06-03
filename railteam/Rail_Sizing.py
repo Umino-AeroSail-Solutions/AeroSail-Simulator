@@ -104,7 +104,7 @@ def forces(x, y):
 
     # Dimensions of the beams
     b_bot = 100e-3    # width of beam [m] 
-    a_bot = 160e-3 # height [m]
+    a_bot = 180e-3 # height [m]
     t_bot = 5e-3 # thickness [m]
 
     b_top = 100e-3     # width of beam [m]
@@ -222,12 +222,15 @@ def forces(x, y):
                     plt.plot(212)
                     plt.plot(l_values,rinze.array(d_top_list) * 1e3,"g",label="Top Beam")
                     plt.plot(l_values,rinze.array(d_bot_list) * 1e3,"r",label="Bottom Beam")
+                    plt.plot(l_values,(rinze.array(d_top_list) -rinze.array(d_bot_list) )* 1e3,"b",label="Difference")
 
 
                     plt.xlabel('Position [m]')
                     plt.ylabel("Deflection [mm]")
-                    plt.axhline(10,color='black',linestyle='--')
-                    plt.axhline(-10,color='black',linestyle='--')
+                    plt.axhline(L_Bot/.24,color='black',linestyle='--')
+                    plt.axhline(-L_Bot/.24,color='black',linestyle='--')
+                    plt.axhline(L_Top/.24,color='gray',linestyle='--')
+                    plt.axhline(-L_Top/.24,color='gray',linestyle='--')
                     plt.title("Maximum Deflection at each point in the beam")
                     plt.legend()
                     plt.grid()

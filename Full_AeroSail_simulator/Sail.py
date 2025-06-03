@@ -488,10 +488,12 @@ class Sail_Class():
                 optimal_thrusts.append(self.cts.max() * qS)
             else:
                 while not struc_ok:
+                    struc_ok2questionmmark = []
                     if opt_alpha>0:
                         opt_alpha = abs(opt_alpha - 0.05)
                     else:
                         opt_alpha = -abs(opt_alpha + 0.05)
+                    
                     if opt_flap>0:
                         opt_flap = abs(opt_flap - np.radians(0.0286))
                     else:
@@ -542,6 +544,8 @@ class Sail_Class():
         # plt.show()
         return np.average(optimal_thrusts)
 
+start = time.process_time()
+print(start)
 
 # TESTING CODE -------------------------------------------------
 #
