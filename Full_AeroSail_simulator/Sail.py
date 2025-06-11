@@ -549,90 +549,90 @@ print(start)
 
 # TESTING CODE -------------------------------------------------
 #
-
-start = time.time()
-
-Profile.initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
-Sail = Sail_Class(os.path.join(
-    os.path.dirname(__file__), ".", "Data", 'E473coordinates.txt')
-    , 5, 0.4, 30, panels = 20)
-# # # print(Sail.get_sail_coefficients(15, np.radians(10)))
-# # # print(Sail.get_l_d_m(10, np.radians(10), 10))
-# # # print(Sail.get_l_d_m(0, 0, 10))
-# # # Sail.plot_polar(-10, 20, 0.5, np.radians(15))
-# # # Sail.create_interpolation(-10, 20, 1, np.radians(0), np.radians(20), np.radians(1), p_interpolation='Data/interp0.4profile.npz')
-# Sail.create_XFLR5_interpolation('Data/XFLR5_5_30_0,5_10m_s_INTERPOLATION')
-# Sail.save_interpolation('Data/interpolationCR4sail_XFLR5.npz')
-Sail.load_interpolation(os.path.join(
-        os.path.dirname(__file__), ".", "Data", 'interpolationCR4sail_XFLR5.npz'))
+#
+# start = time.time()
+#
+# Profile.initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
+# Sail = Sail_Class(os.path.join(
+#     os.path.dirname(__file__), ".", "Data", 'E473coordinates.txt')
+#     , 4.5, 0.4, 30, panels = 20)
+# # # # print(Sail.get_sail_coefficients(15, np.radians(10)))
+# # # # print(Sail.get_l_d_m(10, np.radians(10), 10))
+# # # # print(Sail.get_l_d_m(0, 0, 10))
+# # # # Sail.plot_polar(-10, 20, 0.5, np.radians(15))
+# # # # Sail.create_interpolation(-10, 20, 1, np.radians(0), np.radians(20), np.radians(1), p_interpolation='Data/interp0.4profile.npz')
+# # Sail.create_XFLR5_interpolation('Data/XFLR5_5_30_0,5_10m_s_INTERPOLATION')
+# # Sail.save_interpolation('Data/interpolationCR4sail_XFLR5.npz')
+# Sail.load_interpolation(os.path.join(
+#         os.path.dirname(__file__), ".", "Data", 'interpolationCR4sail_XFLR5.npz'))
+# # #
+# # # # print(Sail.InterpAlphas, Sail.InterpFlaps, Sail.InterpCds, Sail.InterpCloCds)
+# # Sail.plot_2d_polar_interp()
+# # Sail.get_cf()
+# # for angle in range(0, 180, 5):
+# #     Sail.plot_cts_for_AWA(np.radians(angle))
+# # # # print(Sail.get_opt_pos(np.radians(10)))
+# # # # print(Sail.get_opt_pos(np.radians(120)))
+# # # # Sail.plot_optimal_values(np.arange(np.radians(5), np.radians(180), np.radians(0.5)))
+# # # # Sail.plot_optimal_values_polar(np.arange(np.radians(180), np.radians(180), np.radians(0.5)))
+# # Sail.load_interpolation('Data/interpolationCR4sail_XFLR5.npz')
+# # Sail.plot_optimal_values(np.arange(np.radians(5), np.radians(180), np.radians(0.01)))
+# # Sail.plot_optimal_values_polar(np.arange(np.radians(-180), np.radians(180), np.radians(0.01)))
+# # Sail.plot_optimal_values_polar_with_thrust(
+# #             np.arange(np.radians(-180), np.radians(180), np.radians(0.01)),
+# #             5000, 15000, 20, [30, 150], shipspeed=22
+# #         )
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+# # # Code to plot average thrust as a function of boat speed and wind speed
+# interpolation = 'yes'
+# # interpolation = 'Data/interpolationCR4sail_XFLR5.npz'
+#
+# # # Define the range of boat speeds and wind speeds
+# boat_speeds = np.array([12, 18, 23])  # Boat speeds
+# wind_speeds = np.array([15, 20, 25, 30, 35])  # Wind speeds
 # #
-# # # print(Sail.InterpAlphas, Sail.InterpFlaps, Sail.InterpCds, Sail.InterpCloCds)
-# Sail.plot_2d_polar_interp()
-# Sail.get_cf()
-# for angle in range(0, 180, 5):
-#     Sail.plot_cts_for_AWA(np.radians(angle))
-# # # print(Sail.get_opt_pos(np.radians(10)))
-# # # print(Sail.get_opt_pos(np.radians(120)))
-# # # Sail.plot_optimal_values(np.arange(np.radians(5), np.radians(180), np.radians(0.5)))
-# # # Sail.plot_optimal_values_polar(np.arange(np.radians(180), np.radians(180), np.radians(0.5)))
-# Sail.load_interpolation('Data/interpolationCR4sail_XFLR5.npz')
-# Sail.plot_optimal_values(np.arange(np.radians(5), np.radians(180), np.radians(0.01)))
-# Sail.plot_optimal_values_polar(np.arange(np.radians(-180), np.radians(180), np.radians(0.01)))
-# Sail.plot_optimal_values_polar_with_thrust(
-#             np.arange(np.radians(-180), np.radians(180), np.radians(0.01)),
-#             5000, 15000, 20, [30, 150], shipspeed=22
-#         )
-
-
-
-
-
-
-
-
-
-
-
-# # Code to plot average thrust as a function of boat speed and wind speed
-interpolation = 'yes'
-# interpolation = 'Data/interpolationCR4sail_XFLR5.npz'
-
-# # Define the range of boat speeds and wind speeds
-boat_speeds = np.array([12, 18, 23])  # Boat speeds
-wind_speeds = np.array([15, 20, 25, 30, 35])  # Wind speeds
+# # # Create a matrix to store thrust values
+# thrust_values = np.zeros((len(boat_speeds), len(wind_speeds)))
+# #
+# ship_power = 15000000
 #
-# # Create a matrix to store thrust values
-thrust_values = np.zeros((len(boat_speeds), len(wind_speeds)))
+# # Just 1 test value
+# # Sail.plot_optimal_values_polar_with_thrust_and_strct(
+# #             np.arange(np.radians(0), np.radians(180), np.radians(1)),
+# #             5000, 15000, 25, [30, 150], shipspeed=23
+# #         , interpolation=interpolation)
 #
-ship_power = 15000000
-
-# Just 1 test value
-# Sail.plot_optimal_values_polar_with_thrust_and_strct(
-#             np.arange(np.radians(0), np.radians(180), np.radians(1)),
-#             5000, 15000, 25, [30, 150], shipspeed=23
-#         , interpolation=interpolation)
-
-# Compute thrust for each (boat_speed, wind_speed) pair
-for j, wind_speed in enumerate(wind_speeds):
-    for i, boat_speed in enumerate(boat_speeds):
-        ship_thrust = ship_power/(boat_speed/1.944)
-        thrust_values[i, j] = (Sail.plot_optimal_values_polar_with_thrust_and_strct(
-            np.arange(np.radians(0), np.radians(180), np.radians(5)),
-            5000, 15000, wind_speed, [30, 150], shipspeed=boat_speed
-        , interpolation=interpolation)/ship_thrust)*100
-
-# # Create a heatmap
+# # Compute thrust for each (boat_speed, wind_speed) pair
+# for j, wind_speed in enumerate(wind_speeds):
+#     for i, boat_speed in enumerate(boat_speeds):
+#         ship_thrust = ship_power/(boat_speed/1.944)
+#         thrust_values[i, j] = (Sail.plot_optimal_values_polar_with_thrust_and_strct(
+#             np.arange(np.radians(0), np.radians(180), np.radians(5)),
+#             5000, 15000, wind_speed, [30, 150], shipspeed=boat_speed
+#         , interpolation=interpolation)/ship_thrust)*100
 #
-thrust_values = np.array(thrust_values)
-
-plt.figure(figsize=(8, 6))
-sns.heatmap(thrust_values, xticklabels=np.round(wind_speeds, 1),
-            yticklabels=np.round(boat_speeds, 1), cmap="coolwarm", annot=True, fmt=".2f", annot_kws={"size": 6})
-plt.xlabel("Wind Speed (knots)")
-plt.ylabel("Boat Speed (knots)")
-plt.title("Average Thrust Heatmap")
-# plt.show()
-
-end = time.time()
-
-print(end-start)
+# # # Create a heatmap
+# #
+# thrust_values = np.array(thrust_values)
+#
+# plt.figure(figsize=(8, 6))
+# sns.heatmap(thrust_values, xticklabels=np.round(wind_speeds, 1),
+#             yticklabels=np.round(boat_speeds, 1), cmap="coolwarm", annot=True, fmt=".2f", annot_kws={"size": 6})
+# plt.xlabel("Wind Speed (knots)")
+# plt.ylabel("Boat Speed (knots)")
+# plt.title("Average Thrust Heatmap")
+# # plt.show()
+#
+# end = time.time()
+#
+# print(end-start)

@@ -26,7 +26,7 @@ panamax_thrust = 2599653.764
 initial_height = 20
 height_step = 0.01
 
-aspectratio = 60/5
+aspectratio = 60/4.5
 
 height = initial_height
 
