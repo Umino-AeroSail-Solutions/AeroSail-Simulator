@@ -16,8 +16,8 @@ interpolation = 'yes'
 # interpolation = 'Data/interpolationCR4sail_XFLR5.npz'
 
 # # Define the range of boat speeds and wind speeds
-boat_speeds = np.array([12, 18, 23])  # Boat speeds
-wind_speeds = np.array([15, 20, 25, 30, 35])  # Wind speeds
+boat_speeds = np.array([0, 12, 18, 23])  # Boat speeds
+wind_speeds = np.array([15, 20, 25, 30])  # Wind speeds
 #
 # # Create a matrix to store thrust values
 thrust_values = np.zeros((len(boat_speeds), len(wind_speeds)))
@@ -38,6 +38,9 @@ for j, wind_speed in enumerate(wind_speeds):
             np.arange(np.radians(0), np.radians(180), np.radians(5)),
             5000, 15000, wind_speed, [30, 150], shipspeed=boat_speed
         , interpolation=interpolation)/ship_thrust)*100
+        # thrust_values[i, j] = (Sail.plot_optimal_values_polar_with_thrust(
+        #     np.arange(np.radians(0), np.radians(180), np.radians(5)),
+        #     5000, 15000, wind_speed, [30, 150], shipspeed=boat_speed)/ship_thrust)*100
 
 # # Create a heatmap
 #
@@ -49,4 +52,4 @@ sns.heatmap(thrust_values, xticklabels=np.round(wind_speeds, 1),
 plt.xlabel("Wind Speed (knots)")
 plt.ylabel("Boat Speed (knots)")
 plt.title("Average Thrust Heatmap")
-# plt.show()
+plt.show()
