@@ -2,7 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Sail import Sail_Class
 import Profile as P
-import Container_Load_Computations as ContLoad
+# import Container_Load_Computations as ContLoad # With inertial loads
+import Container_Load_Computations_no_inertia as ContLoad # For no inertial loads
 
 from matplotlib import cm
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
@@ -19,7 +20,7 @@ sail_instance.load_interpolation(interpolation)
 
 # Set up the parameters
 height = 30  # Example height
-chord = 5
+chord = 4.5
 windspeed = 30 / 1.944  # Max windspeed in m/s
 
 Stackheight = 4 # Height of container stack in number of containers INCLUDING AEROSAIL CONTAINER
@@ -53,7 +54,7 @@ def drawenvelope(sail_instance, height, chord, windspeedknots, ax, real_containe
                 failure = True
                 print()
                 print("---------------------------------------------------------------")
-                print("Max cf: ", maxcf)
+                print("Max force: ", forcemag)
                 print("Max thrust", forcemag)
                 print("---------------------------------------------------------------")
                 print()
