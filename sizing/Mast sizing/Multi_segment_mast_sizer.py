@@ -312,22 +312,16 @@ class Segment():
 # V-slot options [[area, d, Ixx/Iyy], [...,...]]-------
 # t-slot 2020, t-slot 4040, t-slot 8080 (quad 4040 version)---------
 
-SF = 3
+SF = 2
 
 max_tension = 200000000.0 # https://struxure.com/wp-content/uploads/2020/05/01-_-6063-T6-Aluminum-MSDS.pdf
 max_shear = 152000000.0
 
-bottom_w, bottom_h = 1.44, 0.7
+bottom_w, bottom_h = 1.44*0.9, 0.7*0.9
 
 windspeed_kt = 30
-windspeed = windspeed_kt/1.944
-density = 1.22522568
-cf = 0.49
 height = 30
-chord = 5
-surface_area = height*chord
-
-F_applied_magnitude = 0.5*density*(windspeed**2) * surface_area * cf * SF
+F_applied_magnitude = SF*30000
 print("Force applied: ", str(F_applied_magnitude), "N")
 
 lod_assumed = 10
@@ -336,7 +330,13 @@ print("angle: ", np.degrees(angle), "degree")
 total_force_vector = np.array([F_applied_magnitude*np.cos(angle), F_applied_magnitude*np.sin(angle)])
 print("total force vector: ", total_force_vector)
 
-v_slot_options = np.array([[.00016210, 0.02, .0000000066881], [0.000504, 0.04, 0.000000073272], [.0016122, 0.08, .0000010225207]])
+
+# V-slots:
+# v_slot_options = np.array([[.00016210, 0.02, .0000000066881], [0.000504, 0.04, 0.000000073272], [.0016122, 0.08, .0000010225207]])
+
+# Square aluminum options:
+#  100*100*10 mm, 100100*5 mm,8080*5 mm, 5050*5 mm, 2020*2mm
+v_slot_options = np.array([[0.0036, 0.100002, 0.00000492106], [  1900/(1000**2),0.100001, 0.00000286583106], [1500/(1000**2), 0.08, 0.0000014125], [900/(1000**2), 0.05, 3.074*10**(-7)], [144/(1000**2), 0.02, 7.872*10**(-9)]])
 
 aludenisy = 2710
 
@@ -350,21 +350,21 @@ segment_3_length = segment_4_length - min_segment_length_difference
 segment_2_length = segment_3_length - min_segment_length_difference
 segment_1_length = segment_2_length - min_segment_length_difference
 
-overlap_01 = 2.6
+overlap_01 = 2.226
 total_overlap_possible = (segment_4_length +segment_3_length +segment_2_length +segment_1_length -overlap_01) - height
 print("total overlap possible: ", total_overlap_possible)
 
 # Equal overlaps:
 
-# overlap_34 = total_overlap_possible/3
-# overlap_23 = total_overlap_possible/3
-# overlap_12 = total_overlap_possible/3
+overlap_34 = total_overlap_possible/3
+overlap_23 = total_overlap_possible/3
+overlap_12 = total_overlap_possible/3
 
 # Different overlaps overwrite:
 
-overlap_34 = 1.03
-overlap_23 = 1.40
-overlap_12 = total_overlap_possible - overlap_34 - overlap_23
+# overlap_34 = 1.03
+# overlap_23 = 1.40
+# overlap_12 = total_overlap_possible - overlap_34 - overlap_23
 print()
 print("overlap_34: ", overlap_34)
 print("overlap_23: ", overlap_23)
@@ -373,9 +373,9 @@ print("overlap_01: ", overlap_01)
 print()
 print()
 
-w1, h1, d1 = bottom_w, bottom_h, 0.08
+w1, h1, d1 = bottom_w, bottom_h, 0.1
 w2, h2, d2 = bottom_w-2*d1, bottom_h-2*d1, 0.08
-w3, h3, d3 = w2-2*d2, h2-2*d2, 0.04
+w3, h3, d3 = w2-2*d2, h2-2*d2, 0.05
 w4, h4, d4 = w3-2*d3, h3-2*d3, 0.02
 
 print("w1: ", w1)
