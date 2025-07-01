@@ -1,4 +1,6 @@
 import numpy as np
+from sympy import false
+
 import Cross_section_analysis as cs
 import matplotlib.pyplot as plt
 import os
@@ -115,9 +117,52 @@ class Segment():
             plt.title('Shear Force and Moment Distribution')
             plt.grid(True)
             plt.show()
+
     def set_width_height(self, width, height):
         self.width = width
         self.height = height
+    def add_cross_section(self, top_thickness, side_thickness, v_slot):
+        self.top_thickness = top_thickness
+        self.side_thickness = side_thickness
+        self.v_slot = v_slot
+        self.a = v_slot[0]
+        self.d = v_slot[1]
+        self.cornerIxx = v_slot[2]
+    def test_cross_section(self, Vx, Vy, Mx, My, material_density, L, added_weight, subdivisions=15):
+        # To avoid dividing by zero
+        if Mx == 0:
+            Mx += 0.01
+        if My == 0:
+            My += 0.01
+        if Vx == 0:
+            Vx += 0.01
+        if Vy == 0:
+            Vy += 0.01
+
+        w = self.width
+        h = self.height
+        a = self.a
+        d = self.d
+        cornerIxx = self.cornerIxx
+        top_thickness = self.top_thickness
+        side_thickness = self.side_thickness
+
+        areas, thicknesses = cs.create_areas_and_thicknesses(w, h, d, a, subdivisions, top_thickness,
+                                                             side_thickness)
+        Ixx, Iyy, Ixy = cs.compute_Ixx_Iyy_Ixy(w, h, top_thickness, side_thickness, d, a,
+                                               cornerIxx=cornerIxx)
+        total_area = 2 * (top_thickness * w + side_thickness * h) + 4 * a
+
+        Nz = total_area * material_density * L + added_weight
+        Vx, Vy, Mx, My, Nz = Vx * SF, Vy * SF, Mx * SF, My * SF, Nz * SF
+        bending_ok, bending_sf = cs.check_bending_ok(w, h, top_thickness, side_thickness, d, a, Mx, My,
+                                                     max_tension, cornerIxx=cornerIxx, Nz=Nz,
+                                                     area=total_area)
+        cs.update_areas_bending(areas, thicknesses, Mx, My, Ixx, Iyy, Ixy)
+        qb, qbmax = cs.compute_shear_flows(areas, Vx, Vy, subdivisions, thicknesses, h, d, w)
+        top_ok, sides_ok, top_SF, sides_SF = cs.check_shear_ok(qb, top_thickness, side_thickness,
+                                                               max_shear, thicknesses)
+        return top_SF, sides_SF, bending_sf
 
     def optimize_cross_section(self, Vx, Vy, Mx, My, material_density, L, added_weight, v_slots,subdivisions=15,
                                skin_step_thickness=0.0005, min_skin_thickness=0.0005, max_thickness=0.01, Print=False):

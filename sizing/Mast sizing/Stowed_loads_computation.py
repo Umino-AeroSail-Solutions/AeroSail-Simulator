@@ -143,10 +143,10 @@ segment_3_length = segment_4_length - min_segment_length_difference
 segment_2_length = segment_3_length - min_segment_length_difference
 segment_1_length = segment_2_length - min_segment_length_difference
 
-segment_4_mass = 106.46
-segment_3_mass = 217.67
-segment_2_mass = 401.70
-segment_1_mass = 425.43
+segment_4_mass = 143.4674
+segment_3_mass = 386.48394
+segment_2_mass = 548.97012
+segment_1_mass = 772.04106
 
 aeroplatform_extra_mass_per_segment = 114
 
@@ -155,7 +155,7 @@ aeroplatform_extra_mass_per_segment = 114
 OL_34 = segment_3_length
 OL_23 = segment_2_length
 OL_12 = segment_1_length
-OL_01 = 2.6
+OL_01 = 2.226
 
 segment_4_added_weights = [[aeroplatform_extra_mass_per_segment*9.81,segment_4_length]]
 Segment4 = Segment(segment_4_length, angle, 0, segment_3_length, segment_4_mass, segment_4_added_weights)
