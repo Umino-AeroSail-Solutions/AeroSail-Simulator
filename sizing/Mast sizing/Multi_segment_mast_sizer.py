@@ -225,20 +225,25 @@ class Segment():
             sorted_designs = possible_designs[possible_designs[:, -1].argsort()]
             # Output the design with the lowest total area
             lowest_area_design = sorted_designs[0]
-            if Print:
-                print("Design with the Lowest Total Area:")
-                print(f"d: {lowest_area_design[0]}")
-                print(f"Top Thickness: {lowest_area_design[1]}")
-                print(f"Side Thickness: {lowest_area_design[2]}")
-                print(f"Sides SF: {lowest_area_design[3]}")
-                print(f"Top SF: {lowest_area_design[4]}")
-                print(f"Bending SF: {lowest_area_design[5]}")
-                print(f"Total Area: {lowest_area_design[6]}")
-                print(f"Total mass: {(lowest_area_design[6] * self.length * material_density)}")
+            # if Print:
+                # print("Design with the Lowest Total Area:")
+                # print(f"d: {lowest_area_design[0]}")
+                # print(f"Top Thickness: {lowest_area_design[1]}")
+                # print(f"Side Thickness: {lowest_area_design[2]}")
+                # print(f"Sides SF: {lowest_area_design[3]}")
+                # print(f"Top SF: {lowest_area_design[4]}")
+                # print(f"Bending SF: {lowest_area_design[5]}")
+                # print(f"Total Area: {lowest_area_design[6]}")
+                # print(f"Total mass: {(lowest_area_design[6] * self.length * material_density)}")
             return lowest_area_design
     def size_it(self, material_density,max_tension, max_shear, v_slots, skin_step_thickness=0.0005,
                 min_skin_thickness=0.0005, max_thickness=0.01, Print=False):
         self.compute_internal_loads()
+        print()
+        print("Bottom loads: ")
+        print("Bottom bottom: ", self.shears[0])
+        print("Bottom top: ", self.shears[2]-self.shears[1])
+        print()
         cross_sections = []
         for idx in range(self.shears.shape[0]):
             # print("Analyizing position: ", idx)
@@ -400,10 +405,16 @@ total_overlap_possible = (segment_4_length +segment_3_length +segment_2_length +
 print("total overlap possible: ", total_overlap_possible)
 
 # Equal overlaps:
+#
+# overlap_34 = total_overlap_possible/3
+# overlap_23 = total_overlap_possible/3
+# overlap_12 = total_overlap_possible/3
 
-overlap_34 = total_overlap_possible/3
-overlap_23 = total_overlap_possible/3
-overlap_12 = total_overlap_possible/3
+# Overlaps with equal deployment speeds
+
+overlap_12 = (total_overlap_possible-(3*min_segment_length_difference))/3
+overlap_23 = overlap_12 + 0.5
+overlap_34 = overlap_23 + 0.5
 
 # Different overlaps overwrite:
 
@@ -416,6 +427,7 @@ print("overlap_23: ", overlap_23)
 print("overlap_12: ", overlap_12)
 print("overlap_01: ", overlap_01)
 print()
+print("Remaining overlap: ", total_overlap_possible - (overlap_12+overlap_23+overlap_34))
 print()
 
 w1, h1, d1 = bottom_w, bottom_h, 0.1
@@ -542,8 +554,8 @@ def optimize_mast(Print=False,plot=False, export_internals=None):
         Segment3_moments = segment_3.moments
         Segment4_moments = segment_4.moments
 
-        print("Segment 1 shears: ",Segment1_shears)
-        print("Segment 1 moments: ", Segment1_moments)
+        print("Segment 4 shears: ",Segment4_shears)
+        print("Segment 4 moments: ", Segment4_moments)
 
         np.savez(os.path.join(output_folder, f"{export_internals}.npz"),
                  Segment1_shears=Segment1_shears,
