@@ -35,8 +35,41 @@ class Square_beam(object):
         minSF = self.Yield / np.max(tensions)
         return minSF
 
-    def get_shears(self, shear1, shear2, torsion_shear):
-        
+    def get_shears(self, shear1, shear2, torsion_shear, loc):
+        Vx = shear1
+        Vy = shear2
+        #     w
+        # ||=======|      x
+        # ||   d   |    <---+ (not the shear center, just for coordinate directions)
+        # ||     b | h      |
+        # ||       |        | y
+        # ||-------|        v
+        # side 1 || s: 0 --> h
+        qb_1 = lambda s: -Vy/self.Ixx * self.t * (-self.h/2*s + s^2 /2) - Vx/self.Iyy * self.t * ((self.w+self.d)/4)*s
+        # side 2 -  s: 0 --> d
+        qb_2 = lambda s: -Vy/self.Ixx * self.t * ((self.h+self.b)/4)*s - Vx/self.Iyy * self.t * (self.d/2*s - s^2/2)
+        # side 3 |  s: 0 --> h
+        qb_3 = lambda s: -Vy/self.Ixx * self.t * (self.h/2*s - s^2 /2) - Vx/self.Iyy * self.t * -((self.w+self.d)/4)*s
+        # side 4 _  s: 0 --> d
+        qb_4 = lambda s: -Vy/self.Ixx * self.t * (-(self.h+self.b)/4)*s - Vx/self.Iyy * self.t * (-self.d/2*s + s^2/2)
+        # qs0
+        qs0 = torsion_shear/2/(((self.w+self.d)/2)*((self.h+self.b)/2))
+
+        # what's below could have been a nested-if but i made it like this for readability :3 (oh my god wtf is that face ew furry ew what)
+        loc = loc % 2*self.h + 2*self.d
+        if loc >= 0 & loc <= self.h:
+            return qb_1(loc) + qs0
+        elif loc > self.h & loc <= (self.h + self.d):
+            loc = loc - self.h
+            return qb_2(loc) + qb_1(self.h) + qs0
+        elif loc > (self.h + self.d) & loc <= (2*self.h + self.d):
+            loc = loc - self.h - self.d
+            return qb_3(loc) + qb_2(self.d) + qb_1(self.h) + qs0
+        elif loc > (2*self.h + self.d) & loc <= (2*self.h + 2*self.d):
+            loc = loc - 2*self.h - self.d
+            return qb_4(loc) + qb_3(self.h) + qb_2(self.d) + qb_1(self.h) + qs0
+
+
 
     def size_profile(self, shear1, shear2, tension, moment1, moment2):
 
