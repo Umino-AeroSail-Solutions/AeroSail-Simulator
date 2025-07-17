@@ -38,7 +38,7 @@ class Square_beam(object):
         minSF = self.Yield / np.max(tensions)
         return minSF
 
-    def get_shears(self, shear1, shear2, torsion_shear, loc):
+    def get_shear(self, shear1, shear2, loc):
         Vx = shear1
         Vy = shear2
         self.b = self.w - 2 * self.t
@@ -53,24 +53,78 @@ class Square_beam(object):
         qb_4 = lambda s: -Vy / self.Ixx * self.t * (-(self.h + self.b) / 4) * s - Vx / self.Iyy * self.t * (
                     -self.d / 2 * s + s ** 2 / 2)
 
-        # Corrected qs0
-        qs0 = torsion_shear / (2 * ((self.w + self.d) / 2) * ((self.h + self.b) / 2))
+        # # Corrected qs0
+        # qs0 = torsion_shear / (2 * ((self.w + self.d) / 2) * ((self.h + self.b) / 2))
+        # Wroooooong INTEGRATION CONSTANTS
 
         # Corrected perimeter wrap
         perimeter = 2 * self.h + 2 * self.d
         loc = loc % perimeter
 
         if 0 <= loc <= self.h:
-            return qb_1(loc) + qs0
+            return qb_1(loc)
         elif self.h < loc <= self.h + self.d:
             loc -= self.h
-            return qb_2(loc) + qb_1(self.h) + qs0
+            return qb_2(loc) + qb_1(self.h)
         elif self.h + self.d < loc <= 2 * self.h + self.d:
             loc -= self.h + self.d
-            return qb_3(loc) + qb_2(self.d) + qb_1(self.h) + qs0
+            return qb_3(loc) + qb_2(self.d) + qb_1(self.h)
         elif 2 * self.h + self.d < loc <= perimeter:
             loc -= 2 * self.h + self.d
-            return qb_4(loc) + qb_3(self.h) + qb_2(self.d) + qb_1(self.h) + qs0
+            return qb_4(loc) + qb_3(self.h) + qb_2(self.d) + qb_1(self.h)
+
+    def create_shearflow_list(self, shear1, shear2, side_subdivisions=80):
+        # Perimeter for shear sampling
+        P = 2 * self.h + 2 * self.d
+
+        # Compute initial shear safety factor
+        shearflows = []
+        for loc in np.linspace(0, P, side_subdivisions, endpoint=False):
+            shearflows.append(self.get_shear(shear1, shear2, loc))
+        self.shearflows = np.array([shearflows, np.linspace(0, P, side_subdivisions, endpoint=False)]).T
+        # print(self.shearflows)
+        return self.shearflows
+
+    def adjust_for_torsion(self, shear1, shear2, torsion=0, side_subdivisions=80):
+        self.b = self.w - self.t
+        self.d = self.h - self.t
+        P = 2 * self.b + 2 * self.d
+        N = side_subdivisions
+        ds = P / N
+
+        self.create_shearflow_list(shear1, shear2, side_subdivisions)
+
+        total_inner_qs0 = 0
+
+        for q, loc in self.shearflows:
+            if 0 <= loc < self.h:
+                lever_arm = self.d / 2  # left wall (vertical)
+            elif self.h <= loc < self.h + self.b:
+                lever_arm = self.b / 2  # bottom wall (horizontal)
+            elif self.h + self.b <= loc < 2 * self.h + self.b:
+                lever_arm = self.d / 2  # right wall
+            elif 2 * self.h + self.b <= loc <= P:
+                lever_arm = self.b / 2  # top wall
+            else:
+                continue  # shouldn't happen, but safe
+
+            total_inner_qs0 += q * lever_arm * ds
+
+        print("Total torsional moment (from q):", total_inner_qs0)
+
+        # If you want to correct for torsion (optional):
+        A = self.h*self.w
+        q0 = total_inner_qs0 / (2 * A)
+        self.shearflows[:, 0] -= q0
+
+        # Plot
+        plt.plot(self.shearflows[:, 1], self.shearflows[:, 0])
+        plt.xlabel("Location along perimeter, s")
+        plt.ylabel("Shear flow q(s)")
+        plt.title("Shear‐flow distribution around beam perimeter")
+        plt.tight_layout()
+        plt.show()
+
 
     # def get_shears(self, shear1, shear2, torsion_shear, loc):
     #     # Great shit anhong what the fuck is self.d and self.b it was not defined :(
@@ -316,7 +370,8 @@ def test_shearflows():
     # sample a few locs and ensure no NaNs
     locs = [0, beam.h/2, beam.h + beam.d/2, 2*beam.h + beam.d - 1e-6]
     for loc in locs:
-        q = beam.get_shears(shear1=200, shear2=10, torsion_shear=0, loc=loc)
+        q = beam.get_shear(shear1=200, shear2=10, loc=loc)
+        beam.create_shearflow_list(shear1=200, shear2=10)
         assert not np.isnan(q)
         print(f"q(s={loc:.4f}) = {q:.2f}")
 
@@ -324,8 +379,10 @@ def test_heatmap_plot():
     mat = Material("TestMat", EModulus=100e9, YieldStrength=400e6, max_shear=250e6)
     beam = Square_beam(length=1.0, w=0.15, h=0.15, t=0.005, material=mat)
     # This will pop up a window (or inline) for you to visually inspect
-    beam.plot_shear_heatmap(shear1=500, shear2=30, torsion_shear=0)
-    beam.plot_shearflow(shear1=500, shear2=30, torsion_shear=0)
+    # beam.plot_shear_heatmap(shear1=500, shear2=30, torsion_shear=0)
+    # beam.plot_shearflow(shear1=500, shear2=30, torsion_shear=0)
+    beam.get_Ixx_Iyy_Ixy()
+    beam.adjust_for_torsion(shear1=500, shear2=30)
 
 def test_size_profile_convergence():
     mat = Material("Titanium", EModulus=110e9, YieldStrength=900e6, max_shear=600e6)
