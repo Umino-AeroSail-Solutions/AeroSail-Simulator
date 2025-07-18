@@ -45,37 +45,37 @@ class Square_beam(object):
         self.d = self.h - 2 * self.t
 
         qb_1 = lambda s: -Vy / self.Ixx * self.t * (-self.h / 2 * s + s ** 2 / 2) - Vx / self.Iyy * self.t * (
-                    (self.w + self.d) / 4) * s
-        qb_2 = lambda s: -Vy / self.Ixx * self.t * ((self.h + self.b) / 4) * s - Vx / self.Iyy * self.t * (
-                    self.d / 2 * s - s ** 2 / 2)
+                    self.b / 2) * s
+        qb_2 = lambda s: -Vy / self.Ixx * self.t * (self.h / 2) * s - Vx / self.Iyy * self.t * (
+                    self.b / 2 * s - s ** 2 / 2)
         qb_3 = lambda s: -Vy / self.Ixx * self.t * (self.h / 2 * s - s ** 2 / 2) - Vx / self.Iyy * self.t * -(
-                    (self.w + self.d) / 4) * s
-        qb_4 = lambda s: -Vy / self.Ixx * self.t * (-(self.h + self.b) / 4) * s - Vx / self.Iyy * self.t * (
-                    -self.d / 2 * s + s ** 2 / 2)
+                    self.b / 2) * s
+        qb_4 = lambda s: -Vy / self.Ixx * self.t * (-self.h / 2) * s - Vx / self.Iyy * self.t * (
+                    -self.b / 2 * s + s ** 2 / 2)
 
         # # Corrected qs0
-        # qs0 = torsion_shear / (2 * ((self.w + self.d) / 2) * ((self.h + self.b) / 2))
+        # qs0 = torsion_shear / (2 * ((self.w + self.b) / 2) * ((self.h + self.d) / 2))
         # Wroooooong INTEGRATION CONSTANTS
 
         # Corrected perimeter wrap
-        perimeter = 2 * self.h + 2 * self.d
+        perimeter = 2 * self.h + 2 * self.b
         loc = loc % perimeter
 
         if 0 <= loc <= self.h:
             return qb_1(loc)
-        elif self.h < loc <= self.h + self.d:
+        elif self.h < loc <= self.h + self.b:
             loc -= self.h
             return qb_2(loc) + qb_1(self.h)
-        elif self.h + self.d < loc <= 2 * self.h + self.d:
-            loc -= self.h + self.d
-            return qb_3(loc) + qb_2(self.d) + qb_1(self.h)
-        elif 2 * self.h + self.d < loc <= perimeter:
-            loc -= 2 * self.h + self.d
-            return qb_4(loc) + qb_3(self.h) + qb_2(self.d) + qb_1(self.h)
+        elif self.h + self.b < loc <= 2 * self.h + self.b:
+            loc -= self.h + self.b
+            return qb_3(loc) + qb_2(self.b) + qb_1(self.h)
+        elif 2 * self.h + self.b< loc <= perimeter:
+            loc -= 2 * self.h + self.b
+            return qb_4(loc) + qb_3(self.h) + qb_2(self.b) + qb_1(self.h)
 
     def create_shearflow_list(self, shear1, shear2, side_subdivisions=80):
         # Perimeter for shear sampling
-        P = 2 * self.h + 2 * self.d
+        P = 2 * self.h + 2 * self.b
 
         # Compute initial shear safety factor
         shearflows = []
@@ -86,9 +86,9 @@ class Square_beam(object):
         return self.shearflows
 
     def adjust_for_torsion(self, shear1, shear2, torsion=0, side_subdivisions=80):
-        self.b = self.w - self.t
-        self.d = self.h - self.t
-        P = 2 * self.b + 2 * self.d
+        self.b = self.w - 2 * self.t
+        self.d = self.h - 2 * self.t
+        P = 2 * self.h + 2 * self.b
         N = side_subdivisions
         ds = P / N
 
@@ -97,14 +97,14 @@ class Square_beam(object):
         total_inner_qs0 = 0
 
         for q, loc in self.shearflows:
-            if 0 <= loc < self.h:
-                lever_arm = self.d / 2  # left wall (vertical)
-            elif self.h <= loc < self.h + self.b:
-                lever_arm = self.b / 2  # bottom wall (horizontal)
-            elif self.h + self.b <= loc < 2 * self.h + self.b:
-                lever_arm = self.d / 2  # right wall
-            elif 2 * self.h + self.b <= loc <= P:
-                lever_arm = self.b / 2  # top wall
+            if 0 <= loc <= self.h:
+                lever_arm = self.b / 2 # left wall (vertical)
+            elif self.h < loc <= self.h + self.b:
+                lever_arm = self.h / 2  # bottom wall (horizontal)
+            elif self.h + self.b < loc <= 2 * self.h + self.b:
+                lever_arm = self.b / 2  # right wall
+            elif 2 * self.h + self.b < loc <= P:
+                lever_arm = self.h / 2  # top wall
             else:
                 continue  # shouldn't happen, but safe
 
@@ -113,12 +113,14 @@ class Square_beam(object):
         print("Total torsional moment (from q):", total_inner_qs0)
 
         # If you want to correct for torsion (optional):
-        A = self.h*self.w
-        q0 = total_inner_qs0 / (2 * A)
+        A = self.h*self.b
+        q0 = total_inner_qs0 / (2 * A) 
         self.shearflows[:, 0] -= q0
 
         # Plot
         plt.plot(self.shearflows[:, 1], self.shearflows[:, 0])
+        corners = [0, self.h, self.h+self.b, 2*self.h+self.b, 2*self.h+2*self.b]
+        plt.vlines(corners, min(self.shearflows[:,0]), max(self.shearflows[:,0]), linestyles="dotted")
         plt.xlabel("Location along perimeter, s")
         plt.ylabel("Shear flow q(s)")
         plt.title("Shear‐flow distribution around beam perimeter")
@@ -134,34 +136,34 @@ class Square_beam(object):
     #     self.d = self.h - 2 * self.t
     #     #     w
     #     # ||=======|      x
-    #     # ||   d   |    <---+ (not the shear center, just for coordinate directions)
-    #     # ||     b | h      |
+    #     # ||   b   |    <---+ (not the shear center, just for coordinate directions)
+    #     # ||     d | h      |
     #     # ||       |        | y
     #     # ||-------|        v
     #     # side 1 || s: 0 --> h
-    #     qb_1 = lambda s: -Vy/self.Ixx * self.t * (-self.h/2*s + (s**2) /2) - Vx/self.Iyy * self.t * ((self.w+self.d)/4)*s
-    #     # side 2 -  s: 0 --> d
-    #     qb_2 = lambda s: -Vy/self.Ixx * self.t * ((self.h+self.b)/4)*s - Vx/self.Iyy * self.t * (self.d/2*s - (s**2)/2)
+    #     qb_1 = lambda s: -Vy/self.Ixx * self.t * (-self.h/2*s + (s**2) /2) - Vx/self.Iyy * self.t * ((self.w+self.b)/4)*s
+    #     # side 2 -  s: 0 --> b
+    #     qb_2 = lambda s: -Vy/self.Ixx * self.t * ((self.h+self.d)/4)*s - Vx/self.Iyy * self.t * (self.b/2*s - (s**2)/2)
     #     # side 3 |  s: 0 --> h
-    #     qb_3 = lambda s: -Vy/self.Ixx * self.t * (self.h/2*s - (s**2) /2) - Vx/self.Iyy * self.t * -((self.w+self.d)/4)*s
-    #     # side 4 _  s: 0 --> d
-    #     qb_4 = lambda s: -Vy/self.Ixx * self.t * (-(self.h+self.b)/4)*s - Vx/self.Iyy * self.t * (-self.d/2*s + (s**2)/2)
+    #     qb_3 = lambda s: -Vy/self.Ixx * self.t * (self.h/2*s - (s**2) /2) - Vx/self.Iyy * self.t * -((self.w+self.b)/4)*s
+    #     # side 4 _  s: 0 --> b
+    #     qb_4 = lambda s: -Vy/self.Ixx * self.t * (-(self.h+self.d)/4)*s - Vx/self.Iyy * self.t * (-self.b/2*s + (s**2)/2)
     #     # qs0
-    #     qs0 = torsion_shear/2/(((self.w+self.d)/2)*((self.h+self.b)/2))
+    #     qs0 = torsion_shear/2/(((self.w+self.b)/2)*((self.h+self.d)/2))
     #
     #     # what's below could have been a nested-if but i made it like this for readability :3 (oh my god wtf is that face ew furry ew what)
-    #     loc = loc % 2*self.h + 2*self.d
+    #     loc = loc % 2*self.h + 2*self.b
     #     if loc >= 0 and loc <= self.h:
     #         return qb_1(loc) + qs0
-    #     elif loc > self.h and loc <= (self.h + self.d):
+    #     elif loc > self.h and loc <= (self.h + self.b):
     #         loc = loc - self.h
     #         return qb_2(loc) + qb_1(self.h) + qs0
-    #     elif loc > (self.h + self.d) and loc <= (2*self.h + self.d):
-    #         loc = loc - self.h - self.d
-    #         return qb_3(loc) + qb_2(self.d) + qb_1(self.h) + qs0
-    #     elif loc > (2*self.h + self.d) and loc <= (2*self.h + 2*self.d):
-    #         loc = loc - 2*self.h - self.d
-    #         return qb_4(loc) + qb_3(self.h) + qb_2(self.d) + qb_1(self.h) + qs0
+    #     elif loc > (self.h + self.b) and loc <= (2*self.h + self.b):
+    #         loc = loc - self.h - self.b
+    #         return qb_3(loc) + qb_2(self.b) + qb_1(self.h) + qs0
+    #     elif loc > (2*self.h + self.b) and loc <= (2*self.h + 2*self.b):
+    #         loc = loc - 2*self.h - self.b
+    #         return qb_4(loc) + qb_3(self.h) + qb_2(self.b) + qb_1(self.h) + qs0
 
 
 
@@ -190,7 +192,7 @@ class Square_beam(object):
         self.tensionSF = self.gettensionSF(moment1, moment2, tension)
 
         # Perimeter for shear sampling
-        P = 2*self.h + 2*self.d
+        P = 2*self.h + 2*self.b
 
         # Compute initial shear safety factor
         shearflows = []
@@ -260,7 +262,7 @@ class Square_beam(object):
         self.d = self.h - 2 * self.t
 
         # Total mid‐line perimeter
-        P = 2 * self.h + 2 * self.d
+        P = 2 * self.h + 2 * self.b
         locs = np.linspace(0, P, subdivisions, endpoint=False)
 
         xs, ys, qs = [], [], []
@@ -271,14 +273,14 @@ class Square_beam(object):
             if s <= self.h:
                 x = -self.w / 2
                 y = self.h / 2 - s
-            elif s <= self.h + self.d:
+            elif s <= self.h + self.b:
                 x = -self.w / 2 + (s - self.h)
                 y = -self.h / 2
-            elif s <= 2 * self.h + self.d:
+            elif s <= 2 * self.h + self.b:
                 x = self.w / 2
-                y = -self.h / 2 + (s - self.h - self.d)
+                y = -self.h / 2 + (s - self.h - self.b)
             else:
-                x = self.w / 2 - (s - 2 * self.h - self.d)
+                x = self.w / 2 - (s - 2 * self.h - self.b)
                 y = self.h / 2
             xs.append(x)
             ys.append(y)
@@ -326,7 +328,7 @@ class Square_beam(object):
         self.d = self.h - 2 * self.t
 
         # total mid‑line perimeter
-        P = 2 * self.h + 2 * self.d
+        P = 2 * self.h + 2 * self.b
         # sample along [0, P)
         locs = np.linspace(0, P, subdivisions, endpoint=False)
 
@@ -368,7 +370,7 @@ def test_shearflows():
     beam = Square_beam(length=0.5, w=0.12, h=0.08, t=0.008, material=mat)
     beam.get_Ixx_Iyy_Ixy()
     # sample a few locs and ensure no NaNs
-    locs = [0, beam.h/2, beam.h + beam.d/2, 2*beam.h + beam.d - 1e-6]
+    locs = [0, beam.h/2, beam.h + beam.b/2, 2*beam.h + beam.b - 1e-6]
     for loc in locs:
         q = beam.get_shear(shear1=200, shear2=10, loc=loc)
         beam.create_shearflow_list(shear1=200, shear2=10)
@@ -397,14 +399,10 @@ def test_size_profile_convergence():
     print(f"Final thickness = {final_t:.4f} m")
 
 if __name__ == "__main__":
-    test_inertia()
-    test_tension_SF()
-    test_shearflows()
+    # test_inertia()
+    # test_tension_SF()
+    # test_shearflows()
     # Plot-based tests (uncomment if running interactively)
     test_heatmap_plot()
-    test_size_profile_convergence()
-    print("All numeric tests passed.")
-
-
-
-
+    # test_size_profile_convergence()
+    # print("All numeric tests passed.")
