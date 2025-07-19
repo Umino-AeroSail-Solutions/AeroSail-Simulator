@@ -302,20 +302,24 @@ class Square_beam(object):
         self.internal_loads = np.array(internal)
         # …and so on for moments
 
-        internal_moments = np.array(([[0,0,0]]))
-        index = 0
-        for load in self.internal_loads:
-            position = load[-1]
-            moment = np.array(([0,0, position]))
-            for used_load in (self.internal_loads[:index, :]):
-                moment[1] += used_load[0] * (used_load[-1] - position)
-                moment[0] += used_load[1] * (used_load[-1] - position)
-            internal_moments = np.append(internal_moments, moment)
+        # build cumulative internal moments
+        moments = [[0.0, 0.0, 0.0]]  # [Mx, My, Tz] at x=0
 
-            index += 1
-        print("Internal loads: ", self.internal_loads)
-        print("Moments: ", internal_moments)
-        self.internal_moments = internal_moments
+        # loop over each station in internal_loads
+        for i, (Vx_i, Vy_i, N_i, xi) in enumerate(self.internal_loads):
+            Mx = 0.0
+            My = 0.0
+            # sum contributions from all loads to the left of xi
+            for Vx_j, Vy_j, N_j, xj in self.internal_loads[i:]:
+                dx = xj - xi
+                Mx += Vy_j * dx  # bending moment about x‐axis due to vertical shear
+                My += Vx_j * dx  # bending moment about y‐axis due to horizontal shear
+            moments.append([Mx, My, xi])
+
+        # convert to numpy array (shape will match internal_loads)
+        self.internal_moments = np.array(moments[1:])
+        print("Moments: ", self.internal_moments)
+        print("Shears: ", self.internal_loads)
 
     def thickness_simple_yield_size(self, loads, SF, initial_thickness, use_self_weight=np.array([0,0,0]),
                                     length_subdivisions=30):
@@ -539,12 +543,12 @@ def test_reaction_and_internal_diagrams():
 
     # --- 2. Define applied loads: [Vx, Vy, N, x_pos] ---
     loads = [
-        [0.0, -500.0, 0.0, 0.5],   # downward point-load at x=0.5 m
-        [0.0, -300.0, 0.0, 1.2],   # downward point-load at x=1.2 m
+        [0.0, -5000.0, 0.0, 0.5],   # downward point-load at x=0.5 m
+        [0.0, 30000.0, 0.0, 1.2],   # downward point-load at x=1.2 m
     ]
 
     # --- 3. Plot using new plot_NVM method ---
-    beam.plot_NVM(loads, use_self_weight=np.array([0,9.81,0]), length_subdivisions=50)
+    beam.plot_NVM(loads, use_self_weight=np.array([0,9.81,0]), length_subdivisions=500)
 
 
 def test_thickness_simple_yield_size():
