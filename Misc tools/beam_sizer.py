@@ -35,7 +35,7 @@ class Square_beam(object):
         for coordinates in corner_coordinates:
             tensions.append(self.get_bending_tension(moment1, moment2, *coordinates)+tension)
         tensions = np.array(tensions)
-        minSF = self.Yield / np.max(tensions)
+        minSF = self.Yield / np.max(np.abs(tensions))
         return minSF
 
     def get_shear(self, shear1, shear2, loc):
@@ -118,14 +118,14 @@ class Square_beam(object):
         self.shearflows[:, 0] -= q0
 
         # Plot
-        plt.plot(self.shearflows[:, 1], self.shearflows[:, 0])
-        corners = [0, self.h, self.h+self.b, 2*self.h+self.b, 2*self.h+2*self.b]
-        plt.vlines(corners, min(self.shearflows[:,0]), max(self.shearflows[:,0]), linestyles="dotted")
-        plt.xlabel("Location along perimeter, s")
-        plt.ylabel("Shear flow q(s)")
-        plt.title("Shear‐flow distribution around beam perimeter")
-        plt.tight_layout()
-        plt.show()
+        # plt.plot(self.shearflows[:, 1], self.shearflows[:, 0])
+        # corners = [0, self.h, self.h+self.b, 2*self.h+self.b, 2*self.h+2*self.b]
+        # plt.vlines(corners, min(self.shearflows[:,0]), max(self.shearflows[:,0]), linestyles="dotted")
+        # plt.xlabel("Location along perimeter, s")
+        # plt.ylabel("Shear flow q(s)")
+        # plt.title("Shear‐flow distribution around beam perimeter")
+        # plt.tight_layout()
+        # plt.show()
 
 
     # def get_shears(self, shear1, shear2, torsion_shear, loc):
@@ -165,17 +165,15 @@ class Square_beam(object):
     #         loc = loc - 2*self.h - self.b
     #         return qb_4(loc) + qb_3(self.h) + qb_2(self.b) + qb_1(self.h) + qs0
 
-
-
     def size_profile(self, shear1, shear2, tension, moment1, moment2, SF,
                      initial_thickness, side_subdivisions=50, plot_convergence=False):
         """
         Iteratively adjust thickness to meet a target safety factor based on shear and tension.
-        If plot_convergence is True, displays how thickness evolves each iteration.
+        If plot_convergence is True, displays how thickness and safety factors evolve each iteration.
         """
         # Check required parameters
         if self.w is None or self.h is None or self.material is None \
-           or self.EMod is None or self.Yield is None:
+                or self.EMod is None or self.Yield is None:
             raise ValueError(
                 "Not enough fixed parameters, ensure Materials, W, H and EMod are set and the material has a yield"
             )
@@ -184,67 +182,164 @@ class Square_beam(object):
         self.t = initial_thickness
         self.get_Ixx_Iyy_Ixy()
 
-        # Store thickness history if requested
+        # Track history
         if plot_convergence:
             last_ts = [self.t]
+            tension_sfs = []
+            shear_sfs = []
+            actual_sfs = []
 
-        # Compute initial tension safety factor
+        # Compute initial safety factors
         self.tensionSF = self.gettensionSF(moment1, moment2, tension)
-
-        # Perimeter for shear sampling
-        P = 2*self.h + 2*self.b
-
-        # Compute initial shear safety factor
-        shearflows = []
-        for loc in np.linspace(0, P, side_subdivisions, endpoint=False):
-            shearflows.append(self.get_shears(shear1, shear2, 0, loc))
-        max_shear = np.max(shearflows)
-        self.shearSF = max_shear / self.max_shear_yield
-
-        # Determine actual safety factor and design ratio
+        self.adjust_for_torsion(shear1, shear2)
+        max_shear = np.max(np.abs(self.shearflows[:, 0]/self.t))
+        self.shearSF = self.max_shear_yield / max_shear
         self.actualSF = min(self.shearSF, self.tensionSF)
         design_sf = self.actualSF / SF
 
-        # Iteratively adjust thickness until within [1.0, 1.1] of target
+        if plot_convergence:
+            tension_sfs.append(self.tensionSF)
+            shear_sfs.append(self.shearSF)
+            actual_sfs.append(self.actualSF)
+
+        # Iteratively adjust thickness until within [1.0, 1.1] of target SF
         iteration = 0
+        print(f"[Iteration {iteration}] Thickness: {self.t:.6f} m, Tension SF: {self.tensionSF:.3f}, "
+              f"Shear SF: {self.shearSF:.3f}, Overall SF: {self.actualSF:.3f}")
         while design_sf < 1 or design_sf > 1.1:
             iteration += 1
-            # Scale thickness
-            self.t = self.t/design_sf
-            # Record
+            self.t = self.t / design_sf
             if plot_convergence:
                 last_ts.append(self.t)
-            # Update inertia and factors
+
             self.get_Ixx_Iyy_Ixy()
             self.tensionSF = self.gettensionSF(moment1, moment2, tension)
 
-            shearflows = []
-            for loc in np.linspace(0, P, side_subdivisions, endpoint=False):
-                shearflows.append(self.get_shears(shear1, shear2, 0, loc))
-            max_shear = np.max(shearflows)
-            self.shearSF = max_shear / self.max_shear_yield
+            self.adjust_for_torsion(shear1, shear2)
+            max_shear = np.max(np.abs(self.shearflows[:, 0]/self.t))
+            self.shearSF = self.max_shear_yield / max_shear
 
             self.actualSF = min(self.shearSF, self.tensionSF)
-            print(design_sf)
-            # Safety break
+            design_sf = self.actualSF / SF
+
+            if plot_convergence:
+                tension_sfs.append(self.tensionSF)
+                shear_sfs.append(self.shearSF)
+                actual_sfs.append(self.actualSF)
+
+            print(f"[Iteration {iteration}] Thickness: {self.t:.6f} m, Tension SF: {self.tensionSF:.3f}, "
+                  f"Shear SF: {self.shearSF:.3f}, Overall SF: {self.actualSF:.3f}")
+
             if iteration > 1000:
                 raise RuntimeError("Thickness iteration did not converge after 1000 steps")
 
         # Plot convergence if requested
         if plot_convergence:
-            plt.plot(range(len(last_ts)), last_ts)
-            plt.xlabel('Iteration')
-            plt.ylabel('Thickness t')
-            plt.title('Convergence of thickness sizing')
+            fig, axs = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
+
+            axs[0].plot(range(len(last_ts)), last_ts, marker='o')
+            axs[0].set_ylabel('Thickness t [m]')
+            axs[0].grid(True)
+
+            axs[1].plot(range(len(tension_sfs)), tension_sfs, label='Tension SF', linestyle='--')
+            axs[1].plot(range(len(shear_sfs)), shear_sfs, label='Shear SF', linestyle='-.')
+            axs[1].plot(range(len(actual_sfs)), actual_sfs, label='Overall SF', color='black')
+            axs[1].axhline(SF, color='gray', linestyle=':', label='Target SF')
+            axs[1].set_ylabel('Safety Factors')
+            axs[1].set_xlabel('Iteration')
+            axs[1].legend()
+            axs[1].grid(True)
+
+            plt.suptitle('Convergence of Thickness and Safety Factors')
             plt.tight_layout()
             plt.show()
 
         return self.t
-    # def thickness_simple_yield_size(self, loads, SF, initial_thickness, use_self_weight=np.array([0,0,0]),
-    #                                 length_subdivisions=30):
-    #     '''loads are defined as [shear1, shear2, normal tension, position across length], use self weight is an
-    #     acceleration vector [x, y, z] where x is shear 1, y is shear 2 and z is normal tension'''
+    def compute_reaction_loads(self, loads, use_self_weight=np.array([0, 0, 0])):
+        self.mass = (self.w*self.h-(self.w-2*self.t)*(self.h-2*self.t))*self.material.Density
+        weight_load = [self.mass*use_self_weight[0], self.mass*use_self_weight[1], self.mass*use_self_weight[2], self.length/2]
+        self.loads=loads
+        simplified_loads = self.loads
+        simplified_loads.append(weight_load)
+        self.total_load = [0,0,0]
+        unweighted_average_position = [0, 0]
+        for load in simplified_loads:
+            self.total_load += [load[0], load[1], load[2]]
+            unweighted_average_position += [load[3]*load[0], load[3]*load[1]]
+        self.total_load = np.array(self.total_load)
+        self.average_position = np.array(unweighted_average_position)/np.sum(np.array(simplified_loads)[:,3])
 
+        M_left = [self.total_load[0]*self.average_position[0], self.total_load[1]*self.average_position[1]]
+        M_right = [self.total_load[0]*(self.length-self.average_position[0]), self.total_load[0]*(self.length-self.average_position[3])]
+
+        self.rload_right = [M_left[0]/self.length, M_left[1]/self.length, 0, self.length]
+        self.rload_left =[M_right[0]/self.length, M_right[1]/self.length, self.total_load[2], 0]
+        self.loads.append(self.rload_left)
+        self.loads.append(self.rload_right)
+        print("Reaction loads: ", [self.rload_right, self.rload_left])
+
+    def compute_internal_loads(self, loads, use_self_weight=np.array([0, 0, 0]), length_subdivisions=30):
+        # first compute reactions and seed self.loads with your point‐loads + reactions
+        self.compute_reaction_loads(loads, use_self_weight)
+        # now append self‐weight as a series of small point‐loads,
+        # each with [wx, wy, wz, x_position]
+        for i in range(1, length_subdivisions + 1):
+            frac = i / length_subdivisions
+            x_i = frac * self.length
+            wx, wy, wz = (self.mass * use_self_weight).tolist()  # now a 3‑tuple
+            self.loads.append([wx, wy, wz, x_i])  # now 4 elements
+
+        # convert to array and sort _rows_ by x (column 3)
+        arr = np.array(self.loads)  # shape (N,4)
+        idx = arr[:, 3].argsort()  # indices that sort by column 3
+        self.loads_array = arr[idx, :]  # now a properly sorted (N×4) array
+
+        # build cumulative internal loads…
+        internal = [[0.0, 0.0, 0.0, 0.0]]
+        for Vx, Vy, N, x in self.loads_array:
+            pVx, pVy, pN, _ = internal[-1]
+            internal.append([pVx + Vx, pVy + Vy, pN + N, x])
+        self.internal_loads = np.array(internal)
+        # …and so on for moments
+
+        internal_moments = np.array(([[0,0,0]]))
+        index = 0
+        for load in self.internal_loads:
+            position = load[-1]
+            moment = np.array(([0,0, position]))
+            for used_load in (self.internal_loads[:index, :]):
+                moment[1] += used_load[0] * (used_load[-1] - position)
+                moment[0] += used_load[1] * (used_load[-1] - position)
+            internal_moments = np.append(internal_moments, moment)
+
+            index += 1
+        print("Internal loads: ", self.internal_loads)
+        print("Moments: ", internal_moments)
+        self.internal_moments = internal_moments
+
+    def thickness_simple_yield_size(self, loads, SF, initial_thickness, use_self_weight=np.array([0,0,0]),
+                                    length_subdivisions=30):
+        '''loads are defined as [shear1, shear2, normal tension, position across length], use self weight is an
+        acceleration vector [x, y, z] where x is shear 1, y is shear 2 and z is normal tension'''
+        self.t = initial_thickness
+        self.best_t = self.t
+        last_weight = self.mass
+        tensionsfs = []
+        shearsfs = []
+        index = 0
+        while abs(self.mass-last_weight) > 1e-3:
+            for load in self.internal_loads:
+                moment = self.internal_moments[index,:]
+                self.compute_internal_loads(loads, use_self_weight, length_subdivisions=length_subdivisions)
+                self.size_profile(load[0], load[1], load[2], moment[0], moment[1], moment[2], self.t)
+                if self.t>self.best_t:
+                    self.best_t = self.t
+                tensionsfs.append(self.tensionSF)
+                shearsfs.append(self.shearSF)
+
+
+        print("Final thickness is: ", self.t, " meters")
+        return self.t
 
     def plot_shear_heatmap(self, shear1, shear2, torsion_shear=0.0, subdivisions=300):
         """
@@ -344,6 +439,44 @@ class Square_beam(object):
         plt.tight_layout()
         plt.show()
 
+    def plot_NVM(self, loads, use_self_weight=np.array([0, 0, 0]), length_subdivisions=100):
+        """
+        Plot Shear‐Force (V) and Bending‐Moment (M) diagrams using your computed internals.
+
+        loads               : list of [Vx, Vy, N, x_pos] applied loads
+        use_self_weight     : 3‐vector [ax, ay, az] for distributed self‐weight
+        length_subdivisions : number of slices to discretize self‐weight
+        """
+        # 1) Build internal arrays
+        self.compute_internal_loads(loads, use_self_weight, length_subdivisions)
+
+        # 2) Extract positions, shear and moment directly
+        x = self.internal_loads[:, 3]  # x‐positions
+        V = self.internal_loads[:, 1]  # transverse shear Vy
+        M = self.internal_moments[:, 1]  # bending moment My
+
+        if len(x) != len(M):
+            raise ValueError(f"Length mismatch: internal_loads has {len(x)} points, internal_moments has {len(M)}")
+
+        # 3) Plot
+        fig, (axV, axM) = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
+
+        # Shear‐Force diagram
+        axV.step(x, V, where='post')
+        axV.set_ylabel('Shear V [N]')
+        axV.set_title('Shear‐Force Diagram')
+        axV.grid(True)
+
+        # Bending‐Moment diagram
+        axM.plot(x, M)
+        axM.set_ylabel('Moment M [N·m]')
+        axM.set_xlabel('Position along beam [m]')
+        axM.set_title('Bending‐Moment Diagram')
+        axM.grid(True)
+
+        plt.tight_layout()
+        plt.show()
+
 
 # Testing code
 
@@ -372,7 +505,7 @@ def test_shearflows():
     # sample a few locs and ensure no NaNs
     locs = [0, beam.h/2, beam.h + beam.b/2, 2*beam.h + beam.b - 1e-6]
     for loc in locs:
-        q = beam.get_shear(shear1=200, shear2=10, loc=loc)
+        q = beam.get_shear(shear1=2000, shear2=100, loc=loc)
         beam.create_shearflow_list(shear1=200, shear2=10)
         assert not np.isnan(q)
         print(f"q(s={loc:.4f}) = {q:.2f}")
@@ -387,22 +520,63 @@ def test_heatmap_plot():
     beam.adjust_for_torsion(shear1=500, shear2=30)
 
 def test_size_profile_convergence():
-    mat = Material("Titanium", EModulus=110e9, YieldStrength=900e6, max_shear=600e6)
-    beam = Square_beam(length=1.0, w=0.5, h=0.5, t=0.003, material=mat)
+    mat = Material("Alu 6063t66", EModulus=68e9, YieldStrength=95e6, max_shear=150e6)
+    beam = Square_beam(length=1.0, w=0.2, h=0.2, t=0.003, material=mat)
     # Try to size for SF=1.2 with some loads; will plot convergence
     final_t = beam.size_profile(
-        shear1=40, shear2=200,
-        tension=0, moment1=800, moment2=200,
-        SF=1.2, initial_thickness=0.01,
+        shear1=4000, shear2=20000,
+        tension=0, moment1=1000, moment2=500,
+        SF=1.2, initial_thickness=0.05,
+        side_subdivisions=80, plot_convergence=True
+    )
+    print(f"Final thickness = {final_t:.4f} m")
+
+
+def test_reaction_and_internal_diagrams():
+    # --- 1. Define material and beam geometry ---
+    mat = Material("Steel", EModulus=210e9, YieldStrength=250e6, max_shear=150e6, Density=7850)
+    beam = Square_beam(length=2.0, w=0.1, h=0.1, t=0.005, material=mat)
+
+    # --- 2. Define applied loads: [Vx, Vy, N, x_pos] ---
+    loads = [
+        [0.0, -500.0, 0.0, 0.5],   # downward point-load at x=0.5 m
+        [0.0, -300.0, 0.0, 1.2],   # downward point-load at x=1.2 m
+    ]
+
+    # --- 3. Plot using new plot_NVM method ---
+    beam.plot_NVM(loads, use_self_weight=np.array([0,9.81,0]), length_subdivisions=50)
+
+
+def test_thickness_simple_yield_size():
+    # --- 1. Material and beam setup ---
+    mat = Material("Aluminum", EModulus=70e9, YieldStrength=300e6, max_shear=200e6, Density=2700)
+    beam = Square_beam(length=1.0, w=0.05, h=0.05, t=0.002, material=mat)
+
+    # --- 2. Define point-load and compute internals ---
+    loads = [[0.0, -1000.0, 0.0, 0.5]]
+    beam.compute_internal_loads(loads, use_self_weight=np.array([0,0,0]), length_subdivisions=20)
+
+    # --- 3. Run thickness sizing ---
+    beam.thickness_simple_yield_size(loads,
+                                     SF=1.5,
+                                     initial_thickness=0.002,
+                                     use_self_weight=np.array([0,0,0]),
+                                     length_subdivisions=20)
+    print(f"Computed minimum thickness: {beam.best_t:.4f} m")
+
+
+def test_size_profile_convergence():
+    mat = Material("Alu6063-T6", EModulus=68e9, YieldStrength=95e6, max_shear=150e6, Density=2700)
+    beam = Square_beam(length=1.0, w=0.2, h=0.2, t=0.003, material=mat)
+    final_t = beam.size_profile(
+        shear1=4000, shear2=20000,
+        tension=0, moment1=1000, moment2=500,
+        SF=1.2, initial_thickness=0.05,
         side_subdivisions=80, plot_convergence=True
     )
     print(f"Final thickness = {final_t:.4f} m")
 
 if __name__ == "__main__":
-    # test_inertia()
-    # test_tension_SF()
-    # test_shearflows()
-    # Plot-based tests (uncomment if running interactively)
-    test_heatmap_plot()
-    # test_size_profile_convergence()
-    # print("All numeric tests passed.")
+    test_size_profile_convergence()
+    test_reaction_and_internal_diagrams()
+    test_thickness_simple_yield_size()
