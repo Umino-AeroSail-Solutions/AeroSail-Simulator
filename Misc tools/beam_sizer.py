@@ -309,7 +309,7 @@ class Square_beam(object):
         for i, (Vx_i, Vy_i, N_i, xi) in enumerate(self.internal_loads):
             Mx = 0.0
             My = 0.0
-            # sum contributions from all loads to the left of xi
+            # sum contributions from all loads to the right of xi
             for Vx_j, Vy_j, N_j, xj in self.internal_loads[i:]:
                 dx = xj - xi
                 Mx += Vy_j * dx  # bending moment about x‐axis due to vertical shear
@@ -445,19 +445,20 @@ class Square_beam(object):
 
     def plot_NVM(self, loads, use_self_weight=np.array([0, 0, 0]), length_subdivisions=100):
         """
-        Plot Shear‐Force (V) and Bending‐Moment (M) diagrams using your computed internals.
+        Plot Shear‐Force (V) and Bending‐Moment (M) diagrams with reaction forces included.
 
-        loads               : list of [Vx, Vy, N, x_pos] applied loads
-        use_self_weight     : 3‐vector [ax, ay, az] for distributed self‐weight
-        length_subdivisions : number of slices to discretize self‐weight
+        Parameters:
+          loads               : list of [Vx, Vy, N, x_pos] applied loads
+          use_self_weight     : 3‐vector [ax, ay, az] for distributed self‐weight
+          length_subdivisions : number of slices to discretize self‐weight
         """
-        # 1) Build internal arrays
+        # 1) Compute internal forces and moments
         self.compute_internal_loads(loads, use_self_weight, length_subdivisions)
 
-        # 2) Extract positions, shear and moment directly
-        x = self.internal_loads[:, 3]  # x‐positions
-        V = self.internal_loads[:, 1]  # transverse shear Vy
-        M = self.internal_moments[:, 1]  # bending moment My
+        # 2) Extract arrays
+        x = self.internal_loads[:, 3]
+        V = self.internal_loads[:, 1]  # Shear force (Vy)
+        M = self.internal_moments[:, 0]  # Moment (My)
 
         if len(x) != len(M):
             raise ValueError(f"Length mismatch: internal_loads has {len(x)} points, internal_moments has {len(M)}")
@@ -465,14 +466,23 @@ class Square_beam(object):
         # 3) Plot
         fig, (axV, axM) = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
 
-        # Shear‐Force diagram
-        axV.step(x, V, where='post')
+        # --- Shear force diagram ---
+        axV.step(x, V, where='post', label='Shear Force V')
         axV.set_ylabel('Shear V [N]')
         axV.set_title('Shear‐Force Diagram')
         axV.grid(True)
 
-        # Bending‐Moment diagram
-        axM.plot(x, M)
+        # Plot reaction shear vectors
+        for rload in [self.rload_left, self.rload_right]:
+            x_pos = rload[3]
+            Vy = rload[1]
+            axV.annotate('', xy=(x_pos, Vy), xytext=(x_pos, 0),
+                         arrowprops=dict(facecolor='red', shrink=0.05, width=1.5, headwidth=8),
+                         fontsize=8)
+            axV.text(x_pos, Vy * 1.05, f'R={Vy:.0f}', color='red', ha='center', fontsize=8)
+
+        # --- Moment diagram ---
+        axM.plot(x, M, label='Moment M', color='tab:blue')
         axM.set_ylabel('Moment M [N·m]')
         axM.set_xlabel('Position along beam [m]')
         axM.set_title('Bending‐Moment Diagram')
