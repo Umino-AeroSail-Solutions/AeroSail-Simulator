@@ -362,7 +362,7 @@ class Segment():
 # V-slot options [[area, d, Ixx/Iyy], [...,...]]-------
 # t-slot 2020, t-slot 4040, t-slot 8080 (quad 4040 version)---------
 
-SF = 2
+SF = 1
 
 max_tension = 200000000.0 # https://struxure.com/wp-content/uploads/2020/05/01-_-6063-T6-Aluminum-MSDS.pdf
 max_shear = 152000000.0
