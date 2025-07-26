@@ -12,7 +12,7 @@ g = 9.80665
 
 # https://www.desmos.com/calculator/0y6jafr8ox
 
-safety_factor = 1.6
+safety_factor = 1.5
 def get_safety_factor():
     return safety_factor
 
@@ -88,12 +88,14 @@ def forces(x, y):
     M_top = max_moment_top  #idk yet
 
     # Wheel dimensions (not fixed)
-    # BASED ON https://www.norelem.com/ca/en/Products/Product-overview/Material-handling-and-transport/95000-Material-handling-and-transport/Wheels-and-rollers/95059-Rollers-heavy-load.html
-    # other option 
-    # maybe the real wheels were the friends we made along the way https://www.amazon.com/dp/B07DB45V1L?ref_=ast_sto_dp&language=en_US&th=1
+    # BASED ON https://www.technicawheels.co.uk/industrial-wheels-all.html?product=&product_list_dir=desc&product_list_order=load_capacity    
+    # USING WHEEL P0746
+
     wheel_width = 100e-3 # MOOGIE TOOLS will burn in hell
-    wheel_radius = 42.5e-3 # 3 inch diameter
-    wheel_carry_force = 720*g # REAL "max load"
+    wheel_radius = 82e-3 / 2 # 82mm diameter
+    wheel_carry_force = 950*g # REAL "max load"
+    wheel_axle_rad = 30e-3 / 2 # https://www.technicawheels.co.uk/industrial-wheels-all.html?product=&product_list_dir=desc&product_list_order=load_capacity
+    
     n_wheels_bot = V_bot / wheel_carry_force # approximately 3  2x1+1 lxw # 12 and 10 for 6 eur per wheel = 132 eur per 
     n_wheels_top = V_top / wheel_carry_force # approximately 6 (2x3) lxw 
     print(f"Number of wheels bottom: {n_wheels_bot}, Number of wheels top: {n_wheels_top}")
@@ -105,12 +107,12 @@ def forces(x, y):
 
     # Dimensions of the beams
     b_bot = 100e-3    # width of beam [m] 
-    a_bot = 180e-3 # height [m]
+    a_bot = 150e-3 # height [m]
     t_bot = 5e-3 # thickness [m]
 
     b_top = 100e-3     # width of beam [m]
-    a_top = 190e-3    # height [m]
-    t_top = 7.5e-3     # thickness [m]
+    a_top = 150e-3    # height [m]
+    t_top = 8e-3     # thickness [m]
 
     # Material properties mild STEEL i think
     rho = 7850 # Density in kg/m³
@@ -152,7 +154,7 @@ def forces(x, y):
             # Buckling!
             kc = 4 # Buckling coefficient, assume simply supported (conservative)
             ks = 5.5 # Buckling coefficient for shear :D
-            v = .33 #poisson ratio
+            v = .30 #poisson ratio
             match y:
                 case "forces":
                     # Getting max shear and max moment
@@ -239,7 +241,7 @@ def forces(x, y):
                 
                 case "sideforce":
                     # Side force calculations
-                    # WE GET THESE FROM ANDRÈS next week
+                    # WE GET THESE FROM ANDRÈS next week _surely_
                     V_bot_side = 158074.32799861467 * safety_factor #TBD
                     V_top_side = 183917.18494112673 *safety_factor #TBD
 
@@ -298,7 +300,7 @@ def forces(x, y):
                     '''
             ## CARRIAGE SIZING
             #variables
-            t_carr_top = 21e-3
+            t_carr_top = 25e-3
             t_carr_bot = 20e-3
             fillet_radius = 2e-3
 
@@ -312,6 +314,7 @@ def forces(x, y):
             carr_top_width_flange = b_top + (wheel_radius + t_carr_web_top/2)
             print(f"Carriage Top Flange Width: {carr_top_width_flange}")
             carr_bot_width_flange = b_bot + (wheel_radius + t_carr_web_bot/2)
+            print(f"Carriage Bot Flange Width: {carr_bot_width_flange}")
 
             carr_top_length = 5 * wheel_radius * 2 * 1.1 # 3  rows wheels (with margin)
             print(f"Carriage Top Length: {carr_top_length}")
@@ -345,7 +348,6 @@ def forces(x, y):
             tau_carr_top = V_top * Q_carr_top / I_carr_top / carr_top_length
             tau_carr_bot = V_bot * Q_carr_bot / I_carr_bot / carr_bot_length
 
-            wheel_axle_rad = 25e-3 / 2
             wheel_axle_length_top = carr_top_width_flange - t_carr_web_top
             wheel_axle_length_bot = carr_bot_width_flange - t_carr_web_bot
             axle_area = rinze.pi * wheel_axle_rad**2
@@ -374,9 +376,9 @@ def forces(x, y):
 
 
 
-
-            print(f"WHEEL Bending Stress SM Top {yield_stress/sigma_axle_top-1} / Bot {yield_stress/sigma_axle_bot-1}")
-            print(f"WHEEL Shear Stress SM Top {yield_stress/2/tau_axle_top-1} / Bot {yield_stress/2/tau_axle_bot-1}")
+            yield_stress_big = 800e6
+            print(f"WHEEL Bending Stress SM Top {yield_stress_big/sigma_axle_top-1} / Bot {yield_stress/sigma_axle_bot-1}")
+            print(f"WHEEL Shear Stress SM Top {yield_stress_big/2/tau_axle_top-1} / Bot {yield_stress/2/tau_axle_bot-1}")
 
             sbr = "steel ball run"
 

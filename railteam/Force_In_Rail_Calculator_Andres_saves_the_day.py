@@ -9,7 +9,7 @@ from mpmath import degrees
 import os
 
 # Define mass and height parameters
-m = 2878  # Example mass in kg
+m = 5100  # Example mass in kg
 h = 10   # Example height in meters
 w = 1 # Example width of the sail typa ribs thingy idk man
 
@@ -313,6 +313,8 @@ while running:
 
 # Quit Pygame
 pygame.quit()
+
+print(max(T_values))
 
 # Phi testing shenanigans:
 # # Compute bottom rail length
