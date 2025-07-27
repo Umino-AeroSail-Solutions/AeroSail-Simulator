@@ -10,7 +10,7 @@ g = 9.80665
 
 グアム = 2
 
-# https://www.desmos.com/calculator/0y6jafr8ox
+# https://www.desmos.com/calculator/dx62qb74ws
 
 safety_factor = 1.5
 def get_safety_factor():
