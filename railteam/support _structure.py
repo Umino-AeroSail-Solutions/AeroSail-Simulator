@@ -106,9 +106,34 @@ if __name__ == "__main__":
 
         toa_base_V = - supp_bot_V - supp_top_V
         toa_base_H = - supp_bot_H - supp_top_H
-        print(toa_base_H, toa_base_V)
 
+        toa_axial = np.array([toa_base_V, supp_bot_V, supp_top_V])
+        toa_shear = np.array([toa_base_H, supp_bot_H, supp_top_H])
+        # print(toa_axial, np.sum(toa_axial), toa_shear, np.sum(toa_shear))
         # do shear and buckling calculations with these values.
+        
+        # axial loading
+        toa_loc = np.array([0, 1.75, 2.1])
+        toa_axial = np.vstack((toa_loc, toa_axial))
+        # tension-compression graph
+        for i, val in enumerate(toa_axial[1]):
+            if i != 0:
+                toa_tc.append(-val+toa_tc[i-1])
+            else: 
+                toa_tc = [-val]                
+        # just for plotting
+        for i, val in enumerate(toa_loc):
+            if i != 0:
+                toa_loc = np.insert(toa_loc, i+countr, toa_loc[i+countr]-0.0001)
+
+                toa_tc.insert(i+countr, toa_tc[i-1+countr])
+                countr += 1
+            else:
+                countr = 0
+        plt.plot(toa_loc, toa_tc)
+        plt.show()
+
+        
 
 
     # # calculated stresses
