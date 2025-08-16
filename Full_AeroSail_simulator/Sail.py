@@ -127,6 +127,10 @@ class Sail_Class():
                 self.InterpCds = self.InterpCds.T
             if Alphas.shape != self.InterpCloCds.shape:
                 self.InterpCloCds = self.InterpCloCds.T
+            if abs(alpha) > np.max(Alphas):
+                raise ValueError(f"Alpha {alpha} too large, failed to extrapolate")
+            if abs(flapdeflection) > np.max(Flaps):
+                raise ValueError(f"Delta {np.degrees(flapdeflection)} too large, failed to extrapolate")
             points = np.vstack((Alphas.flatten(), Flaps.flatten())).T
             self.cl = griddata(points, self.InterpCls.flatten(), (alpha, flapdeflection), method='linear',
                                fill_value=0).item()
@@ -199,7 +203,7 @@ class Sail_Class():
         self.InterpCloCds = npzfile['interpCloCds']
     def plot_2d_polar_interp(self):
         '''Plots the interpolation arrays'''
-        fig = plt.figure(figsize=(18, 6))
+        fig = plt.figure(figsize=(18, 8))
         Alphas, Flaps = np.meshgrid(self.InterpAlphas, self.InterpFlaps)
 
         # Plot Cl
@@ -264,7 +268,7 @@ class Sail_Class():
             self.opt_flap = -self.InterpFlaps[maxloc[0]]
             self.opt_alpha = -self.InterpAlphas[maxloc[1]]
         return self.opt_alpha, self.opt_flap
-    def get_opt_pos_struc(self, TWA, windspeedkt, shipspeed, interpolation,fatigue=False, multiplier=5, StackHeight=4):
+    def get_opt_pos_struc(self, TWA, windspeedkt, shipspeed, interpolation,fatigue=False, multiplier=10, StackHeight=4):
         '''Finds the optimum flap deflection and alpha for an Apparent Wind Angle AWA, given structural considerations'''
         shipspeed = shipspeed / 1.944
         windspeed = windspeedkt / 1.944
@@ -312,11 +316,12 @@ class Sail_Class():
                 struc_ok = clc.CheckContainer(force_vector, self.height, StackHeight, Containerweight=4950)
             optimal_thrust = (self.get_specific_ct(opt_alpha, opt_flap, interpolation, AWA) * qS)
         return self.opt_alpha, self.opt_flap
-    def plot_cts_for_AWA(self, AWA):
+    def plot_cts_for_AWA(self, AWA, AWS):
         '''Plots the thrust coefficient arrays'''
         # Calculate cts
         self.get_cts(AWA)
         opt_alpha, opt_flap = self.get_opt_pos(AWA)
+        opt_alpha_s, opt_flap_s = self.get_opt_pos_struc(AWA, AWS, 0.1, 'yes')
 
         # Create a meshgrid for plotting
         Alphas, Flaps = np.meshgrid(self.InterpAlphas, self.InterpFlaps)
@@ -331,6 +336,7 @@ class Sail_Class():
 
         # Plotting the optimal point
         plt.plot(opt_alpha, opt_flap, 'ro', label='Optimal Solution')
+        plt.plot(opt_alpha_s, opt_flap_s, 'r+', label='Position with structural constraints')
         plt.legend()
 
         plt.show()
@@ -659,10 +665,10 @@ print(start)
 #
 # start = time.time()
 #
-# Profile.initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
-# Sail = Sail_Class(os.path.join(
-#     os.path.dirname(__file__), ".", "Data", 'E473coordinates.txt')
-#     , 4.5, 0.4, 30, panels = 20)
+Profile.initializeXfoil('C:/Xfoil699src', 'C:/Xfoil699src/xfoil.exe')
+Sail = Sail_Class(os.path.join(
+    os.path.dirname(__file__), ".", "Data", 'E473coordinates.txt')
+    , 4.5, 0.4, 30, panels = 20)
 # # # # print(Sail.get_sail_coefficients(15, np.radians(10)))
 # # # # print(Sail.get_l_d_m(10, np.radians(10), 10))
 # # # # print(Sail.get_l_d_m(0, 0, 10))
@@ -670,12 +676,20 @@ print(start)
 # # # # Sail.create_interpolation(-10, 20, 1, np.radians(0), np.radians(20), np.radians(1), p_interpolation='Data/interp0.4profile.npz')
 # # Sail.create_XFLR5_interpolation('Data/XFLR5_5_30_0,5_10m_s_INTERPOLATION')
 # # Sail.save_interpolation('Data/interpolationCR4sail_XFLR5.npz')
-# Sail.load_interpolation(os.path.join(
-#         os.path.dirname(__file__), ".", "Data", 'interpolationCR4sail_XFLR5.npz'))
+Sail.load_interpolation(os.path.join(
+        os.path.dirname(__file__), ".", "Data", 'interpolationCR4sail_XFLR5.npz'))
 # # #
 # # # # print(Sail.InterpAlphas, Sail.InterpFlaps, Sail.InterpCds, Sail.InterpCloCds)
-# # Sail.plot_2d_polar_interp()
-# # Sail.get_cf()
+Sail.plot_2d_polar_interp()
+print('Plotted 2d interp')
+Sail.get_cf()
+print('Got Cf')
+Sail.plot_cts_for_AWA(np.radians(30), 25)
+Sail.plot_cts_for_AWA(np.radians(30), 15)
+Sail.plot_cts_for_AWA(np.radians(60), 25)
+Sail.plot_cts_for_AWA(np.radians(130), 25)
+Sail.plot_cts_for_AWA(np.radians(150), 25)
+print('Finished')
 # # for angle in range(0, 180, 5):
 # #     Sail.plot_cts_for_AWA(np.radians(angle))
 # # # # print(Sail.get_opt_pos(np.radians(10)))
