@@ -143,10 +143,10 @@ segment_3_length = segment_4_length - min_segment_length_difference
 segment_2_length = segment_3_length - min_segment_length_difference
 segment_1_length = segment_2_length - min_segment_length_difference
 
-segment_4_mass = 143.4674
-segment_3_mass = 386.48394
-segment_2_mass = 548.97012
-segment_1_mass = 772.04106
+segment_4_mass = 194.5
+segment_3_mass = 540
+segment_2_mass = 788.4
+segment_1_mass = 900
 
 aeroplatform_extra_mass_per_segment = 114
 
