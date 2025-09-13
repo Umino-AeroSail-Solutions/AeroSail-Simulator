@@ -58,7 +58,9 @@ class Segment():
         print(f"Total load     : {self.total_weight:.2f} N")
         print(f"Moment about 1 : {M1:.2f} N·m (span = {span:.2f} m)")
         print(f"Reaction R2    : {self.R2:.2f} N")
+        print([self.R2*math.cos(math.radians(self.angle)), self.R2*math.sin(math.radians(self.angle))])
         print(f"Reaction R1    : {self.R1:.2f} N")
+        print([self.R1 * math.cos(math.radians(self.angle)), self.R1 * math.sin(math.radians(self.angle))])
         return self.R1, self.R2
 
     def compute_internal_loads(self, plot=False):
@@ -135,7 +137,7 @@ class Segment():
 
 # BORUI CHECK THIS NUMBERS
 
-angle = 115.116-90
+angle = 152.068-90
 
 min_segment_length_difference = 0.5 # Space to allow for ribs and storage
 segment_4_length = 10
@@ -143,10 +145,12 @@ segment_3_length = segment_4_length - min_segment_length_difference
 segment_2_length = segment_3_length - min_segment_length_difference
 segment_1_length = segment_2_length - min_segment_length_difference
 
-segment_4_mass = 194.5
-segment_3_mass = 540
-segment_2_mass = 788.4
-segment_1_mass = 900
+mass_SF = 1.2
+
+segment_4_mass = 194.5 * mass_SF
+segment_3_mass = 540 * mass_SF
+segment_2_mass = 788.4 *  mass_SF
+segment_1_mass = 850 * mass_SF
 
 aeroplatform_extra_mass_per_segment = 114
 
