@@ -48,7 +48,7 @@ class Connection():
 
         if rivets_per_row is None:
             minimum_spacing = 3*Rivet.diameter
-            rivets_per_row = self.width//minimum_spacing
+            rivets_per_row = (self.width//minimum_spacing) -1
         self.rivet = Rivet
         self.rivet_max_force = self.rivet.Shear_Yield
         self.connection_d = self.rivet.diameter
@@ -71,6 +71,14 @@ class Connection():
         panelSF = self.max_allowed_panel_force / force
         tearingSF = self.max_tearing_force / force
         minSF = min(rivetSF, panelSF, tearingSF)
+        # while tearingSF < 1 and rivets_per_row > 1:
+        #     rivets_per_row -= 1
+        #     self.max_tearing_force = min(
+        #         self.Panel1.Get_Max_tearing_force(spacing, self.rivets_per_row),
+        #         self.Panel2.Get_Max_tearing_force(spacing, self.rivets_per_row),
+        #     )
+        #     force = self.shearflow * spacing
+        #     tearingSF = self.max_tearing_force / force
 
         # store convergence history
         iterations, rivet_history, panel_history, tearing_history, spacing_history = [], [], [], [], []
