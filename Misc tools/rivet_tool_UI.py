@@ -3,6 +3,7 @@ from rivet_spacing_sizer import *
 
 # Here comes a fastener list (Not only rivets in case you want to it also works with bolts):
 
+# https://en.gesipa.de/products/blind-rivets/
 Gesipa1433601 = Rivet(2000, 5.1/1000, 2800, 41/250, "Gesipa 1433601")
 Gesipa1454074 = Rivet(3400, 6.5/1000, 4600, 60/200, "Gesipa 1454074")
 Gesipa1454608 = Rivet(2000, 4.1/1000, 2500, 80/500, "Gesipa 1454608")
