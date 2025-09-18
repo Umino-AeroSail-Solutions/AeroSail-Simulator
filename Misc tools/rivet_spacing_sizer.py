@@ -2,11 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class Rivet():
-    def __init__(self, Shear_Yield_Stress, diameter, Tension_Yield, cost):
+    def __init__(self, Shear_Yield_Stress, diameter, Tension_Yield, cost, name="Unnamed Chinese Kid"):
         self.Shear_Yield = Shear_Yield_Stress
         self.diameter = diameter
         self.Tension_Yield = Tension_Yield
         self.cost = cost
+        self.name = name
 
 class Panel():
     def __init__(self, thickness, shear_yield, tension_yield, E_mod, max_bearing_stress):
@@ -40,9 +41,14 @@ class Connection():
         self.width = width
         self.shearflow= self.stress*self.width
 
-    def get_required_spacing(self, Rivet, rivets_per_row, initialspacing=None, plot=True):
+    def get_required_spacing(self, Rivet, rivets_per_row=None, initialspacing=None, plot=True):
+        print("COMPUTING RIVET: \n______________________________________\n", Rivet.name, "\n______________________________________\n")
         if initialspacing is None:
             initialspacing = Rivet.diameter * 3
+
+        if rivets_per_row is None:
+            minimum_spacing = 3*Rivet.diameter
+            rivets_per_row = self.width//minimum_spacing
         self.rivet = Rivet
         self.rivet_max_force = self.rivet.Shear_Yield
         self.connection_d = self.rivet.diameter
@@ -137,40 +143,62 @@ class Connection():
         if spacing < 3*self.rivet.diameter:
             print("WARNING! Spacing to small: ", spacing*1000, "mm, it should be more than: ", 3*self.rivet.diameter*1000, "mm")
 
-        return spacing
+        return spacing, rivets_per_row, min(tearingSF, panelSF, rivetSF)*self.SF
+
+    def find_The_Chosen_One(self, rivet_list, cost_multiplier=1, number_multiplier=0):
+        best_optimization = 10000000000000000000000
+        best_rivet = rivet_list[0]
+        for rivet in rivet_list:
+            spacing, rivets_per_row, minSF = self.get_required_spacing(rivet, plot=False)
+            rivets_per_meter = rivets_per_row /spacing
+            optimization = (cost_multiplier * rivets_per_meter * rivet.cost) + number_multiplier*rivets_per_meter
+            if optimization < best_optimization:
+                best_optimization = optimization
+                best_rivet = rivet
+
+        print("Best rivet is: ", best_rivet.name)
+
+        spacing, rivets_per_row, minSF = self.get_required_spacing(best_rivet, plot=True)
+
+        print(f"Rivets per row = {rivets_per_row:.1f}")
+        print(f"Min SF = {minSF:.1f}")
+        print(f"Converged rivet spacing ≈ {spacing * 1000:.1f} mm")
+        return best_rivet
 
 
 # EXAMPLE CODE ----------------------------------------------------------------------------
 # Example rivet – 4 mm steel rivet
-steel_rivet = Rivet(
-    Shear_Yield_Stress = 3300.0,  # N (shear strength in single shear ≈ 3.3 kN)
-    diameter = 0.004,             # m
-    Tension_Yield = 4500.0,       # N (approx. tension capacity)
-    cost = 0.10
-)
-
-# Panels – mild steel
-thickness1 = 0.001  # 5 mm
-thickness2 = 0.001  # 3 mm
-shear_yield = 250e6       # Pa
-tension_yield = 250e6     # Pa
-E_mod = 200e9             # Pa
-max_bearing_stress = 300e6  # Pa
-
-panel5 = Panel(thickness1, shear_yield, tension_yield, E_mod, max_bearing_stress)
-panel3 = Panel(thickness2, shear_yield, tension_yield, E_mod, max_bearing_stress)
-
-# Connection setup
-# Applied stress = 100 MPa, width = 0.1 m
-conn = Connection(
-    stress = 10e5,
-    Panel1 = panel5,
-    Panel2 = panel3,
-    width = 0.1,
-    SF = 2
-)
-
-# Compute required spacing with 3 rivets per row
-spacing = conn.get_required_spacing(steel_rivet, rivets_per_row=4)
-
-print(f"Converged rivet spacing ≈ {spacing*1000:.1f} mm")
+# steel_rivet = Rivet(
+#     Shear_Yield_Stress = 3300.0,  # N (shear strength in single shear ≈ 3.3 kN)
+#     diameter = 0.004,             # m
+#     Tension_Yield = 4500.0,       # N (approx. tension capacity)
+#     cost = 0.10
+# )
+#
+# # Panels – mild steel
+# thickness1 = 0.001  # 5 mm
+# thickness2 = 0.001  # 3 mm
+# shear_yield = 250e6       # Pa
+# tension_yield = 250e6     # Pa
+# E_mod = 200e9             # Pa
+# max_bearing_stress = 300e6  # Pa
+#
+# panel5 = Panel(thickness1, shear_yield, tension_yield, E_mod, max_bearing_stress)
+# panel3 = Panel(thickness2, shear_yield, tension_yield, E_mod, max_bearing_stress)
+#
+# # Connection setup
+# # Applied stress = 100 MPa, width = 0.1 m
+# conn = Connection(
+#     stress = 10e5,
+#     Panel1 = panel5,
+#     Panel2 = panel3,
+#     width = 0.1,
+#     SF = 2
+# )
+#
+# # Compute required spacing with 3 rivets per row
+# spacing, rivets_per_row, minSF = conn.get_required_spacing(steel_rivet)
+#
+# print(f"Rivets per row = {rivets_per_row:.1f}")
+# print(f"Min SF = {minSF:.1f}")
+# print(f"Converged rivet spacing ≈ {spacing*1000:.1f} mm")
