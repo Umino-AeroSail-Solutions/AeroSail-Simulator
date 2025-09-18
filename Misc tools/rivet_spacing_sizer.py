@@ -137,29 +137,32 @@ class Connection():
             plt.grid(axis="y")
             plt.show()
 
+        tearing = False
+
         if tearingSF < 1:
             print("WARNING! Tearing sf to small: ", tearingSF)
+            tearing = True
 
         if spacing < 3*self.rivet.diameter:
             print("WARNING! Spacing to small: ", spacing*1000, "mm, it should be more than: ", 3*self.rivet.diameter*1000, "mm")
 
-        return spacing, rivets_per_row, min(tearingSF, panelSF, rivetSF)*self.SF
+        return spacing, rivets_per_row, min(tearingSF, panelSF, rivetSF)*self.SF, tearing
 
     def find_The_Chosen_One(self, rivet_list, cost_multiplier=1, number_multiplier=0):
         best_optimization = 10000000000000000000000
         best_rivet = rivet_list[0]
         for rivet in rivet_list:
-            spacing, rivets_per_row, minSF = self.get_required_spacing(rivet, plot=False)
+            spacing, rivets_per_row, minSF, tearing = self.get_required_spacing(rivet, plot=False)
             rivets_per_meter = rivets_per_row /spacing
             optimization = (cost_multiplier * rivets_per_meter * rivet.cost) + number_multiplier*rivets_per_meter
-            if optimization < best_optimization:
+            if optimization < best_optimization and not tearing:
                 best_optimization = optimization
                 best_rivet = rivet
 
         print("Best rivet is: ", best_rivet.name)
 
-        spacing, rivets_per_row, minSF = self.get_required_spacing(best_rivet, plot=True)
-
+        spacing, rivets_per_row, minSF, tearing = self.get_required_spacing(best_rivet, plot=True)
+        print(f"Cost per meter = {best_optimization:.1f}")
         print(f"Rivets per row = {rivets_per_row:.1f}")
         print(f"Min SF = {minSF:.1f}")
         print(f"Converged rivet spacing ≈ {spacing * 1000:.1f} mm")
