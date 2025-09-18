@@ -154,12 +154,17 @@ class Connection():
         for rivet in rivet_list:
             spacing, rivets_per_row, minSF, tearing = self.get_required_spacing(rivet, plot=False)
             rivets_per_meter = rivets_per_row /spacing
+
             optimization = (cost_multiplier * rivets_per_meter * rivet.cost) + number_multiplier*rivets_per_meter
+            print(f"Cost per meter = {optimization:.1f}")
+            print(f"Rivets per row = {rivets_per_row:.1f}")
+            print(f"Min SF = {minSF:.1f}")
+            print(f"Converged rivet spacing ≈ {spacing * 1000:.1f} mm")
             if optimization < best_optimization and not tearing:
                 best_optimization = optimization
                 best_rivet = rivet
 
-        print("Best rivet is: ", best_rivet.name)
+        print("Best rivet is: ", best_rivet.name, "---------------------------------")
 
         spacing, rivets_per_row, minSF, tearing = self.get_required_spacing(best_rivet, plot=True)
         print(f"Cost per meter = {best_optimization:.1f}")
