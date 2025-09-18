@@ -40,7 +40,7 @@ class Connection():
         self.width = width
         self.shearflow= self.stress*self.width
 
-    def get_required_spacing(self, Rivet, rivets_per_row, initialspacing=None):
+    def get_required_spacing(self, Rivet, rivets_per_row, initialspacing=None, plot=True):
         if initialspacing is None:
             initialspacing = Rivet.diameter * 3
         self.rivet = Rivet
@@ -92,28 +92,44 @@ class Connection():
             spacing = spacing * minSF
 
             iteration_n += 1
+        if plot:
+            # Plot convergence
+            plt.figure(figsize=(8, 5))
+            plt.plot(iterations, rivet_history, label="Rivet SF")
+            plt.plot(iterations, panel_history, label="Panel SF")
+            plt.plot(iterations, tearing_history, label="Tearing SF")
+            plt.axhline(1.0, color="red", linestyle="--", label="Target SF = 1")
+            plt.xlabel("Iteration")
+            plt.ylabel("Safety Factor")
+            plt.title("Convergence of Safety Factors")
+            plt.legend()
+            # Set integer ticks on x
+            plt.xticks(np.arange(min(iterations), max(iterations) + 1, 1))
 
-        # Plot convergence
-        plt.figure(figsize=(8, 5))
-        plt.plot(iterations, rivet_history, label="Rivet SF")
-        plt.plot(iterations, panel_history, label="Panel SF")
-        plt.plot(iterations, tearing_history, label="Tearing SF")
-        plt.axhline(1.0, color="red", linestyle="--", label="Target SF = 1")
-        plt.xlabel("Iteration")
-        plt.ylabel("Safety Factor")
-        plt.title("Convergence of Safety Factors")
-        plt.legend()
-        plt.grid(True)
-        plt.show()
+            # Vertical grid lines only at x-ticks (iterations)
+            plt.grid(axis="x", which="major")
 
-        # --- Plot 2: Spacing history ---
-        plt.figure(figsize=(8, 5))
-        plt.plot(iterations, np.array(spacing_history) * 1000, marker="o")
-        plt.xlabel("Iteration")
-        plt.ylabel("Spacing [mm]")
-        plt.title("Convergence of Rivet Spacing")
-        plt.grid(True)
-        plt.show()
+            # Horizontal grid on y as usual
+            plt.grid(axis="y")
+            plt.show()
+
+            # --- Plot 2: Spacing history ---
+            plt.figure(figsize=(8, 5))
+            plt.plot(iterations, np.array(spacing_history) * 1000, marker="o")
+            plt.axhline(3*self.rivet.diameter*1000, color="red", linestyle="--", label="Minumum recommended spacing")
+            plt.legend()
+            plt.xlabel("Iteration")
+            plt.ylabel("Spacing [mm]")
+            plt.title("Convergence of Rivet Spacing")
+            # Set integer ticks on x
+            plt.xticks(np.arange(min(iterations), max(iterations) + 1, 1))
+
+            # Vertical grid lines only at x-ticks (iterations)
+            plt.grid(axis="x", which="major")
+
+            # Horizontal grid on y as usual
+            plt.grid(axis="y")
+            plt.show()
 
         if tearingSF < 1:
             print("WARNING! Tearing sf to small: ", tearingSF)
