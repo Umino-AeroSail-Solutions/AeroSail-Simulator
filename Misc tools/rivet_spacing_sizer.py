@@ -1,3 +1,5 @@
+import numpy as np
+import matplotlib.pyplot as plt
 
 class Rivet():
     def __init__(self, Shear_Yield_Stress, diameter, Tension_Yield, cost):
@@ -21,11 +23,138 @@ class Panel():
     def Get_Max_Total_Hole_D(self, force, width):
         max_D = (force/(self.tension_yield*self.thickness)) + width
         return max_D
+    def Get_Max_allowed_force(self, diameter, n, width):
+        force_bearing = n*diameter*(self.max_bearing_stress*self.thickness)
+        force_tension = (width-n*diameter)*(self.tension_yield*self.thickness)
+        self.maxallowedforce = min(force_bearing, force_tension)
+        return min(force_bearing, force_tension)
+    def Get_Max_tearing_force(self, spacing, rivets_per_row):
+        force_tearing = self.shear_yield*2*spacing*self.thickness*rivets_per_row
+        return force_tearing
 class Connection():
-    def __init__(self, Tension_stress, Panel1, Panel2, width, SF=4.5): # Normal safety factor is huge due to 3x stress concentrations in holes
+    def __init__(self, stress, Panel1, Panel2, width, SF=4.5): # Normal safety factor is huge due to 3x stress concentrations in holes
         self.SF = SF
-        self.Tension_stress = Tension_stress*self.SF
+        self.stress = stress*self.SF
         self.Panel1 = Panel1
         self.Panel2 = Panel2
         self.width = width
+        self.shearflow= self.stress*self.width
 
+    def get_required_spacing(self, Rivet, rivets_per_row, initialspacing=None):
+        if initialspacing is None:
+            initialspacing = Rivet.diameter * 3
+        self.rivet = Rivet
+        self.rivet_max_force = self.rivet.Shear_Yield
+        self.connection_d = self.rivet.diameter
+
+        spacing = initialspacing
+
+        # Iteration 0
+        iteration_n = 0
+        force = self.shearflow * spacing
+        self.rivets_per_row = rivets_per_row
+        self.max_allowed_panel_force = min(
+            self.Panel1.Get_Max_allowed_force(self.connection_d, self.rivets_per_row, self.width), self.Panel2.Get_Max_allowed_force(self.connection_d, self.rivets_per_row, self.width)
+        )
+        self.max_tearing_force = min(
+            self.Panel1.Get_Max_tearing_force(spacing, self.rivets_per_row),
+            self.Panel2.Get_Max_tearing_force(spacing, self.rivets_per_row),
+        )
+
+        rivetSF = self.rivet_max_force / force
+        panelSF = self.max_allowed_panel_force / force
+        tearingSF = self.max_tearing_force / force
+        minSF = min(rivetSF, panelSF, tearingSF)
+
+        # store convergence history
+        iterations, rivet_history, panel_history, tearing_history, spacing_history = [], [], [], [], []
+
+        while (((minSF - 1) > 0.1) or (minSF - 1 < 0)) and iteration_n < 100:
+
+            force = self.shearflow * spacing
+            self.max_tearing_force = min(
+                self.Panel1.Get_Max_tearing_force(spacing, self.rivets_per_row),
+                self.Panel2.Get_Max_tearing_force(spacing, self.rivets_per_row),
+            )
+            rivetSF = self.rivet_max_force / force
+            panelSF = self.max_allowed_panel_force / force
+            tearingSF = self.max_tearing_force / force
+            minSF = min(rivetSF, panelSF)
+
+
+            # record values
+            iterations.append(iteration_n)
+            rivet_history.append(rivetSF)
+            panel_history.append(panelSF)
+            tearing_history.append(tearingSF)
+            spacing_history.append(spacing)
+
+            spacing = spacing * minSF
+
+            iteration_n += 1
+
+        # Plot convergence
+        plt.figure(figsize=(8, 5))
+        plt.plot(iterations, rivet_history, label="Rivet SF")
+        plt.plot(iterations, panel_history, label="Panel SF")
+        plt.plot(iterations, tearing_history, label="Tearing SF")
+        plt.axhline(1.0, color="red", linestyle="--", label="Target SF = 1")
+        plt.xlabel("Iteration")
+        plt.ylabel("Safety Factor")
+        plt.title("Convergence of Safety Factors")
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
+        # --- Plot 2: Spacing history ---
+        plt.figure(figsize=(8, 5))
+        plt.plot(iterations, np.array(spacing_history) * 1000, marker="o")
+        plt.xlabel("Iteration")
+        plt.ylabel("Spacing [mm]")
+        plt.title("Convergence of Rivet Spacing")
+        plt.grid(True)
+        plt.show()
+
+        if tearingSF < 1:
+            print("WARNING! Tearing sf to small: ", tearingSF)
+
+        if spacing < 3*self.rivet.diameter:
+            print("WARNING! Spacing to small: ", spacing*1000, "mm, it should be more than: ", 3*self.rivet.diameter*1000, "mm")
+
+        return spacing
+
+
+# EXAMPLE CODE ----------------------------------------------------------------------------
+# Example rivet – 4 mm steel rivet
+steel_rivet = Rivet(
+    Shear_Yield_Stress = 3300.0,  # N (shear strength in single shear ≈ 3.3 kN)
+    diameter = 0.004,             # m
+    Tension_Yield = 4500.0,       # N (approx. tension capacity)
+    cost = 0.10
+)
+
+# Panels – mild steel
+thickness1 = 0.001  # 5 mm
+thickness2 = 0.001  # 3 mm
+shear_yield = 250e6       # Pa
+tension_yield = 250e6     # Pa
+E_mod = 200e9             # Pa
+max_bearing_stress = 300e6  # Pa
+
+panel5 = Panel(thickness1, shear_yield, tension_yield, E_mod, max_bearing_stress)
+panel3 = Panel(thickness2, shear_yield, tension_yield, E_mod, max_bearing_stress)
+
+# Connection setup
+# Applied stress = 100 MPa, width = 0.1 m
+conn = Connection(
+    stress = 10e5,
+    Panel1 = panel5,
+    Panel2 = panel3,
+    width = 0.1,
+    SF = 2
+)
+
+# Compute required spacing with 3 rivets per row
+spacing = conn.get_required_spacing(steel_rivet, rivets_per_row=4)
+
+print(f"Converged rivet spacing ≈ {spacing*1000:.1f} mm")
