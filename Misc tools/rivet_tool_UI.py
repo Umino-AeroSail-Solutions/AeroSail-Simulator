@@ -17,11 +17,21 @@ BN_21443 = Rivet(14500, 6.6/1000, 8330, 50/100, "BN 21443") # ONLY THIN
 BN_84012 = Rivet(15600, 6.6/1000, 8500, 50/100, "BN 84012") # ONLY THIN
 BN_84013 = Rivet(49400, 10.5/1000, 32300, 50/100, "BN 84013")
 
+# Bolts: https://eurocodeapplied.com/design/en1993/bolt-design-properties
+M8_grade_8_8_nonthread = Rivet(19300, 8/1000, 21100, 14/100, "M8 grade 8.8 nonthread")
+M10_grade_8_8 = Rivet(22300, 11/1000, 33400, 17/100, "M10 grade 8.8")
+M10_grade_8_8_nonthread = Rivet(30200, 11/1000, 33400, 17/100, "M10 grade 8.8 non threaded")
+M14_grade_8_8 = Rivet(44200, 15/1000, 66200, 25/100, "M14 grade 8.8")
+M14_grade_8_8_nonthread = Rivet(66200, 15/1000, 66200, 25/100, "M14 grade 8.8")
+M20_grade_8_8_nonthread = Rivet(90500, 22/1000, 141000, 20/100, "M20 grade 8.8 nonthread")
+long25mmrivet = Rivet(4000, 4.8/1000, 5000, 70/250, "Long 25 mm grip rivet ")# https://rivet-expert.com/nl/standaard-popnagel-bolkop-rvs-a2-rvs-a2-4-80x30-00-mm-klembereik-20-00-25-00-mm
 
 
-rivet_list_THICK = [Gesipa1433601, Gesipa1454074, Gesipa1454608, Gesipa1456041, Gesipa1433932, Gesipa1433811, Gesipa1433814, BibusCN03_6419_0700, BN_84013]
-rivet_list_thin = [Gesipa1433601, Gesipa1454074, Gesipa1454608, Gesipa1456041, Gesipa1433932, Gesipa1433811, Gesipa1433814, BibusCN02_6420_0700, BibusCN03_6419_0700, BN_21443, BN_84012, BN_84013]
+rivet_list_THICK = [Gesipa1433601, Gesipa1454074, Gesipa1454608, Gesipa1456041, Gesipa1433932, Gesipa1433811, Gesipa1433814, BibusCN03_6419_0700, BN_84013, M8_grade_8_8_nonthread, M10_grade_8_8, M14_grade_8_8, M20_grade_8_8_nonthread, M14_grade_8_8_nonthread, M10_grade_8_8_nonthread]
+rivet_list_thin = [Gesipa1433601, Gesipa1454074, Gesipa1454608, Gesipa1456041, Gesipa1433932, Gesipa1433811, Gesipa1433814, BibusCN02_6420_0700, BibusCN03_6419_0700, BN_21443, BN_84012, BN_84013, M10_grade_8_8, M14_grade_8_8, M20_grade_8_8_nonthread, M14_grade_8_8_nonthread, M10_grade_8_8_nonthread, M14_grade_8_8_nonthread, M8_grade_8_8_nonthread]
+rivet_list_SuperTHICK = [long25mmrivet]
 
+only_bolt_list = [M10_grade_8_8, M14_grade_8_8, M20_grade_8_8_nonthread, M14_grade_8_8_nonthread, M10_grade_8_8_nonthread, M14_grade_8_8_nonthread]
 
 # https://asm.matweb.com/search/SpecificMaterial.asp?bassnum=MA6063T6
 
@@ -51,10 +61,14 @@ stress = float(input("Now enter stress in Pa: "))
 
 if option == 1:
     connection = Connection(stress, column, top_panel, column_width, SF=1.2)
-    connection.find_The_Chosen_One(rivet_list_thin, cost_multiplier=1, number_multiplier=0)
+    # connection.find_The_Chosen_One(rivet_list_thin, cost_multiplier=1, number_multiplier=0)
+    # connection.find_The_Chosen_One(rivet_list_SuperTHICK, cost_multiplier=1, number_multiplier=0)
+    connection.find_The_Chosen_One(only_bolt_list, cost_multiplier=1, number_multiplier=0)
     print("\n")
 
 if option == 2:
     connection = Connection(stress, column, side_panel, column_width, SF=1.2)
-    connection.find_The_Chosen_One(rivet_list_THICK, cost_multiplier=1, number_multiplier=0)
+    # connection.find_The_Chosen_One(rivet_list_THICK, cost_multiplier=1, number_multiplier=0)
+    # connection.find_The_Chosen_One(rivet_list_SuperTHICK, cost_multiplier=1, number_multiplier=0)
+    connection.find_The_Chosen_One(only_bolt_list, cost_multiplier=1, number_multiplier=0)
     print("\n")

@@ -49,6 +49,9 @@ class Connection():
         if rivets_per_row is None:
             minimum_spacing = 3*Rivet.diameter
             rivets_per_row = (self.width//minimum_spacing) -1
+
+        if rivets_per_row <= 0:
+            rivets_per_row = 1
         self.rivet = Rivet
         self.rivet_max_force = self.rivet.Shear_Yield
         self.connection_d = self.rivet.diameter
@@ -57,7 +60,7 @@ class Connection():
 
         # Iteration 0
         iteration_n = 0
-        force = self.shearflow * spacing
+        force = self.stress * spacing * self.width
         self.rivets_per_row = rivets_per_row
         self.max_allowed_panel_force = min(
             self.Panel1.Get_Max_allowed_force(self.connection_d, self.rivets_per_row, self.width), self.Panel2.Get_Max_allowed_force(self.connection_d, self.rivets_per_row, self.width)
@@ -77,7 +80,7 @@ class Connection():
         #         self.Panel1.Get_Max_tearing_force(spacing, self.rivets_per_row),
         #         self.Panel2.Get_Max_tearing_force(spacing, self.rivets_per_row),
         #     )
-        #     force = self.shearflow * spacing
+        #     force = self.stress * spacing*self.width
         #     tearingSF = self.max_tearing_force / force
 
         # store convergence history
@@ -85,7 +88,7 @@ class Connection():
 
         while (((minSF - 1) > 0.1) or (minSF - 1 < 0)) and iteration_n < 100:
 
-            force = self.shearflow * spacing
+            force = self.stress * spacing * self.width
             self.max_tearing_force = min(
                 self.Panel1.Get_Max_tearing_force(spacing, self.rivets_per_row),
                 self.Panel2.Get_Max_tearing_force(spacing, self.rivets_per_row),
@@ -172,7 +175,7 @@ class Connection():
                 best_optimization = optimization
                 best_rivet = rivet
 
-        print("Best rivet is: ", best_rivet.name, "---------------------------------")
+        print("\n\nBest rivet is: ", best_rivet.name, "---------------------------------")
 
         spacing, rivets_per_row, minSF, tearing = self.get_required_spacing(best_rivet, plot=True)
         print(f"Cost per meter = {best_optimization:.1f}")
