@@ -86,7 +86,7 @@ class Connection():
         # store convergence history
         iterations, rivet_history, panel_history, tearing_history, spacing_history = [], [], [], [], []
 
-        while (((minSF - 1) > 0.1) or (minSF - 1 < 0)) and iteration_n < 100:
+        while (((minSF - 1) > 0.1) or (minSF - 1 < 0) or (iteration_n<2)) and iteration_n < 100:
 
             force = self.stress * spacing * self.width
             self.max_tearing_force = min(
@@ -121,7 +121,7 @@ class Connection():
             plt.title("Convergence of Safety Factors")
             plt.legend()
             # Set integer ticks on x
-            plt.xticks(np.arange(min(iterations), max(iterations) + 1, 1))
+            plt.xticks(np.arange(0, max(iterations) + 1, 1))
 
             # Vertical grid lines only at x-ticks (iterations)
             plt.grid(axis="x", which="major")
