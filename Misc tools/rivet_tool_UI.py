@@ -61,13 +61,18 @@ alu6063_T6_tension_yield = 214e6
 alu6063_T6_eMod = 68.9e9
 alu6063_T6_bearing_yield = 276e6
 
+alu6061_T6_shear_yield = 207e6
+alu6061_T6_tension_yield = 276e6
+alu6061_T6_eMod = 68.9e9
+alu6061_T6_bearing_yield = 607e6
+
 top_panel_thickness = 4/1000
 side_panel_thickness = 5/1000
 column_thickness = 10/1000
 
-top_panel = Panel(top_panel_thickness, alu6063_T6_shear_yield, alu6063_T6_tension_yield, alu6063_T6_eMod, alu6063_T6_bearing_yield)
-side_panel = Panel(side_panel_thickness, alu6063_T6_shear_yield, alu6063_T6_tension_yield, alu6063_T6_eMod, alu6063_T6_bearing_yield)
-column = Panel(column_thickness, alu6063_T6_shear_yield, alu6063_T6_tension_yield, alu6063_T6_eMod, alu6063_T6_bearing_yield)
+top_panel = Panel(top_panel_thickness, alu6061_T6_shear_yield, alu6061_T6_tension_yield, alu6061_T6_eMod, alu6061_T6_bearing_yield)
+side_panel = Panel(side_panel_thickness, alu6061_T6_shear_yield, alu6061_T6_tension_yield, alu6061_T6_eMod, alu6061_T6_bearing_yield)
+column = Panel(column_thickness, alu6061_T6_shear_yield, alu6061_T6_tension_yield, alu6061_T6_eMod, alu6061_T6_bearing_yield)
 
 column_width = 80/1000
 print("--------RIVET SIZER--------\n\n")
@@ -84,7 +89,7 @@ if option == 1:
     connection = Connection(stress, column, top_panel, column_width, SF=1.25)
     # connection.find_The_Chosen_One(rivet_list_thin, cost_multiplier=1, number_multiplier=0)
     # connection.find_The_Chosen_One(rivet_list_ESTRUBOLTS, cost_multiplier=1, number_multiplier=0)
-    connection.find_The_Chosen_One([Estrubolt6_4], cost_multiplier=1, number_multiplier=0)
+    connection.find_The_Chosen_One([Estrubolt8_0], cost_multiplier=1, number_multiplier=0) # Max 14.7 MPa, rivet limited
     # connection.find_The_Chosen_One(rivet_list_SuperTHICK, cost_multiplier=1, number_multiplier=0)
     # connection.find_The_Chosen_One(only_bolt_list, cost_multiplier=1, number_multiplier=0)
     print("\n")
@@ -93,7 +98,7 @@ if option == 2:
     connection = Connection(stress, column, side_panel, column_width, SF=1.25)
     # connection.find_The_Chosen_One(rivet_list_THICK, cost_multiplier=1, number_multiplier=0)
     # connection.find_The_Chosen_One(rivet_list_ESTRUBOLTS, cost_multiplier=1, number_multiplier=0)
-    connection.find_The_Chosen_One([Estrubolt6_4], cost_multiplier=1, number_multiplier=0)
+    connection.find_The_Chosen_One([Estrubolt8_0], cost_multiplier=1, number_multiplier=0) # Max 14.7 MPa, rivet limited
     # connection.find_The_Chosen_One(rivet_list_SuperTHICK, cost_multiplier=1, number_multiplier=0)
     # connection.find_The_Chosen_One(only_bolt_list, cost_multiplier=1, number_multiplier=0)
     print("\n")

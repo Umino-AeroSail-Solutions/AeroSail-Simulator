@@ -118,7 +118,7 @@ class Connection():
             plt.axhline(1.0, color="red", linestyle="--", label="Target SF = 1")
             plt.xlabel("Iteration")
             plt.ylabel("Safety Factor")
-            plt.title("Convergence of Safety Factors")
+            plt.title("Convergence of Safety Factors: " + Rivet.name)
             plt.legend()
             # Set integer ticks on x
             plt.xticks(np.arange(0, max(iterations) + 1, 1))
@@ -137,7 +137,7 @@ class Connection():
             plt.legend()
             plt.xlabel("Iteration")
             plt.ylabel("Spacing [mm]")
-            plt.title("Convergence of Rivet Spacing")
+            plt.title("Convergence of Rivet Spacing: " + Rivet.name)
             # Set integer ticks on x
             plt.xticks(np.arange(min(iterations), max(iterations) + 1, 1))
 
@@ -163,7 +163,7 @@ class Connection():
         best_optimization = 10000000000000000000000
         best_rivet = rivet_list[0]
         for rivet in rivet_list:
-            spacing, rivets_per_row, minSF, tearing = self.get_required_spacing(rivet, plot=False)
+            spacing, rivets_per_row, minSF, tearing = self.get_required_spacing(rivet, plot=True)
             rivets_per_meter = rivets_per_row /spacing
 
             optimization = (cost_multiplier * rivets_per_meter * rivet.cost) + number_multiplier*rivets_per_meter
