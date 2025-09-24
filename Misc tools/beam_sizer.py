@@ -592,5 +592,5 @@ def test_size_profile_convergence():
 
 if __name__ == "__main__":
     test_size_profile_convergence()
-    test_reaction_and_internal_diagrams()
-    test_thickness_simple_yield_size()
+    # test_reaction_and_internal_diagrams()
+    # test_thickness_simple_yield_size()

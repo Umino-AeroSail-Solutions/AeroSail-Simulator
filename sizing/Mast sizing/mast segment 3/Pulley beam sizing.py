@@ -38,3 +38,11 @@ moment = [0, total_pulley_load*Pulley3_beam.length/6]
 
 Pulley2_beam.size_profile(shear[0], shear[1], 0, moment[0], moment[1], 1.5, 3/1000,plot_convergence=True)
 
+bottom_support_beam = bs.Square_beam(1.804, 0.04, 0.04, material=alu_6063_T66)
+
+
+print("Mast support beam \n")
+
+shear = [0.577*1000, 0]
+moment= [0, 1.227*1000]
+bottom_support_beam.size_profile(shear[0], shear[1], 0, moment[0], moment[1], 1.5, 4/1000,plot_convergence=True)

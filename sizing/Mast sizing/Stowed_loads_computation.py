@@ -154,6 +154,8 @@ segment_1_mass = 1100 * mass_SF
 
 aeroplatform_extra_mass_per_segment = 114
 
+print("Total mass: ", segment_4_mass+segment_3_mass+segment_2_mass+segment_1_mass+4*aeroplatform_extra_mass_per_segment)
+
 #All overlaps are the length of the bottom segment except the first one
 
 OL_34 = segment_3_length
