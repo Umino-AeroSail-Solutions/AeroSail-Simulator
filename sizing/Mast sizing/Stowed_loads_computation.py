@@ -150,7 +150,7 @@ mass_SF = 1.2
 segment_4_mass = 194.5 * mass_SF
 segment_3_mass = 540 * mass_SF
 segment_2_mass = 788.4 *  mass_SF
-segment_1_mass = 850 * mass_SF
+segment_1_mass = 1100 * mass_SF
 
 aeroplatform_extra_mass_per_segment = 114
 
