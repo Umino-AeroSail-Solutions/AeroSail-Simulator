@@ -88,31 +88,31 @@ def forces(x, y):
     M_top = max_moment_top  #idk yet
 
     # Wheel dimensions (not fixed)
-    # BASED ON https://www.technicawheels.co.uk/industrial-wheels-all.html?product=&product_list_dir=desc&product_list_order=load_capacity    
-    # USING WHEEL P0746
+    # BASED ON catia
+    # USING WHEEL P3534
 
-    wheel_width = 100e-3 # MOOGIE TOOLS will burn in hell
-    wheel_radius = 82e-3 / 2 # 82mm diameter
-    wheel_carry_force = 950*g # REAL "max load"
-    wheel_axle_rad = 30e-3 / 2 # https://www.technicawheels.co.uk/industrial-wheels-all.html?product=&product_list_dir=desc&product_list_order=load_capacity
+    wheel_width = 70e-3 # MOOGIE TOOLS will burn in hell
+    wheel_radius = 250e-3 / 2 # 250mm diameter
+    wheel_carry_force = 3210*g # REAL "max load"
+    wheel_axle_rad = 45e-3 / 2 # Check catia
     
     n_wheels_bot = V_bot / wheel_carry_force # approximately 3  2x1+1 lxw # 12 and 10 for 6 eur per wheel = 132 eur per 
     n_wheels_top = V_top / wheel_carry_force # approximately 6 (2x3) lxw 
     print(f"Number of wheels bottom: {n_wheels_bot}, Number of wheels top: {n_wheels_top}")
 
     #bearing
-    width_bearing = 26e-3 # https://nl.rs-online.com/web/p/roller-bearings/0312425
-    bearing_radius = 30e-3 #    INNER RADIUS                  "
-    load_limit = 82e3 # Basic dynamic load rating, radial
+    width_bearing = 40e-3 #
+    bearing_radius = 50e-3 #    INNER RADIUS                  "
+    load_limit = 82e3 # Basic dynamic load rating, radial, not used
 
     # Dimensions of the beams
     b_bot = 100e-3    # width of beam [m] 
     a_bot = 150e-3 # height [m]
     t_bot = 5e-3 # thickness [m]
 
-    b_top = 100e-3     # width of beam [m]
-    a_top = 150e-3    # height [m]
-    t_top = 8e-3     # thickness [m]
+    b_top = 100e-3     # width of beam [m] https://www.metalsupplies.com/products/mild-steel-hollow-section/
+    a_top = 200e-3    # height [m]
+    t_top = 10e-3     # thickness [m]
 
     # Material properties mild STEEL i think
     rho = 7850 # Density in kg/m³
