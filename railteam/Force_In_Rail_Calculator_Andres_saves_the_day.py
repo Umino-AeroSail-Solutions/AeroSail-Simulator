@@ -18,8 +18,8 @@ w = 1 # Example width of the sail typa ribs thingy idk man
 #pygame.init()
 
 # Screen dimensions
-WIDTH, HEIGHT = 1920, 1080
-WIDTH, HEIGHT = 1600, 900
+WIDTH, HEIGHT = 1920/2, 1080/2
+WIDTH, HEIGHT = 1600/2, 900/2
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Erection Visualizer")
 
@@ -107,7 +107,7 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False, cogloc=h/2):
 
     # Now we define point A, the point at which the attachment happens in the lower rail
 
-    A = P1 + (l * ((P4-P1)/L_Bot))        
+    A = P1 + (l * ((P4-P1)/L_Bot))
 
     # Now you find the intersections between a circle centered in point A with radius d and the line passing through P3 and P2
 
@@ -160,7 +160,7 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False, cogloc=h/2):
         pygame.draw.line(screen, WHITE, A*scale + offset, (A+((h/d)*(C_vector)))*scale + offset, 1)
         pygame.draw.circle(screen, YELLOW, A*scale + offset, 4)
         pygame.draw.circle(screen, YELLOW, B * scale + offset, 4)
-        
+
         #Container Outlines
         pygame.draw.line(screen, BoruiBlue, [0,0] * scale + offset, [0,2.7]*scale+offset, 2)
         pygame.draw.line(screen, BoruiBlue, [0,0] * scale + offset, [12,0]*scale+offset, 2)
@@ -197,7 +197,7 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False, cogloc=h/2):
             3
         )
         bottom_connection = (A - np.array([np.cos(angle), np.sin(angle)]) * half_width)
-        print("Bottom connection coordinate: ", bottom_connection[1])
+        # print("Bottom connection coordinate: ", bottom_connection[1])
         # Top ring support
         ring_support_width = 2
         half_width = ring_support_width / 2
@@ -219,6 +219,44 @@ def get_reactions(P1, P2, P3, P4, l, m, h, draw=False, cogloc=h/2):
         draw_arrow(screen, (A+((cogloc/d))*(C_vector))*scale + offset, (-np.pi / 2), m * 9.81 *vector_scale , YELLOW)
     return R1, R2, T, B
 
+def get_extra_mast_comp(R2, P1, P2,P3, P4, l):
+    # Some useful dimensions
+    L_Bot = np.linalg.norm(P4 - P1)
+    L_Top = np.linalg.norm(P3 - P2)
+    d = np.linalg.norm(P2 - P1)
+
+    if l < 0 or l > L_Bot:
+        raise ValueError("l is supposed to be between 0 and {}, to remain within the bottom rail".format(L_Bot))
+
+    # Now we define point A, the point at which the attachment happens in the lower rail
+
+    A = P1 + (l * ((P4 - P1) / L_Bot))
+
+    # Now you find the intersections between a circle centered in point A with radius d and the line passing through P3 and P2
+
+    B1, B2 = circle_line_intersection(A, d * 2, P3, P2)
+
+    if B1[0] > B2[0]:
+        B = B1
+    else:
+        B = B2
+
+    C_vector = B - A
+    D_vector = [C_vector[1], -1 * C_vector[0]]
+
+    # print(C_vector)
+    # print(D_vector)
+    phi = np.arctan2(C_vector[1], C_vector[0])
+    # return phi # for testing
+
+    alpha = -np.arctan2((P4[1] - P1[1]), (P4[0] - P1[0]))  # Bottom rail angle from the horizontal CW
+    beta = (np.arctan2((P3[1] - P2[1]), (P3[0] - P2[0])))  # Top rail angle from the horizontal ccw
+    # print(np.degrees(alpha), np.degrees(beta))
+
+    mast_tr_angle = phi - alpha
+    print("\n Mast tr angle: ", np.degrees(mast_tr_angle))
+    return -1*R2*np.sin(mast_tr_angle)
+
 
 
 # Compute bottom rail length
@@ -231,6 +269,7 @@ l2_values = np.zeros(len(l_values))
 # Compute reactions for each l
 R1_values = []
 R2_values = []
+extra_mast_comp_values = []
 T_values = []
 
 delta_t = 0
@@ -245,8 +284,10 @@ for l in l_values:
         if event.type == pygame.QUIT:
             running = False
     R1, R2, T, B = get_reactions(P1, P2, P3, P4, l, m, h, draw=draw, cogloc=cogloc)
+    mast_compression = get_extra_mast_comp(R2, P1, P2, P3, P4, l)
     R1_values.append(R1) 
     R2_values.append(R2)
+    extra_mast_comp_values.append(mast_compression)
     T_values.append(T)
     if draw:
         # Update the display
@@ -277,15 +318,35 @@ for i, leng in enumerate(l_values):
 np.savez(os.path.join(os.path.dirname(__file__),"forcevalues.npz"), R1_values=R1_values, R2_values=R2_values, l_values=l_values, l2_values=l2_values, support_forces_bot=support_forces_bot, support_forces_top=support_forces_top)
 
 # Plot reaction forces as a function of l
-plt.figure(figsize=(8, 5))
+plt.figure(figsize=(8, 5), dpi=500)
 plt.plot(l_values, R1_values, label='R1', color='r')
 plt.plot(l_values, R2_values, label='R2', color='g')
 plt.plot(l_values, T_values, label='T', color='b')
+plt.plot(l_values, extra_mast_comp_values, label='Extra compression', color='y')
 plt.xlabel('$l$ (Attachment Position on Bottom Rail)')
 plt.ylabel('Reaction Forces')
 plt.title('Reaction Forces as a Function of Attachment Position $l$')
 plt.legend()
 plt.grid(True)
+# Helper function to annotate max and min points
+def annotate_extrema(x, y, label, color):
+    max_idx = np.argmax(y)
+    min_idx = np.argmin(y)
+    plt.scatter(x[max_idx], y[max_idx], color=color, marker='s', s=6)
+    plt.scatter(x[min_idx], y[min_idx], color=color, marker='s', s=6)
+    plt.text(x[max_idx], y[max_idx],
+             f'  Max: {y[max_idx]:.2f} N',
+             color=color, fontsize=5, ha='left', va='bottom')
+    plt.text(x[min_idx], y[min_idx],
+             f'  Min: {y[min_idx]:.2f} N',
+             color=color, fontsize=5, ha='left', va='top')
+
+# Annotate all curves
+annotate_extrema(l_values, R1_values, 'R1', 'r')
+annotate_extrema(l_values, R2_values, 'R2', 'g')
+annotate_extrema(l_values, T_values, 'T', 'b')
+annotate_extrema(l_values, extra_mast_comp_values, 'Extra compression', 'y')
+
 plt.show()
 
 plt.figure(figsize=(8, 5))
@@ -299,7 +360,7 @@ plt.show()
 
 
 # Main loop
-running = True
+running = False
 while running:
     screen.fill(BLACK)
     for event in pygame.event.get():
@@ -309,6 +370,8 @@ while running:
     mx, my = pygame.mouse.get_pos()
     l = (mx) * (L_Bot/WIDTH)
     R1, R2, T, B = get_reactions(P1, P2, P3, P4, l, m, h, draw=True, cogloc=cogloc)
+    extra_compression = get_extra_mast_comp(R2, P1, P2, P3, P4, l)
+    print("Extra compression: ", extra_compression)
     pygame.display.flip()
 
 # Quit Pygame
