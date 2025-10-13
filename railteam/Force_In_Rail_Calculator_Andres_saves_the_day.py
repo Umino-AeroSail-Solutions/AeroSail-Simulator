@@ -18,8 +18,8 @@ w = 1 # Example width of the sail typa ribs thingy idk man
 #pygame.init()
 
 # Screen dimensions
-WIDTH, HEIGHT = 1920/2, 1080/2
-WIDTH, HEIGHT = 1600/2, 900/2
+WIDTH, HEIGHT = 1920/2, 1080/1.3
+# WIDTH, HEIGHT = 1600/2, 900/2
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Erection Visualizer")
 
@@ -360,7 +360,7 @@ plt.show()
 
 
 # Main loop
-running = False
+running = True
 while running:
     screen.fill(BLACK)
     for event in pygame.event.get():
