@@ -107,12 +107,12 @@ def forces(x, y):
 
     # Dimensions of the beams
     b_bot = 100e-3    # width of beam [m] 
-    a_bot = 150e-3 # height [m]
-    t_bot = 5e-3 # thickness [m]
+    a_bot = 200e-3 # height [m]
+    t_bot = 6e-3 # thickness [m]
 
     b_top = 100e-3     # width of beam [m] https://www.metalsupplies.com/products/mild-steel-hollow-section/
-    a_top = 200e-3    # height [m]
-    t_top = 10e-3     # thickness [m]
+    a_top = 200e-3    # height [m] https://www.limtrade.nl/rechth-koker-kgv-200-x-100-x-8?gad_source=1&gad_campaignid=23023698626&gbraid=0AAAAADkrCBa_2E1h-h7Pt0XzI4jSuFSun&gclid=CjwKCAjwx-zHBhBhEiwA7Kjq63nJMS5croeUhQGd37muN17mJ-pBTP1gYG2HjcsZqFZznClN9ve9jhoCqQoQAvD_BwE
+    t_top = 8e-3     # thickness [m]https://www.alibaba.com/product-detail/Structure-Steel-Profiles-100x100-100x200mm-Rectangular_1601408336828.html
 
     # Material properties mild STEEL i think
     rho = 7850 # Density in kg/m³
