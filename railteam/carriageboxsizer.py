@@ -46,7 +46,7 @@ def test_beam(a, b, t_a, t_b, force_up, moment_up ,shear_yield, tension_yield):
 def optimize_carriage_box(a, b, force_up, width,
                           shear_yield, tension_yield,
                           aim_SF=1.5,
-                          t_a=20/1000, t_b=2/1000,
+                          t_a=0.1/1000, t_b=3/1000,
                           tol=1e-2, max_iter=100):
 
     moment_up = force_up * width / 2
@@ -124,12 +124,34 @@ print("Optimized design, top carriage, top rollers:", best_top_carriage_top_roll
 
 moment_up = 30000*125/1000
 top_carriage_top_rollers = test_beam(a=530/1000, b=250/1000, t_a=0.0000000000001, t_b=3/1000,force_up=30000, moment_up=moment_up, shear_yield=alu6061_T6_shear_yield, tension_yield=alu6061_T6_tension_yield)
-print("Real design sf:", top_carriage_top_rollers)
+print("Real design sf top:", top_carriage_top_rollers)
 print("max shear: ", alu6061_T6_shear_yield/top_carriage_top_rollers[0])
 
 max_shear_panel = alu6061_T6_shear_yield/top_carriage_top_rollers[0]
 k=6
 buckling_shear = k*(math.pi**2)*alu6061_T6_eMod*((3/1000)**2)/(12*(1-0.33**2)*(250/1000)**2)
+print("Buckling shear: ", buckling_shear)
+print("Buckling safety factor: ", buckling_shear/max_shear_panel)
+
+
+best_bot_carriage_top_rollers = optimize_carriage_box(
+    a=300/1000, b=120/1000,
+    force_up=13000, width=125/1000,
+    shear_yield=alu6061_T6_shear_yield,
+    tension_yield=alu6061_T6_tension_yield,
+    aim_SF=2
+)
+print("Optimized design, bot carriage, top rollers:", best_bot_carriage_top_rollers)
+
+
+moment_up = 13000*125/1000
+bot_carriage_top_rollers = test_beam(a=300/1000, b=120/1000, t_a=0.0000000000001, t_b=3/1000,force_up=13000, moment_up=moment_up, shear_yield=alu6061_T6_shear_yield, tension_yield=alu6061_T6_tension_yield)
+print("Real design sf bot:", bot_carriage_top_rollers)
+print("max shear: ", alu6061_T6_shear_yield/bot_carriage_top_rollers[0])
+
+max_shear_panel = alu6061_T6_shear_yield/bot_carriage_top_rollers[0]
+k=6
+buckling_shear = k*(math.pi**2)*alu6061_T6_eMod*((3/1000)**2)/(12*(1-0.33**2)*(100/1000)**2)
 print("Buckling shear: ", buckling_shear)
 print("Buckling safety factor: ", buckling_shear/max_shear_panel)
 
