@@ -254,7 +254,7 @@ def get_extra_mast_comp(R2, P1, P2,P3, P4, l):
     # print(np.degrees(alpha), np.degrees(beta))
 
     mast_tr_angle = phi - alpha
-    print("\n Mast tr angle: ", np.degrees(mast_tr_angle))
+    # print("\n Mast tr angle: ", np.degrees(mast_tr_angle))
     return -1*R2*np.sin(mast_tr_angle)
 
 
