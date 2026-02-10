@@ -50,6 +50,8 @@ P4 = np.array([6, 0.26]) # Bottom rail in extended~
 
 L_Bot = np.linalg.norm(P4-P1)
 L_Top = np.linalg.norm(P3-P2)
+print("Bottom rail length: ",L_Bot*1000)
+print("Top rail length: ",L_Top*1000)
 
 
 
@@ -261,6 +263,8 @@ def get_extra_mast_comp(R2, P1, P2,P3, P4, l):
 
 # Compute bottom rail length
 L_Bot = np.linalg.norm(P4 - P1)
+print(L_Bot)
+print(np.linalg.norm(P3 - P3))
 
 # Generate values of l from 0 to L_Bot
 l_values = np.linspace(0, L_Bot, 1000)
