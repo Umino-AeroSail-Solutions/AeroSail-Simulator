@@ -17,8 +17,9 @@ interpolation = 'yes'
 
 # # Define the range of boat speeds and wind speeds
 boat_speeds = np.array([23])  # Boat speeds
-wind_speeds = np.array([10, 15, 20, 25, 30])  # Wind speeds
-#
+# wind_speeds = np.array([10, 15, 20, 25, 30])  # Wind speeds
+wind_speeds = np.array([30])  # Wind speeds
+
 # # Create a matrix to store thrust values
 thrust_values = np.zeros((len(boat_speeds), len(wind_speeds)))
 #
