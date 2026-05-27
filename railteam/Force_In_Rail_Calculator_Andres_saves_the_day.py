@@ -14,30 +14,6 @@ h = 10   # Example height in meters
 w = 1 # Example width of the sail typa ribs thingy idk man
 
 
-# Initialize Pygame
-#pygame.init()
-
-# Screen dimensions
-WIDTH, HEIGHT = 1920/2, 1080/1.3
-# WIDTH, HEIGHT = 1600/2, 900/2
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Erection Visualizer")
-
-
-# Font setup
-pygame.font.init()
-font = pygame.font.SysFont('Arial', 24)
-
-# Colors
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-BLUE = (0, 0, 255)
-GREEN = (0, 255, 0)
-YELLOW = (255, 255, 0)
-BoruiBlue = (0,122,200)
-MateRed = (200,50,50)
-
 
 ####################################################################
 #Inputs: coordinate of P1, P2, P4, mass of mast M, height of mast H#
@@ -48,10 +24,22 @@ P2 = np.array([2.4435, 1.768]) # Top rail in retracted
 P3 = np.array([6, 2.4935]) # Top rail in extended
 P4 = np.array([6, 0.26]) # Bottom rail in extended~
 
+# Compute bottom rail length
 L_Bot = np.linalg.norm(P4-P1)
 L_Top = np.linalg.norm(P3-P2)
 
+# New version where L_bot is extended to reach the bottom and left places
+P1_ext = np.array([0, (P4[1]-P1[1])/(P4[0]-P1[0])*(-P1[0])+P1[1]])
+print(P1_ext[1])
+P4_ext = np.array([(P4[0]-P1[0])/(P4[1]-P1[1])*(-P1[1])+P1[0], 0])
+print(P4_ext[0])
+L_Bot_ext = np.linalg.norm(P4_ext-P1_ext)
+# print("botlength ext: ", L_Bot_ext)
+P1_ext_len = np.linalg.norm(P1-P1_ext)
+# P4_ext_len = np.linalg.norm(P4_ext-P4)
 
+alpha = -np.arctan2((P4[1] - P1[1]), (P4[0] - P1[0])) # Bottom rail angle from the horizontal CW
+beta = (np.arctan2((P3[1] - P2[1]), (P3[0] - P2[0]))) # Top rail angle from the horizontal ccw
 
 def circle_line_intersection(center, diameter, P1, P2):
     center = np.array(center)
@@ -254,155 +242,186 @@ def get_extra_mast_comp(R2, P1, P2,P3, P4, l):
     # print(np.degrees(alpha), np.degrees(beta))
 
     mast_tr_angle = phi - alpha
-    print("\n Mast tr angle: ", np.degrees(mast_tr_angle))
+    # print("\n Mast tr angle: ", np.degrees(mast_tr_angle))
     return -1*R2*np.sin(mast_tr_angle)
 
 
 
-# Compute bottom rail length
-L_Bot = np.linalg.norm(P4 - P1)
 
-# Generate values of l from 0 to L_Bot
-l_values = np.linspace(0, L_Bot, 1000)
-l2_values = np.zeros(len(l_values))
+if __name__ == "__main__":
+    # Initialize Pygame
+    #pygame.init()
 
-# Compute reactions for each l
-R1_values = []
-R2_values = []
-extra_mast_comp_values = []
-T_values = []
+    # Screen dimensions
+    WIDTH, HEIGHT = 1920/2, 1080/1.3
+    # WIDTH, HEIGHT = 1600/2, 900/2
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption("Erection Visualizer")
 
-delta_t = 0
 
-draw = True
+    # Font setup
+    pygame.font.init()
+    font = pygame.font.SysFont('Arial', 24)
 
-cogloc = 4.12
+    # Colors
+    WHITE = (255, 255, 255)
+    BLACK = (0, 0, 0)
+    RED = (255, 0, 0)
+    BLUE = (0, 0, 255)
+    GREEN = (0, 255, 0)
+    YELLOW = (255, 255, 0)
+    BoruiBlue = (0,122,200)
+    MateRed = (200,50,50)
 
-for l in l_values:
-    screen.fill(BLACK)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-    R1, R2, T, B = get_reactions(P1, P2, P3, P4, l, m, h, draw=draw, cogloc=cogloc)
-    mast_compression = get_extra_mast_comp(R2, P1, P2, P3, P4, l)
-    R1_values.append(R1) 
-    R2_values.append(R2)
-    extra_mast_comp_values.append(mast_compression)
-    T_values.append(T)
-    if draw:
-        # Update the display
+
+    # Generate values of l from 0 to L_Bot
+    l_values = np.linspace(0, L_Bot, 1000)
+    l2_values = np.zeros(len(l_values))
+
+    # Compute reactions for each l
+    R1_values = []
+    R2_values = []
+    extra_mast_comp_values = []
+    T_values = []
+
+    delta_t = 0
+
+    draw = True
+
+    cogloc = 4.12
+
+    for l in l_values:
+        screen.fill(BLACK)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        R1, R2, T, B = get_reactions(P1, P2, P3, P4, l, m, h, draw=draw, cogloc=cogloc)
+        mast_compression = get_extra_mast_comp(R2, P1, P2, P3, P4, l)
+        R1_values.append(R1) 
+        R2_values.append(R2)
+        extra_mast_comp_values.append(mast_compression)
+        T_values.append(T)
+        if draw:
+            # Update the display
+            pygame.display.flip()
+            pygame.time.delay(delta_t)
+        i = np.where(l_values == l)
+        l2_values[i]=np.linalg.norm(P2-B)
+
+    L_Top = max(l2_values)
+    L_Bot = max(l_values)
+    R1_max = np.max(np.abs(np.array(R1_values)))
+    R2_max = np.max(np.abs(np.array(R2_values)))
+    # print("R1 max: ", np.max(np.abs(np.array(R1_values))))
+    # print("R2 max: ", np.max(np.abs(np.array(R2_values))))
+    # print("T max: ", np.max(np.abs(np.array(T_values))))
+
+    support_forces_bot = []
+    support_forces_top = []
+
+
+    for i, leng in enumerate(l_values):
+        # S2_bot = R1_values[i] * leng / L_Bot
+        # S1_bot = R1_values[i] * (L_Bot-leng) / L_Bot
+        # support_forces_bot.append([S1_bot, S2_bot])
+
+        # New version where L_bot is extended to reach the bottom and left places
+        S2_bot_ext = R1_values[i] * (leng+P1_ext_len) / L_Bot_ext
+        S1_bot_ext = R1_values[i] * (L_Bot_ext-leng) / L_Bot_ext
+        support_forces_bot.append([S1_bot_ext, S2_bot_ext])
+
+        S2_top = R2_values[i] * l2_values[i] / L_Top
+        S1_top = R2_values[i] * (L_Top -l2_values[i]) / L_Top
+        support_forces_top.append([S1_top, S2_top])
+
+    np.savez(os.path.join(os.path.dirname(__file__),"forcevalues.npz"), R1_values=R1_values, R2_values=R2_values, l_values=l_values, l2_values=l2_values, support_forces_bot=support_forces_bot, support_forces_top=support_forces_top)
+
+    # Plot reaction forces as a function of l
+    plt.figure(figsize=(8, 5), dpi=500)
+    plt.plot(l_values, R1_values, label='R1', color='r')
+    plt.plot(l_values, R2_values, label='R2', color='g')
+    plt.plot(l_values, T_values, label='T', color='b')
+    plt.plot(l_values, extra_mast_comp_values, label='Extra compression', color='y')
+    plt.xlabel('$l$ (Attachment Position on Bottom Rail)')
+    plt.ylabel('Reaction Forces')
+    plt.title('Reaction Forces as a Function of Attachment Position $l$')
+    plt.legend()
+    plt.grid(True)
+    # Helper function to annotate max and min points
+    def annotate_extrema(x, y, label, color):
+        max_idx = np.argmax(y)
+        min_idx = np.argmin(y)
+        plt.scatter(x[max_idx], y[max_idx], color=color, marker='s', s=6)
+        plt.scatter(x[min_idx], y[min_idx], color=color, marker='s', s=6)
+        plt.text(x[max_idx], y[max_idx],
+                f'  Max: {y[max_idx]:.2f} N',
+                color=color, fontsize=5, ha='left', va='bottom')
+        plt.text(x[min_idx], y[min_idx],
+                f'  Min: {y[min_idx]:.2f} N',
+                color=color, fontsize=5, ha='left', va='top')
+
+    # Annotate all curves
+    annotate_extrema(l_values, R1_values, 'R1', 'r')
+    annotate_extrema(l_values, R2_values, 'R2', 'g')
+    annotate_extrema(l_values, T_values, 'T', 'b')
+    annotate_extrema(l_values, extra_mast_comp_values, 'Extra compression', 'y')
+
+    plt.show()
+
+    plt.figure(figsize=(8, 5))
+    plt.plot(l2_values, R2_values, label='R2', color='g')
+    plt.xlabel('$l2$ (Attachment Position on Top Rail)')
+    plt.ylabel('Reaction Forces')
+    plt.title('Reaction Forces as a Function of Attachment Position $l2$')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+
+    # Main loop
+    running = True
+    while running:
+        screen.fill(BLACK)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        mx, my = pygame.mouse.get_pos()
+        l = (mx) * (L_Bot/WIDTH)
+        R1, R2, T, B = get_reactions(P1, P2, P3, P4, l, m, h, draw=True, cogloc=cogloc)
+        extra_compression = get_extra_mast_comp(R2, P1, P2, P3, P4, l)
+        # print("Extra compression: ", extra_compression)
         pygame.display.flip()
-        pygame.time.delay(delta_t)
-    i = np.where(l_values == l)
-    l2_values[i]=np.linalg.norm(P2-B)
 
-L_Top = max(l2_values)
-L_Bot = max(l_values)
-R1_max = np.max(np.abs(np.array(R1_values)))
-R2_max = np.max(np.abs(np.array(R2_values)))
-# print("R1 max: ", np.max(np.abs(np.array(R1_values))))
-# print("R2 max: ", np.max(np.abs(np.array(R2_values))))
-# print("T max: ", np.max(np.abs(np.array(T_values))))
+    # Quit Pygame
+    pygame.quit()
 
-support_forces_bot = []
-support_forces_top = []
-for i, leng in enumerate(l_values):
-    S2_bot = R1_values[i] * leng / L_Bot
-    S1_bot = R1_values[i] * (L_Bot-leng) / L_Bot
-    support_forces_bot.append([S1_bot, S2_bot])
+    print(max(T_values))
 
-    S2_top = R2_values[i] * l2_values[i] / L_Top
-    S1_top = R2_values[i] * (L_Top -l2_values[i]) / L_Top
-    support_forces_top.append([S1_top, S2_top])
-
-np.savez(os.path.join(os.path.dirname(__file__),"forcevalues.npz"), R1_values=R1_values, R2_values=R2_values, l_values=l_values, l2_values=l2_values, support_forces_bot=support_forces_bot, support_forces_top=support_forces_top)
-
-# Plot reaction forces as a function of l
-plt.figure(figsize=(8, 5), dpi=500)
-plt.plot(l_values, R1_values, label='R1', color='r')
-plt.plot(l_values, R2_values, label='R2', color='g')
-plt.plot(l_values, T_values, label='T', color='b')
-plt.plot(l_values, extra_mast_comp_values, label='Extra compression', color='y')
-plt.xlabel('$l$ (Attachment Position on Bottom Rail)')
-plt.ylabel('Reaction Forces')
-plt.title('Reaction Forces as a Function of Attachment Position $l$')
-plt.legend()
-plt.grid(True)
-# Helper function to annotate max and min points
-def annotate_extrema(x, y, label, color):
-    max_idx = np.argmax(y)
-    min_idx = np.argmin(y)
-    plt.scatter(x[max_idx], y[max_idx], color=color, marker='s', s=6)
-    plt.scatter(x[min_idx], y[min_idx], color=color, marker='s', s=6)
-    plt.text(x[max_idx], y[max_idx],
-             f'  Max: {y[max_idx]:.2f} N',
-             color=color, fontsize=5, ha='left', va='bottom')
-    plt.text(x[min_idx], y[min_idx],
-             f'  Min: {y[min_idx]:.2f} N',
-             color=color, fontsize=5, ha='left', va='top')
-
-# Annotate all curves
-annotate_extrema(l_values, R1_values, 'R1', 'r')
-annotate_extrema(l_values, R2_values, 'R2', 'g')
-annotate_extrema(l_values, T_values, 'T', 'b')
-annotate_extrema(l_values, extra_mast_comp_values, 'Extra compression', 'y')
-
-plt.show()
-
-plt.figure(figsize=(8, 5))
-plt.plot(l2_values, R2_values, label='R2', color='g')
-plt.xlabel('$l2$ (Attachment Position on Top Rail)')
-plt.ylabel('Reaction Forces')
-plt.title('Reaction Forces as a Function of Attachment Position $l2$')
-plt.legend()
-plt.grid(True)
-plt.show()
-
-
-# Main loop
-running = True
-while running:
-    screen.fill(BLACK)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-
-    mx, my = pygame.mouse.get_pos()
-    l = (mx) * (L_Bot/WIDTH)
-    R1, R2, T, B = get_reactions(P1, P2, P3, P4, l, m, h, draw=True, cogloc=cogloc)
-    extra_compression = get_extra_mast_comp(R2, P1, P2, P3, P4, l)
-    print("Extra compression: ", extra_compression)
-    pygame.display.flip()
-
-# Quit Pygame
-pygame.quit()
-
-print(max(T_values))
-
-# Phi testing shenanigans:
-# # Compute bottom rail length
-# L_Bot = np.linalg.norm(P4 - P1)
-#
-# # Generate values of l from 0 to L_Bot
-# l_values = np.linspace(0, L_Bot, 100)
-# phi_values = []
-# m,h = 0,0
-# for l in l_values:
-#     print(l)
-#     phi = get_reactions(P1, P2, P3, P4, l, m, h, cogloc=cogloc)
-#     print(phi)
-#     print()
-#     phi_values.append(phi)
-#
-# # Convert phi to degrees for better readability
-# phi_values = np.degrees(phi_values)
-#
-# # Plot phi as a function of l
-# plt.figure(figsize=(8, 5))
-# plt.plot(l_values, phi_values, label=r'$\phi$ vs. $l$', color='b')
-# plt.xlabel('$l$ (Attachment Position on Bottom Rail)')
-# plt.ylabel(r'$\phi$ (degrees)')
-# plt.title('Angle $\phi$ as a Function of Attachment Position $l$')
-# plt.legend()
-# plt.grid(True)
-# plt.show()
+    # Phi testing shenanigans:
+    # # Compute bottom rail length
+    # L_Bot = np.linalg.norm(P4 - P1)
+    #
+    # # Generate values of l from 0 to L_Bot
+    # l_values = np.linspace(0, L_Bot, 100)
+    # phi_values = []
+    # m,h = 0,0
+    # for l in l_values:
+    #     print(l)
+    #     phi = get_reactions(P1, P2, P3, P4, l, m, h, cogloc=cogloc)
+    #     print(phi)
+    #     print()
+    #     phi_values.append(phi)
+    #
+    # # Convert phi to degrees for better readability
+    # phi_values = np.degrees(phi_values)
+    #
+    # # Plot phi as a function of l
+    # plt.figure(figsize=(8, 5))
+    # plt.plot(l_values, phi_values, label=r'$\phi$ vs. $l$', color='b')
+    # plt.xlabel('$l$ (Attachment Position on Bottom Rail)')
+    # plt.ylabel(r'$\phi$ (degrees)')
+    # plt.title('Angle $\phi$ as a Function of Attachment Position $l$')
+    # plt.legend()
+    # plt.grid(True)
+    # plt.show()

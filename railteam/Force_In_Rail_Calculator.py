@@ -35,16 +35,13 @@ def solve_for_x2(l):
 
 """def solve_for_x2(l):
     x2_Value = 0
-<<<<<<< HEAD
     equation = P2[0] - P1[0] - (sympy.sqrt(pow((x2 - l), 2) + pow((((P3[1] - P2[1])/(P3[0] - P2[0]) * x2 + P2[1]) - ((P4[1] - P1[1])/(P4[0] - P1[0]) * l * math.cos(alpha) + P1[1])), 2)))
     print(f"Equation to solve at l={l}: {equation}")
 
     solutions = solve(P2[0] - P1[0] - (sympy.sqrt(pow((x2 - l),2) + pow((((P3[1] - P2[1])/(P3[0] - P2[0]) * x2 + P2[1]) - ((P4[1] - P1[1])/(P4[0] - P1[0]) * l * math.cos(alpha) + P1[1])), 2))), x2)
     print(solutions)
-=======
     solutions = solve(abs(P2[0] - P1[0]) - (sympy.sqrt(pow((x2 - l),2) + pow((((P3[1] - P2[1])/(P3[0] - P2[0]) * x2 + P2[1]) - ((P4[1] - P1[1])/(P4[0] - P1[0]) * l * math.cos(alpha) + P1[1])), 2))), x2)
     #print(solutions)
->>>>>>> e0722411609d3fc323aec2840c485a474736189d
     for solution in solutions:
         if x2_Value < solution:
             x2_Value = solution
