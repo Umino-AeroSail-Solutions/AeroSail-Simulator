@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Assembly:
 
     def __init__(self, element_list, node_list):
@@ -22,32 +23,43 @@ class Assembly:
             self.big_K[matrix_spot_2:matrix_spot_2+3, matrix_spot_2:matrix_spot_2+3] += element.k_global[3:6, 3:6]
 
     def build_force_vector(self, force_dict_in):
-        for node, forces in force_dict_in:
+        for node, forces in force_dict_in.items():
             for i in range(3):
-                self.f[node+i] = forces[i]
+                self.f[node*3+i] = forces[i]
     
     def apply_boundary_conditions(self, bc_list):
-        bc_indexes = []
-        for i, node in enumerate(bc_list):
-            for j, bc in enumerate(node):
+        bc_indices = []
+        for node, bcs in bc_list.items():
+            for j, bc in enumerate(bcs):
                 if bc == 1:
-                    bc_indexes.append(int(node)+j)
+                    bc_indices.append(int(node)*3+j)
         
         f_free = np.copy(self.f)
         K_free = np.copy(self.big_K)
-        for index in bc_index:
-            f_free = np.delete(f_fixed, index)
-            K_free = np.delete(K_free, index, 0)
-            K_free = np.delete(K_free, index, 1)
+        f_free = np.delete(f_free, bc_indices)
+        K_free = np.delete(K_free, bc_indices, 0)
+        K_free = np.delete(K_free, bc_indices, 1)
+        
+        self.bc_indices = np.sort(bc_indices)
         
         self.f_f = f_free
-        self.big_K_f = big_K_f
-        
+        self.big_K_f = K_free
+
 
         
+    def solve(self):
+        u_sol_f = np.linalg.solve(self.big_K_f, self.f_f)
+        u_sol = u_sol_f
+        for index in self.bc_indices:
+            u_sol = np.insert(u_sol, index, 0)
+        
+        self.u_sol = u_sol
 
     
-    def solve(self):
-        u_sol = np.linalg.solve(self.big_K_f, self.f_f)
+    def give_forces(self):
+        for element in self.element_list:
+            u_spot_1 = element.node_i.id*3
+            u_spot_2 = element.node_j.id*3
+            u_global_element = np.hstack((self.u_sol[u_spot_1:u_spot_1+3], self.u_sol[u_spot_2:u_spot_2+3]))
 
-            
+            element.forces = element.element_forces(u_global_element)

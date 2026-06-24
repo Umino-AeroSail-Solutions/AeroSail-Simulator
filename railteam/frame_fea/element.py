@@ -16,6 +16,8 @@ class Element:
         self.node_j = node_j
         self.L = np.linalg.norm(node_j.coords - node_i.coords)
         self.angle = np.arctan2(node_j.coords[1]-node_i.coords[1], node_j.coords[0]-node_i.coords[0])
+
+        self.forces = np.zeros(6)
         # precompute and store
         self.T = self.transformation_matrix()
         self.k_local = self.local_stiffness()

@@ -72,13 +72,18 @@ def initialize_rails():
 def frame_elements():
     frame_p_A1 = np.array([0,2])
     frame_p_A2 = P2
+    print("Top Left Rail", P2)
 
     frame_p_B1 = P3
+    print("Top Right Rail", P3)
     frame_p_B2 = np.array([P4_ext[0], P3[1]])
+    print("Top Right with wall", P4)
 
     frame_p_C = P1_ext
+    print("Bottom Left", P1_ext)
 
     frame_p_D = P4_ext
+    print("Bottom Right", P4_ext)
 
     return frame_p_A1, frame_p_A2, frame_p_B1, frame_p_B2, frame_p_C, frame_p_D
 

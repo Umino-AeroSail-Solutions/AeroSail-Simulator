@@ -1,0 +1,18 @@
+{
+    "nodes": {
+        "0" :   [0, 0],
+        "1" :   [1, 0]
+    },
+    "elements": [
+        {"id": 0, "nodes": [0,1], "prop": "aluminium"}
+    ],
+    "properties": {
+        "aluminium": {"E": 70e9, "A": 1e-4, "I": 8.333333333333333333333333333e-10}
+    },
+    "boundary_conditions": {
+        "0": [1,1,1]
+    },
+    "loads": {
+        "1": [0,-50,0]
+    }
+}

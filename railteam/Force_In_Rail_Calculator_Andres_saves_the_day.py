@@ -408,69 +408,69 @@ if __name__ == "__main__":
     S1_top = R2_values[i] * (L_Top -l2_values[i]) / L_Top
     support_forces_top.append([S1_top, S2_top])
 
-np.savez(os.path.join(os.path.dirname(__file__),"forcevalues.npz"), R1_values=R1_values, R2_values=R2_values, l_values=l_values, l2_values=l2_values, support_forces_bot=support_forces_bot, support_forces_top=support_forces_top)
+# np.savez(os.path.join(os.path.dirname(__file__),"forcevalues.npz"), R1_values=R1_values, R2_values=R2_values, l_values=l_values, l2_values=l2_values, support_forces_bot=support_forces_bot, support_forces_top=support_forces_top)
 
-# Plot reaction forces as a function of l
-plt.figure(figsize=(8, 5), dpi=500)
-plt.plot(l_values, R1_values, label='R1', color='r')
-plt.plot(l_values, R2_values, label='R2', color='g')
-plt.plot(l_values, T_values, label='T', color='b')
-plt.plot(l_values, extra_mast_comp_values, label='Extra compression', color='y')
-plt.xlabel('$l$ (Attachment Position on Bottom Rail)')
-plt.ylabel('Reaction Forces')
-plt.title('Reaction Forces as a Function of Attachment Position $l$')
-plt.legend()
-plt.grid(True)
-# Helper function to annotate max and min points
-def annotate_extrema(x, y, label, color):
-    max_idx = np.argmax(y)
-    min_idx = np.argmin(y)
-    plt.scatter(x[max_idx], y[max_idx], color=color, marker='s', s=6)
-    plt.scatter(x[min_idx], y[min_idx], color=color, marker='s', s=6)
-    plt.text(x[max_idx], y[max_idx],
-             f'  Max: {y[max_idx]:.2f} N',
-             color=color, fontsize=5, ha='left', va='bottom')
-    plt.text(x[min_idx], y[min_idx],
-             f'  Min: {y[min_idx]:.2f} N',
-             color=color, fontsize=5, ha='left', va='top')
+# # Plot reaction forces as a function of l
+# plt.figure(figsize=(8, 5), dpi=500)
+# plt.plot(l_values, R1_values, label='R1', color='r')
+# plt.plot(l_values, R2_values, label='R2', color='g')
+# plt.plot(l_values, T_values, label='T', color='b')
+# plt.plot(l_values, extra_mast_comp_values, label='Extra compression', color='y')
+# plt.xlabel('$l$ (Attachment Position on Bottom Rail)')
+# plt.ylabel('Reaction Forces')
+# plt.title('Reaction Forces as a Function of Attachment Position $l$')
+# plt.legend()
+# plt.grid(True)
+# # Helper function to annotate max and min points
+# def annotate_extrema(x, y, label, color):
+#     max_idx = np.argmax(y)
+#     min_idx = np.argmin(y)
+#     plt.scatter(x[max_idx], y[max_idx], color=color, marker='s', s=6)
+#     plt.scatter(x[min_idx], y[min_idx], color=color, marker='s', s=6)
+#     plt.text(x[max_idx], y[max_idx],
+#              f'  Max: {y[max_idx]:.2f} N',
+#              color=color, fontsize=5, ha='left', va='bottom')
+#     plt.text(x[min_idx], y[min_idx],
+#              f'  Min: {y[min_idx]:.2f} N',
+#              color=color, fontsize=5, ha='left', va='top')
 
-# Annotate all curves
-annotate_extrema(l_values, R1_values, 'R1', 'r')
-annotate_extrema(l_values, R2_values, 'R2', 'g')
-annotate_extrema(l_values, T_values, 'T', 'b')
-annotate_extrema(l_values, extra_mast_comp_values, 'Extra compression', 'y')
+# # Annotate all curves
+# annotate_extrema(l_values, R1_values, 'R1', 'r')
+# annotate_extrema(l_values, R2_values, 'R2', 'g')
+# annotate_extrema(l_values, T_values, 'T', 'b')
+# annotate_extrema(l_values, extra_mast_comp_values, 'Extra compression', 'y')
 
-plt.show()
+# plt.show()
 
-plt.figure(figsize=(8, 5))
-plt.plot(l2_values, R2_values, label='R2', color='g')
-plt.xlabel('$l2$ (Attachment Position on Top Rail)')
-plt.ylabel('Reaction Forces')
-plt.title('Reaction Forces as a Function of Attachment Position $l2$')
-plt.legend()
-plt.grid(True)
-plt.show()
+# plt.figure(figsize=(8, 5))
+# plt.plot(l2_values, R2_values, label='R2', color='g')
+# plt.xlabel('$l2$ (Attachment Position on Top Rail)')
+# plt.ylabel('Reaction Forces')
+# plt.title('Reaction Forces as a Function of Attachment Position $l2$')
+# plt.legend()
+# plt.grid(True)
+# plt.show()
 
 
-# Main loop
-running = False
-while running:
-    screen.fill(BLACK)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+# # Main loop
+# running = False
+# while running:
+#     screen.fill(BLACK)
+#     for event in pygame.event.get():
+#         if event.type == pygame.QUIT:
+#             running = False
 
-    mx, my = pygame.mouse.get_pos()
-    l = (mx) * (L_Bot/WIDTH)
-    R1, R2, T, B = get_reactions(P1, P2, P3, P4, l, m, h, draw=True, cogloc=cogloc)
-    extra_compression = get_extra_mast_comp(R2, P1, P2, P3, P4, l)
-    print("Extra compression: ", extra_compression)
-    pygame.display.flip()
+#     mx, my = pygame.mouse.get_pos()
+#     l = (mx) * (L_Bot/WIDTH)
+#     R1, R2, T, B = get_reactions(P1, P2, P3, P4, l, m, h, draw=True, cogloc=cogloc)
+#     extra_compression = get_extra_mast_comp(R2, P1, P2, P3, P4, l)
+#     print("Extra compression: ", extra_compression)
+#     pygame.display.flip()
 
-# Quit Pygame
-pygame.quit()
+# # Quit Pygame
+# pygame.quit()
 
-print(max(T_values))
+# print(max(T_values))
 
 # Phi testing shenanigans:
 # # Compute bottom rail length
